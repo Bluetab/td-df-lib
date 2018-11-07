@@ -4,12 +4,13 @@ defmodule TdDfLib.Validation do
   """
 
   alias Ecto.Changeset
-  alias TdPerms.DynamicFormCache
+  @df_cache Application.get_env(:td_df_lib, :df_cache)
 
   @string "string"
   @list "list"
   @variable_list "variable_list"
   @variable_map_list "variable_map_list"
+  @map_list "map_list"
 
   def get_content_changeset(content, template_name) do
     schema = get_template_cotent(template_name)
@@ -17,7 +18,7 @@ defmodule TdDfLib.Validation do
   end
 
   defp get_template_cotent(template_name) do
-    DynamicFormCache.get_template_content(template_name)
+    @df_cache.get_template_content(template_name)
   end
 
   def build_changeset(content, content_schema) do
@@ -46,6 +47,7 @@ defmodule TdDfLib.Validation do
       @list -> :string
       @variable_list -> {:array, :string}
       @variable_map_list -> {:array, :map}
+      @map_list -> :map
     end
   end
 
@@ -83,6 +85,5 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_inclusion_validation(changeset, %{}), do: changeset
-
 
 end
