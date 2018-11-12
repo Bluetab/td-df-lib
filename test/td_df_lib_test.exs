@@ -117,4 +117,68 @@ defmodule TdDfLibTest do
     changeset = Validation.get_content_changeset(%{"field" => "value"}, "test_name")
     assert changeset.valid?
   end
+
+  test "content with hidden required field returns valid changeset" do
+    @df_cache.put_template(%{
+        id: 0,
+        label: "label",
+        name: "test_name",
+        content: [%{
+          "name" => "radio_list",
+          "type" => "list",
+          "required" => true,
+          "values" => ["Yes", "No"]
+        }, %{
+          "name" => "dependant_text",
+          "type" => "string",
+          "required" => true,
+          "depends" => %{ "on" => "radio_list", "to_be" => "Yes" }
+        }]
+    })
+    changeset = Validation.get_content_changeset(%{"radio_list" => "No"}, "test_name")
+    assert changeset.valid?
+  end
+
+  test "content with depend required not set field returns invalid changeset" do
+    @df_cache.put_template(%{
+        id: 0,
+        label: "label",
+        name: "test_name",
+        content: [%{
+          "name" => "radio_list",
+          "type" => "list",
+          "required" => true,
+          "values" => ["Yes", "No"]
+        }, %{
+          "name" => "dependant_text",
+          "type" => "string",
+          "required" => true,
+          "depends" => %{ "on" => "radio_list", "to_be" => "Yes" }
+        }]
+    })
+    changeset = Validation.get_content_changeset(%{"radio_list" => "Yes"}, "test_name")
+    refute changeset.valid?
+  end
+
+  test "content with depend required set field returns valid changeset" do
+    @df_cache.put_template(%{
+        id: 0,
+        label: "label",
+        name: "test_name",
+        content: [%{
+          "name" => "radio_list",
+          "type" => "list",
+          "required" => true,
+          "values" => ["Yes", "No"]
+        }, %{
+          "name" => "dependant_text",
+          "type" => "string",
+          "required" => true,
+          "depends" => %{ "on" => "radio_list", "to_be" => "Yes" }
+        }]
+    })
+    content = %{"radio_list" => "Yes", "dependant_text" => "value"}
+    changeset = Validation.get_content_changeset(content, "test_name")
+    assert changeset.valid?
+  end
 end

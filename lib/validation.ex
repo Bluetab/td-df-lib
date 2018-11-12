@@ -51,6 +51,16 @@ defmodule TdDfLib.Validation do
     end
   end
 
+  # Filters schema for non applicable dependant field
+  defp add_content_validation(changeset, %{"depends" =>
+      %{ "on" => depend_on, "to_be" => depend_to_be }} = content_item) do
+    case Map.get(changeset.data, depend_on) do
+      ^depend_to_be ->
+        add_content_validation(changeset, Map.drop(content_item, ["depends"]))
+      _ -> changeset
+    end
+  end
+
   defp add_content_validation(changeset, %{} = content_item) do
     changeset
     |> add_require_validation(content_item)
