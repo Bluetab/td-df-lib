@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.10.0] 2018-12-19
+
+### Changed
+
+- Update to td-perms 2.10.0
+
 ## [2.8.0] 2018-11-15
 
 ### Changed
