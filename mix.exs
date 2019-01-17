@@ -24,7 +24,7 @@ defmodule TdDfLib.MixProject do
       {:phoenix_ecto, "~> 3.2"},
       {:poison, "~> 2.2.0"},
       {:credo, "~> 0.9.3", only: [:dev, :test], runtime: false},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.10.0"},
+      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.11.2"},
     ]
   end
 end
