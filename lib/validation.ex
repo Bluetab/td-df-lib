@@ -24,9 +24,10 @@ defmodule TdDfLib.Validation do
   def build_changeset(content, content_schema) do
     changeset_fields = get_changeset_fields(content_schema)
     changeset = {content, changeset_fields}
+
     changeset
-      |> Changeset.cast(content, Map.keys(changeset_fields))
-      |> add_content_validation(content_schema)
+    |> Changeset.cast(content, Map.keys(changeset_fields))
+    |> add_content_validation(content_schema)
   end
 
   defp get_changeset_fields(content_schema) do
@@ -52,12 +53,16 @@ defmodule TdDfLib.Validation do
   end
 
   # Filters schema for non applicable dependant field
-  defp add_content_validation(changeset, %{"depends" =>
-      %{ "on" => depend_on, "to_be" => depend_to_be }} = content_item) do
+  defp add_content_validation(
+         changeset,
+         %{"depends" => %{"on" => depend_on, "to_be" => depend_to_be}} = content_item
+       ) do
     case Map.get(changeset.data, depend_on) do
       ^depend_to_be ->
         add_content_validation(changeset, Map.drop(content_item, ["depends"]))
-      _ -> changeset
+
+      _ ->
+        changeset
     end
   end
 
@@ -88,12 +93,15 @@ defmodule TdDfLib.Validation do
 
   defp add_max_length_validation(changeset, %{}), do: changeset
 
-  defp add_inclusion_validation(changeset,
-    %{"type" => "list", "meta" => %{"role" => _rolename}}), do: changeset
+  defp add_inclusion_validation(
+         changeset,
+         %{"type" => "list", "meta" => %{"role" => _rolename}}
+       ),
+       do: changeset
+
   defp add_inclusion_validation(changeset, %{"name" => name, "type" => "list", "values" => values}) do
     Changeset.validate_inclusion(changeset, String.to_atom(name), values)
   end
 
   defp add_inclusion_validation(changeset, %{}), do: changeset
-
 end
