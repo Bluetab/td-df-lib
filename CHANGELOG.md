@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.0] 2019-01-25
+
+### Changed
+
+- Changed validations to new content format
+
 ## [2.11.0] 2019-01-17
 
 ### Changed

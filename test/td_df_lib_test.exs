@@ -22,118 +22,111 @@ defmodule TdDfLibTest do
     assert changeset.valid?
   end
 
-  test "empty content on required field return invalid changeset" do
-    @df_cache.put_template(%{
-      id: 0,
-      label: "label",
-      name: "test_name",
-      content: [
-        %{
-          "name" => "field",
-          "type" => "string",
-          "required" => true
-        }
-      ]
-    })
-
-    changeset = Validation.get_content_changeset(%{}, "test_name")
-    refute changeset.valid?
-  end
-
   # Test field value type
-  def get_changeset_for(field_type, field_value) do
+  def get_changeset_for(field_type, field_value, cardinality) do
     @df_cache.put_template(%{
-      id: 0,
-      label: "label",
-      name: "test_name",
-      content: [%{"name" => "field", "type" => field_type}]
+        id: 0, label: "label", name: "test_name",
+        content: [%{
+          "name" => "field",
+          "type" => field_type,
+          "cardinality" => cardinality
+        }]
     })
-
     content = %{"field" => field_value}
     Validation.get_content_changeset(content, "test_name")
   end
 
+  test "valid type string cardinality 1" do
+    changeset = get_changeset_for("string", "string_value", "1")
+    assert changeset.valid?
+  end
+
+  test "valid type string cardinality ?" do
+    changeset = get_changeset_for("string", "string_value", "?")
+    assert changeset.valid?
+  end
+
+  test "invalid type string cardinality 1" do
+    changeset = get_changeset_for("string", ["string_value"], "1")
+    refute changeset.valid?
+  end
+
+  test "invalid type string cardinality ?" do
+    changeset = get_changeset_for("string", ["string_value"], "?")
+    refute changeset.valid?
+  end
+
+  test "valid type string cardinality +" do
+    changeset = get_changeset_for("string", ["string_value"], "+")
+    assert changeset.valid?
+  end
+
+  test "valid type string cardinality *" do
+    changeset = get_changeset_for("string", ["string_value"], "*")
+    assert changeset.valid?
+  end
+
+  test "invalid type string cardinality +" do
+    changeset = get_changeset_for("string", "string_value", "+")
+    refute changeset.valid?
+  end
+
+  test "invalid type string cardinality *" do
+    changeset = get_changeset_for("string", "string_value", "*")
+    refute changeset.valid?
+  end
+
+  test "valid type url" do
+    changeset = get_changeset_for("url", %{}, "?")
+    assert changeset.valid?
+  end
+
+  test "invalid type url" do
+    changeset = get_changeset_for("url", "string_value", "?")
+    refute changeset.valid?
+  end
+
+  test "invalid required type string cardinality 1" do
+    changeset = get_changeset_for("string", "", "1")
+    refute changeset.valid?
+    changeset = get_changeset_for("string", nil, "1")
+    refute changeset.valid?
+  end
+
+  test "valid not required type string cardinality ?" do
+    changeset = get_changeset_for("string", "", "?")
+    assert changeset.valid?
+    changeset = get_changeset_for("string", nil, "?")
+    assert changeset.valid?
+  end
+
+  test "invalid required type string cardinality +" do
+    changeset = get_changeset_for("string", [], "+")
+    refute changeset.valid?
+    changeset = get_changeset_for("string", nil, "+")
+    refute changeset.valid?
+  end
+
+  test "valid not required type string cardinality *" do
+    changeset = get_changeset_for("string", [], "*")
+    assert changeset.valid?
+    changeset = get_changeset_for("string", nil, "*")
+    assert changeset.valid?
+  end
+
+  test "invalid content for string cardinality *" do
+    changeset = get_changeset_for("string", ["valid", 123], "*")
+    refute changeset.valid?
+  end
+
   # @string -> :string
   test "string field is valid with string value" do
-    changeset = get_changeset_for("string", "string")
+    changeset = get_changeset_for("string", "string", "1")
     assert changeset.valid?
   end
-
   test "string field is invalid with integer value" do
-    changeset = get_changeset_for("string", 123)
+    changeset = get_changeset_for("string", 123, "1")
     refute changeset.valid?
-  end
-
-  # @list -> :string
-  test "list field is valid with string value" do
-    changeset = get_changeset_for("list", "string")
-    assert changeset.valid?
-  end
-
-  test "list field is invalid with integer value" do
-    changeset = get_changeset_for("list", 123)
-    refute changeset.valid?
-  end
-
-  # @variable_list -> {:array, :string}
-  test "variable_list field is valid with string array value" do
-    changeset = get_changeset_for("variable_list", ["string", "array"])
-    assert changeset.valid?
-  end
-
-  test "variable_list field is invalid with integer array value" do
-    changeset = get_changeset_for("variable_list", [123, 456, "string"])
-    refute changeset.valid?
-  end
-
-  test "variable_list field is invalid with integer value" do
-    changeset = get_changeset_for("variable_list", 123)
-    refute changeset.valid?
-  end
-
-  # @variable_map_list -> {:array, :map}
-  test "variable_map_list field is valid with map array value" do
-    changeset = get_changeset_for("variable_map_list", [%{}, %{}])
-    assert changeset.valid?
-  end
-
-  test "livariable_map_listst field is invalid with integer array value" do
-    changeset = get_changeset_for("variable_map_list", [123, 456])
-    refute changeset.valid?
-  end
-
-  test "livariable_map_listst field is invalid with integer value" do
-    changeset = get_changeset_for("variable_map_list", 123)
-    refute changeset.valid?
-  end
-
-  # @map_list -> :map
-  test "map_list field is valid with map value" do
-    changeset = get_changeset_for("map_list", %{})
-    assert changeset.valid?
-  end
-
-  test "map_list field is invalid with string value" do
-    changeset = get_changeset_for("map_list", "string")
-    refute changeset.valid?
-  end
-
-  test "non empty content on required field returns valid changeset" do
-    @df_cache.put_template(%{
-      id: 0,
-      label: "label",
-      name: "test_name",
-      content: [
-        %{
-          "name" => "field",
-          "type" => "string",
-          "required" => true
-        }
-      ]
-    })
-
-    changeset = Validation.get_content_changeset(%{"field" => "value"}, "test_name")
-    assert changeset.valid?
   end
 
   test "content with hidden required field returns valid changeset" do
@@ -144,17 +137,16 @@ defmodule TdDfLibTest do
       content: [
         %{
           "name" => "radio_list",
-          "type" => "list",
-          "required" => true,
+          "type" => "string",
+          "cardinality" => "1",
           "values" => ["Yes", "No"]
         },
         %{
           "name" => "dependant_text",
           "type" => "string",
-          "required" => true,
+          "cardinality" => "1",
           "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
-        }
-      ]
+        }]
     })
 
     changeset = Validation.get_content_changeset(%{"radio_list" => "No"}, "test_name")
@@ -169,17 +161,16 @@ defmodule TdDfLibTest do
       content: [
         %{
           "name" => "radio_list",
-          "type" => "list",
-          "required" => true,
+          "type" => "string",
+          "cardinality" => "1",
           "values" => ["Yes", "No"]
         },
         %{
           "name" => "dependant_text",
           "type" => "string",
-          "required" => true,
+          "cardinality" => "1",
           "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
-        }
-      ]
+        }]
     })
 
     changeset = Validation.get_content_changeset(%{"radio_list" => "Yes"}, "test_name")
@@ -194,17 +185,16 @@ defmodule TdDfLibTest do
       content: [
         %{
           "name" => "radio_list",
-          "type" => "list",
-          "required" => true,
+          "type" => "string",
+          "cardinality" => "1",
           "values" => ["Yes", "No"]
         },
         %{
           "name" => "dependant_text",
           "type" => "string",
-          "required" => true,
+          "cardinality" => "1",
           "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
-        }
-      ]
+        }]
     })
 
     content = %{"radio_list" => "Yes", "dependant_text" => "value"}
