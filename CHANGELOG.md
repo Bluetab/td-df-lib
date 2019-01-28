@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.1] 2019-01-28
+
+### Changed
+
+- [TD-1390] Bump td_perms version to 2.12.0
+
 ## [2.12.0] 2019-01-25
 
 ### Changed
