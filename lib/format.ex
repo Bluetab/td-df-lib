@@ -20,12 +20,18 @@ defmodule TdDfLib.Format do
     Map.put_new(content, name, default)
   end
 
-  def set_default_value(content, %{"name" => name, "cardinality" => "+"}) do
-    Map.put_new(content, name, "")
+  def set_default_value(content, %{"name" => name, "cardinality" => "*", "values" => values})
+      when not is_nil(values) do
+    Map.put_new(content, name, [""])
   end
 
-  def set_default_value(content, %{"name" => name, "cardinality" => "*"}) do
+  def set_default_value(content, %{"name" => name, "cardinality" => "+", "values" => values})
+      when not is_nil(values) do
     Map.put_new(content, name, [""])
+  end
+
+  def set_default_value(content, %{"name" => name, "values" => values}) when not is_nil(values) do
+    Map.put_new(content, name, "")
   end
 
   def set_default_value(content, %{}), do: content

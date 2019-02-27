@@ -105,6 +105,12 @@ defmodule TdDfLibTest do
     refute changeset.valid?
     changeset = get_changeset_for("string", nil, "+")
     refute changeset.valid?
+    changeset = get_changeset_for("string", [nil], "+")
+    refute changeset.valid?
+    changeset = get_changeset_for("string", [""], "+")
+    refute changeset.valid?
+    changeset = get_changeset_for("string", [[]], "+")
+    refute changeset.valid?
   end
 
   test "valid not required type string cardinality *" do
