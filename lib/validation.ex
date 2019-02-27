@@ -78,12 +78,22 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "+"}) do
+    field = String.to_atom(name)
     changeset
-    |> Changeset.validate_required(String.to_atom(name))
-    |> Changeset.validate_length(String.to_atom(name), min: 1)
+    |> Changeset.validate_required(field)
+    |> Changeset.validate_length(field, min: 1)
+    |> Changeset.validate_change(field, &validate_no_empty_items/2)
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
+
+  defp validate_no_empty_items(field, [_h|_t] = values) do
+    case Enum.any?([nil, "", []], &(Enum.member?(values, &1))) do
+      true -> Keyword.new([{field, "should not contain empty values"}])
+      _ -> []
+    end
+  end
+  defp validate_no_empty_items(_, _), do: []
 
   defp add_max_length_validation(changeset, %{"name" => name, "max_size" => max_size}) do
     Changeset.validate_length(changeset, String.to_atom(name), max: max_size)

@@ -16,15 +16,21 @@ defmodule TdDfLib.FormatTest do
     assert Format.set_default_value(content, field) == %{"foo" => "baz"}
   end
 
+  test "set_default_value/2 uses empty default for values fields" do
+    content = %{}
+    field = %{"name" => "foo", "values" => []}
+    assert Format.set_default_value(content, field) == %{"foo" => ""}
+  end
+
   test "set_default_value/2 uses empty string as default if field cardinality is '+'" do
     content = %{}
-    field = %{"name" => "foo", "cardinality" => "+"}
-    assert Format.set_default_value(content, field) == %{"foo" => ""}
+    field = %{"name" => "foo", "cardinality" => "+", "values" => []}
+    assert Format.set_default_value(content, field) == %{"foo" => [""]}
   end
 
   test "set_default_value/2 uses list with empty string as default if field cardinality is '*'" do
     content = %{}
-    field = %{"name" => "foo", "cardinality" => "*"}
+    field = %{"name" => "foo", "cardinality" => "*", "values" => []}
     assert Format.set_default_value(content, field) == %{"foo" => [""]}
   end
 
@@ -32,13 +38,13 @@ defmodule TdDfLib.FormatTest do
     content = %{"xyzzy" => "spqr"}
     fields = [
       %{"name" => "foo", "default" => "foo"},
-      %{"name" => "bar", "cardinality" => "+"},
-      %{"name" => "baz", "cardinality" => "*"},
+      %{"name" => "bar", "cardinality" => "+", "values" => []},
+      %{"name" => "baz", "cardinality" => "*", "values" => []},
       %{"name" => "xyzzy", "default" => "xyzzy"},
     ]
     assert Format.set_default_values(content, fields) == %{
       "foo" => "foo",
-      "bar" => "",
+      "bar" => [""],
       "baz" => [""],
       "xyzzy" => "spqr"
     }
@@ -48,12 +54,12 @@ defmodule TdDfLib.FormatTest do
     content = %{"xyzzy" => "spqr"}
     fields = [
       %{"name" => "foo", "default" => "foo"},
-      %{"name" => "bar", "cardinality" => "+"},
-      %{"name" => "baz", "cardinality" => "*"}
+      %{"name" => "bar", "cardinality" => "+", "values" => []},
+      %{"name" => "baz", "cardinality" => "*", "values" => []}
     ]
     assert Format.apply_template(content, fields) == %{
       "foo" => "foo",
-      "bar" => "",
+      "bar" => [""],
       "baz" => [""]
     }
   end
