@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.14.1] 2019-02-27
+
+### Added
+
+- [TD-1085] Support for applying template defaults to content
+
 ## [2.14.0] 2019-02-21
 
 ### Changed
