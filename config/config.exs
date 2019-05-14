@@ -8,4 +8,4 @@ config :td_perms, permissions: [
 ]
 config :td_df_lib, df_cache: TdPerms.DynamicFormCache
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

@@ -95,21 +95,18 @@ defmodule TdDfLib.Validation do
   end
   defp validate_no_empty_items(_, _), do: []
 
-  defp add_max_length_validation(changeset, %{"name" => name, "max_size" => max_size}) do
-    Changeset.validate_length(changeset, String.to_atom(name), max: max_size)
-  end
+  # defp add_max_length_validation(changeset, %{"name" => name, "max_size" => max_size}) do
+  #   Changeset.validate_length(changeset, String.to_atom(name), max: max_size)
+  # end
+  # defp add_max_length_validation(changeset, %{}), do: changeset
 
-  defp add_max_length_validation(changeset, %{}), do: changeset
-
-  defp add_inclusion_validation(
-         changeset,
-         %{"type" => "list", "meta" => %{"role" => _rolename}}
-       ),
-       do: changeset
-
-  defp add_inclusion_validation(changeset, %{"name" => name, "type" => "list", "values" => values}) do
-    Changeset.validate_inclusion(changeset, String.to_atom(name), values)
-  end
-
-  defp add_inclusion_validation(changeset, %{}), do: changeset
+  # defp add_inclusion_validation(
+  #        changeset,
+  #        %{"type" => "list", "meta" => %{"role" => _rolename}}
+  #      ),
+  #      do: changeset
+  # defp add_inclusion_validation(changeset, %{"name" => name, "type" => "list", "values" => values}) do
+  #   Changeset.validate_inclusion(changeset, String.to_atom(name), values)
+  # end
+  # defp add_inclusion_validation(changeset, %{}), do: changeset
 end

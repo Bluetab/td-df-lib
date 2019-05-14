@@ -15,6 +15,7 @@ defmodule TdDfLibTest do
       id: 0,
       label: "label",
       name: "test_name",
+      scope: "test",
       content: []
     })
 
@@ -26,6 +27,7 @@ defmodule TdDfLibTest do
   def get_changeset_for(field_type, field_value, cardinality) do
     @df_cache.put_template(%{
         id: 0, label: "label", name: "test_name",
+        scope: "test",
         content: [%{
           "name" => "field",
           "type" => field_type,
@@ -140,6 +142,7 @@ defmodule TdDfLibTest do
       id: 0,
       label: "label",
       name: "test_name",
+      scope: "test",
       content: [
         %{
           "name" => "radio_list",
@@ -164,6 +167,7 @@ defmodule TdDfLibTest do
       id: 0,
       label: "label",
       name: "test_name",
+      scope: "test",
       content: [
         %{
           "name" => "radio_list",
@@ -188,6 +192,7 @@ defmodule TdDfLibTest do
       id: 0,
       label: "label",
       name: "test_name",
+      scope: "test",
       content: [
         %{
           "name" => "radio_list",
