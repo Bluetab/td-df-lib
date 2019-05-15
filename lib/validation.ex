@@ -13,7 +13,7 @@ defmodule TdDfLib.Validation do
   }
 
   def build_changeset(content, content_schema) do
-    changeset_fields = get_changeset_fields(content_schema)
+    changeset_fields = get_changeset_fields(content_schema) |> IO.inspect
 
     {content, changeset_fields}
     |> Changeset.cast(content, Map.keys(changeset_fields))
@@ -23,7 +23,7 @@ defmodule TdDfLib.Validation do
   defp get_changeset_fields(content_schema) do
     item_mapping = fn item ->
       name = item |> Map.get("name")
-      type = Map.get(@types, Map.get(item, "type"))
+      type = Map.get(@types, Map.get(item, "type"), :string)
       cardinality = item |> Map.get("cardinality")
       {String.to_atom(name), get_field_type(type, cardinality)}
     end

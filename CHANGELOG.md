@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.19.2] 2019-05-15
+## [2.19.3] 2019-05-15
 
 ### Fixed
 
@@ -10,6 +10,7 @@
 
 - Decouple TdDfLib.Validation from cache
 - Dependencies: phoenix_ecto 4.0, credo 1.0, td_perms 2.19.1
+- Use :string as default field type
 
 ## [2.19.0] 2019-05-08
 
