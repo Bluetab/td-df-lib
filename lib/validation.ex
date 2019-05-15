@@ -24,9 +24,10 @@ defmodule TdDfLib.Validation do
 
   def build_changeset(content, content_schema) do
     changeset_fields = get_changeset_fields(content_schema)
+
     {content, changeset_fields}
-      |> Changeset.cast(content, Map.keys(changeset_fields))
-      |> add_content_validation(content_schema)
+    |> Changeset.cast(content, Map.keys(changeset_fields))
+    |> add_content_validation(content_schema)
   end
 
   defp get_changeset_fields(content_schema) do
@@ -47,8 +48,10 @@ defmodule TdDfLib.Validation do
   defp get_field_type(type, _), do: type
 
   # Filters schema for non applicable dependant field
-  defp add_content_validation(changeset, %{"depends" =>
-      %{"on" => depend_on, "to_be" => depend_to_be}} = content_item) do
+  defp add_content_validation(
+         changeset,
+         %{"depends" => %{"on" => depend_on, "to_be" => depend_to_be}} = content_item
+       ) do
     case Map.get(changeset.data, depend_on) do
       ^depend_to_be ->
         add_content_validation(changeset, Map.drop(content_item, ["depends"]))
@@ -61,6 +64,7 @@ defmodule TdDfLib.Validation do
   defp add_content_validation(changeset, %{} = content_item) do
     changeset
     |> add_require_validation(content_item)
+
     # |> add_max_length_validation(content_item)
     # |> add_inclusion_validation(content_item)
   end
@@ -79,6 +83,7 @@ defmodule TdDfLib.Validation do
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "+"}) do
     field = String.to_atom(name)
+
     changeset
     |> Changeset.validate_required(field)
     |> Changeset.validate_length(field, min: 1)
@@ -87,26 +92,12 @@ defmodule TdDfLib.Validation do
 
   defp add_require_validation(changeset, %{}), do: changeset
 
-  defp validate_no_empty_items(field, [_h|_t] = values) do
-    case Enum.any?([nil, "", []], &(Enum.member?(values, &1))) do
+  defp validate_no_empty_items(field, [_h | _t] = values) do
+    case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
       true -> Keyword.new([{field, "should not contain empty values"}])
       _ -> []
     end
   end
+
   defp validate_no_empty_items(_, _), do: []
-
-  # defp add_max_length_validation(changeset, %{"name" => name, "max_size" => max_size}) do
-  #   Changeset.validate_length(changeset, String.to_atom(name), max: max_size)
-  # end
-  # defp add_max_length_validation(changeset, %{}), do: changeset
-
-  # defp add_inclusion_validation(
-  #        changeset,
-  #        %{"type" => "list", "meta" => %{"role" => _rolename}}
-  #      ),
-  #      do: changeset
-  # defp add_inclusion_validation(changeset, %{"name" => name, "type" => "list", "values" => values}) do
-  #   Changeset.validate_inclusion(changeset, String.to_atom(name), values)
-  # end
-  # defp add_inclusion_validation(changeset, %{}), do: changeset
 end
