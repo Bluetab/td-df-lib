@@ -4,7 +4,6 @@ defmodule TdDfLib.Validation do
   """
 
   alias Ecto.Changeset
-  @df_cache Application.get_env(:td_df_lib, :df_cache)
 
   @types %{
     "string" => :string,
@@ -12,15 +11,6 @@ defmodule TdDfLib.Validation do
     "url" => :map,
     "user" => :string
   }
-
-  def get_content_changeset(content, template_name) do
-    schema = get_template_content(template_name)
-    build_changeset(content, schema)
-  end
-
-  defp get_template_content(template_name) do
-    @df_cache.get_template_content(template_name)
-  end
 
   def build_changeset(content, content_schema) do
     changeset_fields = get_changeset_fields(content_schema)

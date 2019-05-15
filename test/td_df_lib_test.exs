@@ -19,23 +19,30 @@ defmodule TdDfLibTest do
       content: []
     })
 
-    changeset = Validation.get_content_changeset(%{}, "test_name")
+    schema = @df_cache.get_template_content("test_name")
+    changeset = Validation.build_changeset(%{}, schema)
     assert changeset.valid?
   end
 
   # Test field value type
   def get_changeset_for(field_type, field_value, cardinality) do
     @df_cache.put_template(%{
-        id: 0, label: "label", name: "test_name",
-        scope: "test",
-        content: [%{
+      id: 0,
+      label: "label",
+      name: "test_name",
+      scope: "test",
+      content: [
+        %{
           "name" => "field",
           "type" => field_type,
           "cardinality" => cardinality
-        }]
+        }
+      ]
     })
+
     content = %{"field" => field_value}
-    Validation.get_content_changeset(content, "test_name")
+    schema = @df_cache.get_template_content("test_name")
+    Validation.build_changeset(content, schema)
   end
 
   test "valid type string cardinality 1" do
@@ -132,6 +139,7 @@ defmodule TdDfLibTest do
     changeset = get_changeset_for("string", "string", "1")
     assert changeset.valid?
   end
+
   test "string field is invalid with integer value" do
     changeset = get_changeset_for("string", 123, "1")
     refute changeset.valid?
@@ -155,10 +163,12 @@ defmodule TdDfLibTest do
           "type" => "string",
           "cardinality" => "1",
           "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
-        }]
+        }
+      ]
     })
 
-    changeset = Validation.get_content_changeset(%{"radio_list" => "No"}, "test_name")
+    schema = @df_cache.get_template_content("test_name")
+    changeset = Validation.build_changeset(%{"radio_list" => "No"}, schema)
     assert changeset.valid?
   end
 
@@ -180,10 +190,12 @@ defmodule TdDfLibTest do
           "type" => "string",
           "cardinality" => "1",
           "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
-        }]
+        }
+      ]
     })
 
-    changeset = Validation.get_content_changeset(%{"radio_list" => "Yes"}, "test_name")
+    schema = @df_cache.get_template_content("test_name")
+    changeset = Validation.build_changeset(%{"radio_list" => "Yes"}, schema)
     refute changeset.valid?
   end
 
@@ -205,11 +217,13 @@ defmodule TdDfLibTest do
           "type" => "string",
           "cardinality" => "1",
           "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
-        }]
+        }
+      ]
     })
 
     content = %{"radio_list" => "Yes", "dependant_text" => "value"}
-    changeset = Validation.get_content_changeset(content, "test_name")
+    schema = @df_cache.get_template_content("test_name")
+    changeset = Validation.build_changeset(content, schema)
     assert changeset.valid?
   end
 end
