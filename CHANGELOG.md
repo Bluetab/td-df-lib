@@ -1,10 +1,14 @@
 # Changelog
 
-## [2.19.1] 2019-05-15
+## [2.19.2] 2019-05-15
 
 ### Fixed
 
 - [TD-1759] Clean library warning and fix tests
+
+### Changed
+
+- Decouple TdDfLib.Validation from cache
 - Dependencies: phoenix_ecto 4.0, credo 1.0, td_perms 2.19.1
 
 ## [2.19.0] 2019-05-08
@@ -85,4 +89,4 @@
 
 - Add map_list field type to validations
 - Add field type validation
-- Use MockDfCache for testing 
+- Use MockDfCache for testing
