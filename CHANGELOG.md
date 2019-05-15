@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-1759] Clean library warning and fix tests
+
 ## [2.19.0] 2019-05-08
 
 ### Changed
