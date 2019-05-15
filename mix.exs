@@ -21,10 +21,9 @@ defmodule TdDfLib.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_ecto, "~> 3.2"},
-      {:poison, "~> 2.2.0"},
-      {:credo, "~> 0.9.3", only: [:dev, :test], runtime: false},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.19.0"}
+      {:phoenix_ecto, "~> 4.0"},
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.19.1"}
     ]
   end
 end

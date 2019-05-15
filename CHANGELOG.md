@@ -1,10 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [2.19.1] 2019-05-15
 
 ### Fixed
 
 - [TD-1759] Clean library warning and fix tests
+- Dependencies: phoenix_ecto 4.0, credo 1.0, td_perms 2.19.1
 
 ## [2.19.0] 2019-05-08
 
