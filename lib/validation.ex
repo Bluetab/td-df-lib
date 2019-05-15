@@ -13,7 +13,7 @@ defmodule TdDfLib.Validation do
   }
 
   def build_changeset(content, content_schema) do
-    changeset_fields = get_changeset_fields(content_schema) |> IO.inspect
+    changeset_fields = get_changeset_fields(content_schema)
 
     {content, changeset_fields}
     |> Changeset.cast(content, Map.keys(changeset_fields))
