@@ -4,7 +4,7 @@ defmodule TdDfLib.MixProject do
   def project do
     [
       app: :td_df_lib,
-      version: "2.21.1",
+      version: "2.21.4",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -23,7 +23,7 @@ defmodule TdDfLib.MixProject do
     [
       {:phoenix_ecto, "~> 4.0"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.21.1"}
+      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.21.4"}
     ]
   end
 end

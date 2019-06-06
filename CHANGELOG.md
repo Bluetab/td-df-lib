@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.21.4] 2019-06-06
+
+### Changed
+
+- Bump td_perms version to 2.21.4
+
 ## [2.21.1] 2019-05-30
 
 ### Changed
