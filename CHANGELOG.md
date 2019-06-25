@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Use TdCache.TemplateCache instead of TdPerms.DynamicFormCache
+
 ## [2.21.4] 2019-06-06
 
 ### Changed
