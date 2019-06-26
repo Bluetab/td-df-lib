@@ -25,7 +25,7 @@ defmodule TdDfLib.MixProject do
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:td_cache,
        git: "https://github.com/Bluetab/td-cache.git",
-       ref: "b42993ea12cbe9dbdc49635e0c286166b9e4000c"}
+       ref: "d471249e484bf1b469a0987f39108f30ad734cdf"}
     ]
   end
 end
