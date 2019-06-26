@@ -4,7 +4,7 @@ defmodule TdDfLib.MixProject do
   def project do
     [
       app: :td_df_lib,
-      version: "2.21.4",
+      version: "3.0.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -14,16 +14,23 @@ defmodule TdDfLib.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: extra_applications(Mix.env())
     ]
   end
+
+  defp extra_applications(:test) do
+    [:logger, :td_cache]
+  end
+
+  defp extra_applications(_), do: [:logger]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:phoenix_ecto, "~> 4.0"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
-      {:td_perms, git: "https://github.com/Bluetab/td-perms.git", tag: "2.21.4"}
+      {:td_cache,
+       git: "https://github.com/Bluetab/td-cache.git", tag: "3.0.0", only: [:test], runtime: false}
     ]
   end
 end
