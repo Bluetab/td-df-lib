@@ -14,9 +14,15 @@ defmodule TdDfLib.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :td_cache]
+      extra_applications: extra_applications(Mix.env())
     ]
   end
+
+  defp extra_applications(:test) do
+    [:logger, :td_cache]
+  end
+
+  defp extra_applications(_), do: [:logger]
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
@@ -24,8 +30,7 @@ defmodule TdDfLib.MixProject do
       {:phoenix_ecto, "~> 4.0"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:td_cache,
-       git: "https://github.com/Bluetab/td-cache.git",
-       ref: "d471249e484bf1b469a0987f39108f30ad734cdf"}
+       git: "https://github.com/Bluetab/td-cache.git", tag: "3.0.0", only: [:test], runtime: false}
     ]
   end
 end
