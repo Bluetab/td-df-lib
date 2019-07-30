@@ -4,6 +4,12 @@
 
 ### Changed
 
+- [TD-1560] Add validation to new `enriched_text` type 
+
+## [3.0.1] 2019-06-27
+
+### Changed
+
 - Use TdCache.TemplateCache instead of TdPerms.DynamicFormCache in tests
 
 ## [2.21.4] 2019-06-06

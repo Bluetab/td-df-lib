@@ -9,7 +9,8 @@ defmodule TdDfLib.Validation do
     "string" => :string,
     "boolean" => :boolean,
     "url" => :map,
-    "user" => :string
+    "user" => :string,
+    "enriched_text" => :map
   }
 
   def build_changeset(content, content_schema) do

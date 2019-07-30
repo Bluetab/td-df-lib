@@ -94,6 +94,21 @@ defmodule TdDfLibTest do
     refute changeset.valid?
   end
 
+  test "valid type enriched_text", %{template: template} do
+    changeset = get_changeset_for("enriched_text", %{}, "?", template)
+    assert changeset.valid?
+  end
+
+  test "invalid string type enriched_text", %{template: template} do
+    changeset = get_changeset_for("enriched_text", "my_string", "1", template)
+    refute changeset.valid?
+  end
+
+  test "invalid array type enriched_text", %{template: template} do
+    changeset = get_changeset_for("enriched_text", ["my_string"], "1", template)
+    refute changeset.valid?
+  end
+
   test "invalid required type string cardinality 1", %{template: template} do
     changeset = get_changeset_for("string", "", "1", template)
     refute changeset.valid?
