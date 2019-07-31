@@ -69,7 +69,12 @@ defmodule TdDfLib.Validation do
   defp add_content_validation(changeset, []), do: changeset
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "1"}) do
-    Changeset.validate_required(changeset, String.to_atom(name))
+    IO.inspect ["content", changeset, name]
+    field = String.to_atom(name)
+    
+    changeset
+    |> Changeset.validate_required(field)
+    |> Changeset.validate_change(field, &validate_no_empty_items/2)
   end
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "+"}) do
@@ -86,6 +91,13 @@ defmodule TdDfLib.Validation do
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
       true -> Keyword.new([{field, "should not contain empty values"}])
+      _ -> []
+    end
+  end
+
+  defp validate_no_empty_items(field, %{} = values) do
+    case values == %{} do
+      true -> Keyword.new([{field, "map should not be empty"}])
       _ -> []
     end
   end
