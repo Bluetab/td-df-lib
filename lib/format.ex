@@ -7,6 +7,7 @@ defmodule TdDfLib.Format do
   def search_values(%{} = content, fields) do
     field_names =
       fields
+      |> Enum.filter(&Map.has_key?(&1, "type"))
       |> Enum.filter(fn %{"type" => type} -> type == "enriched_text" end)
       |> Enum.map(&Map.get(&1, "name"))
 
