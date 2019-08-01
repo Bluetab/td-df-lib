@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.0] 2019-08-01
+
+### Changed
+
+- [TD-1560] Add validation to new `enriched_text` type 
+
 ## [3.0.1] 2019-06-27
 
 ### Changed

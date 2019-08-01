@@ -2,6 +2,22 @@ defmodule TdDfLib.Format do
   @moduledoc """
   Manages content formatting
   """
+  alias TdDfLib.RichText
+
+  def search_values(%{} = content, fields) do
+    field_names =
+      fields
+      |> Enum.filter(&Map.has_key?(&1, "type"))
+      |> Enum.filter(fn %{"type" => type} -> type == "enriched_text" end)
+      |> Enum.map(&Map.get(&1, "name"))
+
+    search_values =
+      content
+      |> Map.take(field_names)
+      |> set_search_values()
+
+    Map.merge(content, search_values)
+  end
 
   def apply_template(%{} = content, fields) do
     field_names = Enum.map(fields, &Map.get(&1, "name"))
@@ -11,9 +27,22 @@ defmodule TdDfLib.Format do
     |> set_default_values(fields)
   end
 
+  def set_search_values(content) do
+    content
+    |> Enum.reduce(Map.new(), &set_search_value(&1, &2))
+  end
+
   def set_default_values(content, fields) do
     fields
     |> Enum.reduce(content, &set_default_value(&2, &1))
+  end
+
+  defp set_search_value({key, value}, acc) when is_map(value) do
+    Map.put(acc, key, RichText.to_plain_text(value))
+  end
+
+  defp set_search_value({key, value}, acc) do
+    Map.put(acc, key, value)
   end
 
   def set_default_value(content, %{"name" => name, "default" => default}) do
