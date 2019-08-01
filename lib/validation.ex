@@ -69,7 +69,6 @@ defmodule TdDfLib.Validation do
   defp add_content_validation(changeset, []), do: changeset
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "1"}) do
-    IO.inspect ["content", changeset, name]
     field = String.to_atom(name)
     
     changeset
