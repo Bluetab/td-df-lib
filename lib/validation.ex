@@ -70,7 +70,7 @@ defmodule TdDfLib.Validation do
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "1"}) do
     field = String.to_atom(name)
-    
+
     changeset
     |> Changeset.validate_required(field)
     |> Changeset.validate_change(field, &validate_no_empty_items/2)

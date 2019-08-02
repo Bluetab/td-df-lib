@@ -57,11 +57,25 @@ defmodule TdDfLib.FormatTest do
       %{"name" => "bar", "cardinality" => "+", "values" => []},
       %{"name" => "baz", "cardinality" => "*", "values" => []}
     ]
-    assert Format.apply_template(content, fields) == %{
+    assert Format.apply_template(content, %{content: fields}) == %{
       "foo" => "foo",
       "bar" => [""],
       "baz" => [""]
     }
+  end
+
+  test "apply_template/2 returns nil when no template is provided" do
+    content = %{"xyzzy" => "spqr"}
+    assert is_nil(Format.apply_template(content, nil))
+  end
+
+  test "apply_template/2 returns nil when no content is provided" do
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{"name" => "bar", "cardinality" => "+", "values" => []},
+      %{"name" => "baz", "cardinality" => "*", "values" => []}
+    ]
+    assert is_nil(Format.apply_template(nil, fields))
   end
 
 end
