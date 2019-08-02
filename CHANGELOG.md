@@ -1,6 +1,12 @@
 # Changelog
 
-## [3.3.1] 2019-08-05
+## [3.3.2] 2019-08-02
+
+### Fixed
+
+- [TD-1560] Default return value in apply_template
+
+## [3.3.1] 2019-08-02
 
 ### Changed
 

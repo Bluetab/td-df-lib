@@ -70,7 +70,7 @@ defmodule TdDfLib.FormatTest do
 
   test "apply_template/2 returns nil when no template is provided" do
     content = %{"xyzzy" => "spqr"}
-    assert is_nil(Format.apply_template(content, nil))
+    assert Format.apply_template(content, nil) == %{}
   end
 
   test "apply_template/2 returns nil when no content is provided" do
@@ -80,7 +80,7 @@ defmodule TdDfLib.FormatTest do
       %{"name" => "baz", "cardinality" => "*", "values" => []}
     ]
 
-    assert is_nil(Format.apply_template(nil, fields))
+    assert Format.apply_template(nil, fields) == %{}
   end
 
   test "search_values/2 sets default values and removes redundant fields" do
