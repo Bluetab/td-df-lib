@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.1] 2019-08-05
+
+### Changed
+
+- [TD-1560] Entry point to retrieve search_values 
+
 ## [3.3.0] 2019-08-01
 
 ### Changed

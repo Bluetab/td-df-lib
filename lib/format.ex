@@ -4,7 +4,27 @@ defmodule TdDfLib.Format do
   """
   alias TdDfLib.RichText
 
-  def search_values(%{} = content, fields) do
+  def apply_template(nil, _), do: nil
+
+  def apply_template(%{} = content, _) when map_size(content) == 0, do: nil
+
+  def apply_template(_, nil), do: nil
+
+  def apply_template(%{} = content, fields) do
+    default_values(content, fields)
+  end
+
+  def search_values(%{} = content, _) when map_size(content) == 0, do: nil
+
+  def search_values(%{} = content, %{content: fields}) do
+    content
+    |> apply_template(fields)
+    |> format_search_values(fields)
+  end
+
+  def search_values(_, _), do: nil
+
+  def format_search_values(content, fields) do
     field_names =
       fields
       |> Enum.filter(&Map.has_key?(&1, "type"))
@@ -19,7 +39,7 @@ defmodule TdDfLib.Format do
     Map.merge(content, search_values)
   end
 
-  def apply_template(%{} = content, fields) do
+  def default_values(content, fields) do
     field_names = Enum.map(fields, &Map.get(&1, "name"))
 
     content
@@ -27,14 +47,14 @@ defmodule TdDfLib.Format do
     |> set_default_values(fields)
   end
 
-  def set_search_values(content) do
-    content
-    |> Enum.reduce(Map.new(), &set_search_value(&1, &2))
-  end
-
   def set_default_values(content, fields) do
     fields
     |> Enum.reduce(content, &set_default_value(&2, &1))
+  end
+
+  def set_search_values(content) do
+    content
+    |> Enum.reduce(Map.new(), &set_search_value(&1, &2))
   end
 
   defp set_search_value({key, value}, acc) when is_map(value) do

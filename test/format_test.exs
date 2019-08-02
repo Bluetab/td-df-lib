@@ -36,32 +36,112 @@ defmodule TdDfLib.FormatTest do
 
   test "set_default_values/2 sets all default values" do
     content = %{"xyzzy" => "spqr"}
+
     fields = [
       %{"name" => "foo", "default" => "foo"},
       %{"name" => "bar", "cardinality" => "+", "values" => []},
       %{"name" => "baz", "cardinality" => "*", "values" => []},
-      %{"name" => "xyzzy", "default" => "xyzzy"},
+      %{"name" => "xyzzy", "default" => "xyzzy"}
     ]
+
     assert Format.set_default_values(content, fields) == %{
-      "foo" => "foo",
-      "bar" => [""],
-      "baz" => [""],
-      "xyzzy" => "spqr"
-    }
+             "foo" => "foo",
+             "bar" => [""],
+             "baz" => [""],
+             "xyzzy" => "spqr"
+           }
   end
 
   test "apply_template/2 sets default values and removes redundant fields" do
     content = %{"xyzzy" => "spqr"}
+
     fields = [
       %{"name" => "foo", "default" => "foo"},
       %{"name" => "bar", "cardinality" => "+", "values" => []},
       %{"name" => "baz", "cardinality" => "*", "values" => []}
     ]
+
     assert Format.apply_template(content, fields) == %{
-      "foo" => "foo",
-      "bar" => [""],
-      "baz" => [""]
-    }
+             "foo" => "foo",
+             "bar" => [""],
+             "baz" => [""]
+           }
   end
 
+  test "apply_template/2 returns nil when no template is provided" do
+    content = %{"xyzzy" => "spqr"}
+    assert is_nil(Format.apply_template(content, nil))
+  end
+
+  test "apply_template/2 returns nil when no content is provided" do
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{"name" => "bar", "cardinality" => "+", "values" => []},
+      %{"name" => "baz", "cardinality" => "*", "values" => []}
+    ]
+
+    assert is_nil(Format.apply_template(nil, fields))
+  end
+
+  test "search_values/2 sets default values and removes redundant fields" do
+    content = %{
+      "xyzzy" => "spqr",
+      "bay" => %{
+        "object" => "value",
+        "document" => %{
+          "data" => %{},
+          "nodes" => [
+            %{
+              "data" => %{},
+              "type" => "paragraph",
+              "nodes" => [
+                %{
+                  "text" => "My Text",
+                  "marks" => [
+                    %{
+                      "data" => %{},
+                      "type" => "bold",
+                      "object" => "mark"
+                    }
+                  ],
+                  "object" => "text"
+                }
+              ],
+              "object" => "block"
+            }
+          ],
+          "object" => "document"
+        }
+      }
+    }
+
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{"name" => "bar", "cardinality" => "+", "values" => []},
+      %{"name" => "baz", "cardinality" => "*", "values" => []},
+      %{"name" => "bay", "type" => "enriched_text"}
+    ]
+
+    assert Format.search_values(content, %{content: fields}) == %{
+             "foo" => "foo",
+             "bar" => [""],
+             "baz" => [""],
+             "bay" => "My Text"
+           }
+  end
+
+  test "search_values/2 returns nil when no template is provided" do
+    content = %{"xyzzy" => "spqr"}
+    assert is_nil(Format.search_values(content, nil))
+  end
+
+  test "search_values/2 returns nil when no content is provided" do
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{"name" => "bar", "cardinality" => "+", "values" => []},
+      %{"name" => "baz", "cardinality" => "*", "values" => []}
+    ]
+
+    assert is_nil(Format.search_values(nil, fields))
+  end
 end
