@@ -7,24 +7,24 @@ defmodule TdDfLib.Format do
   def apply_template(nil, _), do: nil
 
   def apply_template(%{} = content, _) when map_size(content) == 0, do: nil
+  
+  def apply_template(_, nil), do: nil
 
-  def apply_template(%{} = content, %{content: fields}) do
-    content
-    |> default_values(fields)
-    |> search_values(fields)
+  def apply_template(%{} = content, fields) do
+    default_values(content, fields)
   end
 
-  def apply_template(_, _), do: nil
+  def search_values(%{} = content, _) when map_size(content) == 0, do: nil
 
-  def default_values(content, fields) do
-    field_names = Enum.map(fields, &Map.get(&1, "name"))
-
+  def search_values(%{} = content, %{content: fields}) do
     content
-      |> Map.take(field_names)
-      |> set_default_values(fields)
+    |> apply_template(fields)
+    |> format_search_values(fields)
   end
 
-  def search_values(content, fields) do
+  def search_values(_, _), do: nil
+
+  def format_search_values(content, fields) do
     field_names =
       fields
       |> Enum.filter(&Map.has_key?(&1, "type"))
@@ -37,6 +37,14 @@ defmodule TdDfLib.Format do
       |> set_search_values()
 
     Map.merge(content, search_values)
+  end
+
+  def default_values(content, fields) do
+    field_names = Enum.map(fields, &Map.get(&1, "name"))
+
+    content
+      |> Map.take(field_names)
+      |> set_default_values(fields)
   end
 
   def set_default_values(content, fields) do
