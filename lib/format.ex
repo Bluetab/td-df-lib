@@ -4,17 +4,13 @@ defmodule TdDfLib.Format do
   """
   alias TdDfLib.RichText
 
-  def apply_template(nil, _), do: nil
+  def apply_template(nil, _), do: %{}
 
-  def apply_template(%{} = content, _) when map_size(content) == 0, do: nil
-
-  def apply_template(_, nil), do: nil
+  def apply_template(_, nil), do: %{}
 
   def apply_template(%{} = content, fields) do
     default_values(content, fields)
   end
-
-  def search_values(%{} = content, _) when map_size(content) == 0, do: nil
 
   def search_values(%{} = content, %{content: fields}) do
     content
