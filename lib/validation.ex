@@ -55,9 +55,7 @@ defmodule TdDfLib.Validation do
   defp add_content_validation(changeset, %{} = content_item) do
     changeset
     |> add_require_validation(content_item)
-
-    # |> add_max_length_validation(content_item)
-    # |> add_inclusion_validation(content_item)
+    |> add_inclusion_validation(content_item)
   end
 
   defp add_content_validation(changeset, [tail | head]) do
@@ -86,6 +84,13 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
+
+  defp add_inclusion_validation(changeset, %{"name" => name, "values" => %{"fixed" => fixed}}) do
+    field = String.to_atom(name)
+    Changeset.validate_subset(changeset, field, fixed)
+  end
+
+  defp add_inclusion_validation(changeset, %{}), do: changeset
 
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
