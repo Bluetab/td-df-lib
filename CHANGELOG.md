@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.5.0] 2019-08-28
+
+### Fixed
+
+- [TD-1428] Validation for fixed values
+
 ## [3.3.2] 2019-08-02
 
 ### Fixed
