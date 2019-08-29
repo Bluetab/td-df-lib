@@ -80,4 +80,55 @@ defmodule TdDfLib.Format do
   end
 
   def set_default_value(content, %{}), do: content
+
+  def format_field(%{"content" => content, "type" => "url"}) do
+    link_value = [
+      %{
+        "url_name" => content,
+        "url_value" => content
+      }
+    ]
+
+    link_value
+  end
+
+  def format_field(%{
+        "type" => "string",
+        "content" => content,
+        "values" => %{"fixed_tuple" => fixed_tuples}
+      }) do
+    fixed_tuple = Enum.find(fixed_tuples, fn %{"value" => value} -> value == content end)
+
+    new_content =
+      case fixed_tuple do
+        nil ->
+          fixed_tuples
+          |> Enum.find(%{"value" => content}, fn %{"text" => text} -> text == content end)
+          |> Map.get("value")
+
+        _fixed_tuple ->
+          content
+      end
+
+    [new_content]
+  end
+
+  def format_field(%{
+        "content" => content,
+        "type" => "string"
+      }) do
+    [content]
+  end
+
+  def format_field(%{
+        "content" => content,
+        "type" => "enriched_text"
+      }) do
+      RichText.to_rich_text(content)
+  end
+
+  def format_field(%{
+        "content" => content
+      }),
+      do: content
 end
