@@ -3,6 +3,7 @@ defmodule TdDfLib.FormatTest do
   doctest TdDfLib.Format
 
   alias TdDfLib.Format
+  alias TdDfLib.RichText
 
   test "set_default_value/2 has no effect if value is present in content" do
     content = %{"foo" => "bar"}
@@ -143,5 +144,39 @@ defmodule TdDfLib.FormatTest do
     ]
 
     assert is_nil(Format.search_values(nil, fields))
+  end
+
+  test "format_field returns url wrapped" do
+    formatted_value = Format.format_field(%{"content" => "https://google.es", "type" => "url"})
+
+    assert formatted_value == [
+             %{
+               "url_name" => "https://google.es",
+               "url_value" => "https://google.es"
+             }
+           ]
+  end
+
+  test "format_field of string with fixed tuple values returns value if text is provided " do
+    fixed_tuples = [%{"value" => "value1", "text" => "description1"}]
+
+    formatted_value =
+      Format.format_field(%{
+        "content" => "description1",
+        "type" => "string",
+        "values" => %{"fixed_tuple" => fixed_tuples}
+      })
+
+    assert formatted_value == ["value1"]
+  end
+
+  test "format_field of enriched_text returns wrapped enriched text" do
+    formatted_value =
+      Format.format_field(%{
+      "content" => "some enriched text",
+      "type" => "enriched_text"
+    })
+
+    assert formatted_value == RichText.to_rich_text("some enriched text")
   end
 end

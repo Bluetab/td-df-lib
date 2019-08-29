@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- [TD-1428] Validation for fixed values
+- [TD-1428] Validation for fixed values, formatting of dynamic form fields
 
 ## [3.3.2] 2019-08-02
 

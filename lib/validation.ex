@@ -87,7 +87,19 @@ defmodule TdDfLib.Validation do
 
   defp add_inclusion_validation(changeset, %{"name" => name, "values" => %{"fixed" => fixed}}) do
     field = String.to_atom(name)
-    Changeset.validate_subset(changeset, field, fixed)
+
+    value =
+      changeset
+      |> Map.get(:data)
+      |> Map.get(name)
+
+    case is_list(value) do
+      true ->
+        Changeset.validate_subset(changeset, field, fixed)
+
+      _ ->
+        Changeset.validate_inclusion(changeset, field, fixed)
+    end
   end
 
   defp add_inclusion_validation(changeset, %{}), do: changeset
