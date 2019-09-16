@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.7.0] 2019-09-16
+
+### Added
+
+- [TD-1625] Add table type
+
 ## [3.5.0] 2019-08-28
 
 ### Fixed
