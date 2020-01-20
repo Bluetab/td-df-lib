@@ -1,6 +1,5 @@
 defmodule TdDfLibTest do
   use ExUnit.Case
-  doctest TdDfLib
 
   alias TdCache.TemplateCache
   alias TdDfLib.Validation
