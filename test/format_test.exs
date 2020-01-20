@@ -116,12 +116,15 @@ defmodule TdDfLib.FormatTest do
       }
     }
 
-    fields = [
-      %{"name" => "foo", "default" => "foo"},
-      %{"name" => "bar", "cardinality" => "+", "values" => []},
-      %{"name" => "baz", "cardinality" => "*", "values" => []},
-      %{"name" => "bay", "type" => "enriched_text"}
-    ]
+    fields = [%{
+      "name" => "group",
+      "fields" => [
+        %{"name" => "foo", "default" => "foo"},
+        %{"name" => "bar", "cardinality" => "+", "values" => []},
+        %{"name" => "baz", "cardinality" => "*", "values" => []},
+        %{"name" => "bay", "type" => "enriched_text"}
+      ]
+    }]
 
     assert Format.search_values(content, %{content: fields}) == %{
              "foo" => "foo",
@@ -178,5 +181,34 @@ defmodule TdDfLib.FormatTest do
     })
 
     assert formatted_value == RichText.to_rich_text("some enriched text")
+  end
+
+  test "flatten_content_fields will list all fields of content" do
+    content = [
+      %{
+        "name" => "group1",
+        "fields" => [
+          %{"name" => "field11", "label" => "label11", "type" => "string"},
+          %{"name" => "field12", "label" => "label12", "cardinality" => "+"},
+        ]
+      },
+      %{
+        "name" => "group2",
+        "fields" => [
+          %{"name" => "field21", "label" => "label21", "widget" => "default"},
+          %{"name" => "field22", "label" => "label22", "values" => %{"fixed" => ["a", "b", "c"]}},
+        ]
+      },
+    ]
+
+    flat_content = Format.flatten_content_fields(content)
+    expected_flat_content = [
+      %{"group" => "group1", "name" => "field11", "label" => "label11", "type" => "string"},
+      %{"group" => "group1", "name" => "field12", "label" => "label12", "cardinality" => "+"},
+      %{"group" => "group2", "name" => "field21", "label" => "label21", "widget" => "default"},
+      %{"group" => "group2", "name" => "field22", "label" => "label22", "values" => %{"fixed" => ["a", "b", "c"]}},
+    ]
+
+    assert flat_content == expected_flat_content
   end
 end

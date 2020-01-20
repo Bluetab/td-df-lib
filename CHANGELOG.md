@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.14.0] 2019-09-20
+
+### Changed
+
+- [TD-2269] Update format to handle new content format of groups
+
 ## [3.7.0] 2019-09-16
 
 ### Added

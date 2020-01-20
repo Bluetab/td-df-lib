@@ -13,12 +13,21 @@ defmodule TdDfLib.Format do
   end
 
   def search_values(%{} = content, %{content: fields}) do
+    fields = flatten_content_fields(fields)
     content
     |> apply_template(fields)
     |> format_search_values(fields)
   end
 
   def search_values(_, _), do: nil
+
+  def flatten_content_fields(content) do
+    content
+      |> Enum.map(fn %{"name" => name, "fields" => fields} ->
+        Enum.map(fields, &(Map.put(&1, "group", name)))
+      end)
+      |> Enum.concat
+  end
 
   def format_search_values(content, fields) do
     field_names =
