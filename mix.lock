@@ -1,5 +1,6 @@
 %{
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], [], "hexpm", "7af5c7e09fe1d40f76c8e4f9dd2be7cebd83909f31fee7cd0e9eadc567da8353"},
+  "con_cache": {:hex, :con_cache, "0.14.0", "863acb90fa08017be3129074993af944cf7a4b6c3ee7c06c5cd0ed6b94fbc223", [:mix], [], "hexpm", "50887a8949377d0b707a3c6653b7610de06074751b52d0f267f52135f391aece"},
   "connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], [], "hexpm"},
   "credo": {:hex, :credo, "1.0.5", "fdea745579f8845315fe6a3b43e2f9f8866839cfbc8562bb72778e9fdaa94214", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "16105fac37c5c4b3f6e1f70ba0784511fec4275cd8bb979386e3c739cf4e6455"},
   "decimal": {:hex, :decimal, "1.7.0", "30d6b52c88541f9a66637359ddf85016df9eb266170d53105f02e4a67e00c5aa", [:mix], [], "hexpm", "771ea78576e5fa505ad58a834f57915c7f5f9df11c87a598a01fdf6065ccfb5d"},
@@ -11,5 +12,5 @@
   "plug_crypto": {:hex, :plug_crypto, "1.0.0", "18e49317d3fa343f24620ed22795ec29d4a5e602d52d1513ccea0b07d8ea7d4d", [:mix], [], "hexpm", "73c1682f0e414cfb5d9b95c8e8cd6ffcfdae699e3b05e1db744e58b7be857759"},
   "poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], [], "hexpm"},
   "redix": {:hex, :redix, "0.8.2", "c25158f905bcf8842e9a11411d65b9257ac70057c4330521d1a4d2a44b4f7ecf", [:mix], [], "hexpm", "da158ef15edfe9ea0d05a7293e8cf29c29da3a094dd52abc2ed85d322637f2a7"},
-  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "0612ac963291ab579dfea8721ff77bd1af1f54d7", [tag: "3.0.5"]},
+  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "f6489bcb3074655b790b8ec9b42770460645b00d", [tag: "3.8.0"]},
 }

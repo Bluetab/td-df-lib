@@ -1,9 +1,10 @@
 defmodule TdDfLib.Templates do
   @moduledoc """
-  Provides functions for working with templates. 
+  Provides functions for working with templates.
   """
 
   alias TdCache.TemplateCache
+  alias TdDfLib.Format
 
   def completeness(%{} = content, %{} = template) do
     template_completeness(template, content)
@@ -26,6 +27,43 @@ defmodule TdDfLib.Templates do
     |> Enum.flat_map(&Map.get(&1, "fields", []))
     |> Enum.filter(&is_optional?/1)
     |> Enum.map(&Map.get(&1, "name"))
+  end
+
+  def optional_fields(nil = _template), do: []
+
+  def group_name(template_name, field_name) when is_binary(template_name) do
+    template_name
+    |> TemplateCache.get_by_name!()
+    |> group_name(field_name)
+  end
+
+  def group_name(%{content: content} = _template, field_name) do
+    do_group_name(content, field_name)
+  end
+
+  def content_schema(template_name) do
+    case TemplateCache.get_by_name!(template_name) do
+      nil ->
+        {:error, :template_not_found}
+
+      template ->
+        template
+        |> Map.get(:content)
+        |> Format.flatten_content_fields()
+    end
+  end
+
+  defp do_group_name(content, field_name) do
+    content
+    |> Enum.filter(&has_field?(&1, field_name))
+    |> Enum.map(fn %{"name" => group} -> group end)
+    |> Enum.at(0)
+  end
+
+  defp has_field?(%{"fields" => fields}, field_name) do
+    fields
+    |> Enum.map(&Map.get(&1, "name"))
+    |> Enum.member?(field_name)
   end
 
   defp is_optional?(%{"cardinality" => cardinality}), do: is_optional?(cardinality)
