@@ -4,6 +4,11 @@ defmodule TdDfLibTest do
   alias TdCache.TemplateCache
   alias TdDfLib.Validation
 
+  setup_all do
+    start_supervised(TdCache.TemplateCache)
+    :ok
+  end
+
   setup do
     template = random_template()
 
@@ -247,7 +252,8 @@ defmodule TdDfLibTest do
       name: "Template #{id}",
       label: "Label #{id}",
       scope: "Scope #{id}",
-      content: [%{"name" => "field", "type" => "string"}]
+      content: [%{"name" => "field", "type" => "string"}],
+      updated_at: DateTime.utc_now()
     }
   end
 

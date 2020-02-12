@@ -1,6 +1,12 @@
 # Changelog
 
-## [3.14.0] 2019-09-20
+## [3.15.0] 2020-02-12
+
+### Added
+
+- [TD-2335] Support for completeness calculation
+
+## [3.14.0] 2020-01-20
 
 ### Changed
 

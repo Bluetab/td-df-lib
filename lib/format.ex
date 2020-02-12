@@ -14,6 +14,7 @@ defmodule TdDfLib.Format do
 
   def search_values(%{} = content, %{content: fields}) do
     fields = flatten_content_fields(fields)
+
     content
     |> apply_template(fields)
     |> format_search_values(fields)
@@ -22,11 +23,9 @@ defmodule TdDfLib.Format do
   def search_values(_, _), do: nil
 
   def flatten_content_fields(content) do
-    content
-      |> Enum.map(fn %{"name" => name, "fields" => fields} ->
-        Enum.map(fields, &(Map.put(&1, "group", name)))
-      end)
-      |> Enum.concat
+    Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
+      Enum.map(fields, &Map.put(&1, "group", group))
+    end)
   end
 
   def format_search_values(content, fields) do
@@ -53,13 +52,11 @@ defmodule TdDfLib.Format do
   end
 
   def set_default_values(content, fields) do
-    fields
-    |> Enum.reduce(content, &set_default_value(&2, &1))
+    Enum.reduce(fields, content, &set_default_value(&2, &1))
   end
 
   def set_search_values(content) do
-    content
-    |> Enum.reduce(Map.new(), &set_search_value(&1, &2))
+    Enum.reduce(content, %{}, &set_search_value(&1, &2))
   end
 
   defp set_search_value({key, value}, acc) when is_map(value) do
@@ -122,18 +119,12 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
-  def format_field(%{
-        "content" => content,
-        "type" => "string"
-      }) do
+  def format_field(%{"content" => content, "type" => "string"}) do
     [content]
   end
 
-  def format_field(%{
-        "content" => content,
-        "type" => "enriched_text"
-      }) do
-      RichText.to_rich_text(content)
+  def format_field(%{"content" => content, "type" => "enriched_text"}) do
+    RichText.to_rich_text(content)
   end
 
   def format_field(%{

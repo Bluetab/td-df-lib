@@ -30,7 +30,7 @@ defmodule TdDfLib.MixProject do
       {:phoenix_ecto, "~> 4.0"},
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
       {:td_cache,
-       git: "https://github.com/Bluetab/td-cache.git", tag: "3.0.5", only: [:test], runtime: false}
+       git: "https://github.com/Bluetab/td-cache.git", tag: "3.8.0", only: [:test], runtime: false}
     ]
   end
 end
