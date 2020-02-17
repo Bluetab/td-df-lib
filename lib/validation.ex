@@ -44,12 +44,11 @@ defmodule TdDfLib.Validation do
          changeset,
          %{"depends" => %{"on" => depend_on, "to_be" => depend_to_be}} = content_item
        ) do
-    case Map.get(changeset.data, depend_on) do
-      ^depend_to_be ->
-        add_content_validation(changeset, Map.drop(content_item, ["depends"]))
-
+    dependent_value = Map.get(changeset.data, depend_on)
+    case Enum.find(depend_to_be, &(&1 == dependent_value)) do
+      nil -> changeset
       _ ->
-        changeset
+        add_content_validation(changeset, Map.drop(content_item, ["depends"]))
     end
   end
 

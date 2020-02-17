@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-2341] Content validation for dependent field assumes to_be value to be a list
+
 ## [3.15.0] 2020-02-12
 
 ### Added

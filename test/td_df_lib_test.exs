@@ -173,13 +173,13 @@ defmodule TdDfLibTest do
             "name" => "radio_list",
             "type" => "string",
             "cardinality" => "1",
-            "values" => ["Yes", "No"]
+            "values" => %{"fixed" => ["Yes", "No"]}
           },
           %{
             "name" => "dependant_text",
             "type" => "string",
             "cardinality" => "1",
-            "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
+            "depends" => %{"on" => "radio_list", "to_be" => ["Yes"]}
           }
         ]
       )
@@ -201,13 +201,13 @@ defmodule TdDfLibTest do
           "name" => "radio_list",
           "type" => "string",
           "cardinality" => "1",
-          "values" => ["Yes", "No"]
+          "values" => %{"fixed" => ["Yes", "No"]}
         },
         %{
           "name" => "dependant_text",
           "type" => "string",
           "cardinality" => "1",
-          "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
+          "depends" => %{"on" => "radio_list", "to_be" => ["Yes"]}
         }
       ])
 
@@ -226,13 +226,13 @@ defmodule TdDfLibTest do
           "name" => "radio_list",
           "type" => "string",
           "cardinality" => "1",
-          "values" => ["Yes", "No"]
+          "values" => %{"fixed" => ["Yes", "No"]}
         },
         %{
           "name" => "dependant_text",
           "type" => "string",
           "cardinality" => "1",
-          "depends" => %{"on" => "radio_list", "to_be" => "Yes"}
+          "depends" => %{"on" => "radio_list", "to_be" => ["Yes"]}
         }
       ])
 
