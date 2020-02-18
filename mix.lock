@@ -12,5 +12,5 @@
   "plug_crypto": {:hex, :plug_crypto, "1.0.0", "18e49317d3fa343f24620ed22795ec29d4a5e602d52d1513ccea0b07d8ea7d4d", [:mix], [], "hexpm", "73c1682f0e414cfb5d9b95c8e8cd6ffcfdae699e3b05e1db744e58b7be857759"},
   "poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], [], "hexpm"},
   "redix": {:hex, :redix, "0.8.2", "c25158f905bcf8842e9a11411d65b9257ac70057c4330521d1a4d2a44b4f7ecf", [:mix], [], "hexpm", "da158ef15edfe9ea0d05a7293e8cf29c29da3a094dd52abc2ed85d322637f2a7"},
-  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "f6489bcb3074655b790b8ec9b42770460645b00d", [tag: "3.8.0"]},
+  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "f4f190f6c606f1a94cf6b25a3beb2bd62ce4663f", [tag: "3.16.1"]},
 }
