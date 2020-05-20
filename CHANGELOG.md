@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2497] Numeric fields mapping
+
 ## [3.16.0]
 
 ### Fixed

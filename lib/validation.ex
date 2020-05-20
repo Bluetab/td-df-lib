@@ -11,7 +11,8 @@ defmodule TdDfLib.Validation do
     "url" => :map,
     "user" => :string,
     "enriched_text" => :map,
-    "table" => :map
+    "table" => :map,
+    "number" => :integer
   }
 
   def build_changeset(content, content_schema) do
