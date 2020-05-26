@@ -17,6 +17,7 @@ defmodule TdDfLib.Format do
 
     content
     |> apply_template(fields)
+    |> drop_values(fields)
     |> format_search_values(fields)
   end
 
@@ -26,6 +27,15 @@ defmodule TdDfLib.Format do
     Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
       Enum.map(fields, &Map.put(&1, "group", group))
     end)
+  end
+
+  defp drop_values(content, fields) do
+    keys =
+      fields
+      |> Enum.filter(&(Map.get(&1, "type") == "image"))
+      |> Enum.map(&Map.get(&1, "name"))
+
+    Map.drop(content, keys)
   end
 
   def format_search_values(content, fields) do
