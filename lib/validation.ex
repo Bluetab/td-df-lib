@@ -1,9 +1,10 @@
 defmodule TdDfLib.Validation do
   @moduledoc """
-  The Template Validation.
+  Template content validation support.
   """
 
   alias Ecto.Changeset
+  alias TdDfLib.Templates
 
   @types %{
     "string" => :string,
@@ -45,6 +46,7 @@ defmodule TdDfLib.Validation do
          %{"depends" => %{"on" => depend_on, "to_be" => depend_to_be}} = content_item
        ) do
     dependent_value = Changeset.get_field(changeset, depend_on)
+
     if Enum.member?(depend_to_be, dependent_value) do
       add_content_validation(changeset, Map.drop(content_item, ["depends"]))
     else
@@ -119,4 +121,31 @@ defmodule TdDfLib.Validation do
   end
 
   defp validate_no_empty_items(_, _), do: []
+
+  @doc """
+  Returns a 2-arity validator function that can be used by
+  `Ecto.Changeset.validate_change/3` on a dynamic content field. The argument
+  may be either the name of a template or it's flattened schema, as returned by
+  `Templates.content_schema/1`.
+  """
+  def validator(template_or_schema)
+
+  def validator(template) when is_binary(template) do
+    template
+    |> Templates.content_schema()
+    |> validator()
+  end
+
+  def validator(schema) when is_list(schema) do
+    fn field, value ->
+      case build_changeset(value, schema) do
+        %{valid?: false, errors: errors} -> [{field, {"invalid content", errors}}]
+        _ -> []
+      end
+    end
+  end
+
+  def validator({:error, reason}) do
+    fn field, _value -> [{field, reason}] end
+  end
 end

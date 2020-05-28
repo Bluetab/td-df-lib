@@ -4,8 +4,12 @@
 
 ### Added
 
-- [TD-2637] Module `TdDfLib.Diff` providing support for calculating key-wise
-  diffs on maps
+- [TD-2637] Support for Audit improvements
+  - `TdDfLib.Diff` provides support for calculating key-wise diffs on maps
+  - `TdDfLib.Validation.validator/2` can be used to create a validator function
+    that can be used by `Ecto.Changeset.validate_change/3`
+  - `TdDfLib.TemplateFactory` can be used by `ExMachina` factories in other
+    services to generate templates in tests
 
 ## [3.23.0] 2020-05-26
 
