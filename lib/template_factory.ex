@@ -38,7 +38,7 @@ defmodule TdDfLib.TemplateFactory do
           "type" => "string",
           "label" => sequence("label"),
           "values" => nil,
-          "cardinality" => 1
+          "cardinality" => "1"
         }
       end
     end
