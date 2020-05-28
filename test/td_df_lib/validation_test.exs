@@ -22,8 +22,8 @@ defmodule TdDfLib.ValidationTest do
       validator = Validation.validator("a_missing_template")
 
       assert is_function(validator, 2)
-      assert validator.(:content, nil) == [content: :template_not_found]
-      assert validator.(:content, %{}) == [content: :template_not_found]
+      assert validator.(:content, nil) == [content: {"invalid template", reason: :template_not_found}]
+      assert validator.(:content, %{}) == [content: {"invalid template", reason: :template_not_found}]
     end
 
     test "returns a validator that validates dynamic content", %{template: %{name: template_name}} do

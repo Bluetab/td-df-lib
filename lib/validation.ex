@@ -130,6 +130,12 @@ defmodule TdDfLib.Validation do
   """
   def validator(template_or_schema)
 
+  def validator({:error, reason}) do
+    fn field, _value ->
+      [{field, {"invalid template", [reason: reason]}}]
+    end
+  end
+
   def validator(template) when is_binary(template) do
     template
     |> Templates.content_schema()
@@ -143,9 +149,5 @@ defmodule TdDfLib.Validation do
         _ -> []
       end
     end
-  end
-
-  def validator({:error, reason}) do
-    fn field, _value -> [{field, reason}] end
   end
 end
