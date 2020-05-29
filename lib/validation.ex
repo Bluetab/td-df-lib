@@ -1,9 +1,10 @@
 defmodule TdDfLib.Validation do
   @moduledoc """
-  The Template Validation.
+  Template content validation support.
   """
 
   alias Ecto.Changeset
+  alias TdDfLib.Templates
 
   @types %{
     "string" => :string,
@@ -26,15 +27,13 @@ defmodule TdDfLib.Validation do
 
   defp get_changeset_fields(content_schema) do
     item_mapping = fn item ->
-      name = item |> Map.get("name")
+      name = Map.get(item, "name")
       type = Map.get(@types, Map.get(item, "type"), :string)
-      cardinality = item |> Map.get("cardinality")
+      cardinality = Map.get(item, "cardinality")
       {String.to_atom(name), get_field_type(type, cardinality)}
     end
 
-    content_schema
-    |> Enum.map(item_mapping)
-    |> Map.new()
+    Map.new(content_schema, item_mapping)
   end
 
   defp get_field_type(type, "*"), do: {:array, type}
@@ -44,20 +43,21 @@ defmodule TdDfLib.Validation do
   # Filters schema for non applicable dependant field
   defp add_content_validation(
          changeset,
-         %{"depends" => %{"on" => depend_on, "to_be" => depend_to_be}} = content_item
+         %{"depends" => %{"on" => on, "to_be" => to_be}} = field_spec
        ) do
-    dependent_value = Changeset.get_field(changeset, depend_on)
-    if Enum.member?(depend_to_be, dependent_value) do
-      add_content_validation(changeset, Map.drop(content_item, ["depends"]))
+    dependent_value = Changeset.get_field(changeset, on)
+
+    if Enum.member?(to_be, dependent_value) do
+      add_content_validation(changeset, Map.drop(field_spec, ["depends"]))
     else
       changeset
     end
   end
 
-  defp add_content_validation(changeset, %{} = content_item) do
+  defp add_content_validation(changeset, %{} = field_spec) do
     changeset
-    |> add_require_validation(content_item)
-    |> add_inclusion_validation(content_item)
+    |> add_require_validation(field_spec)
+    |> add_inclusion_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [tail | head]) do
@@ -87,20 +87,15 @@ defmodule TdDfLib.Validation do
 
   defp add_require_validation(changeset, %{}), do: changeset
 
-  defp add_inclusion_validation(changeset, %{"name" => name, "values" => %{"fixed" => fixed}}) do
+  defp add_inclusion_validation(%{data: data} = changeset, %{"name" => name, "values" => %{"fixed" => fixed}}) do
     field = String.to_atom(name)
 
-    value =
-      changeset
-      |> Map.get(:data)
-      |> Map.get(name)
-
-    case is_list(value) do
-      true ->
-        Changeset.validate_subset(changeset, field, fixed)
-
-      _ ->
-        Changeset.validate_inclusion(changeset, field, fixed)
+    data
+    |> Map.get(name)
+    |> is_list()
+    |> case do
+      true -> Changeset.validate_subset(changeset, field, fixed)
+      _ -> Changeset.validate_inclusion(changeset, field, fixed)
     end
   end
 
@@ -121,4 +116,33 @@ defmodule TdDfLib.Validation do
   end
 
   defp validate_no_empty_items(_, _), do: []
+
+  @doc """
+  Returns a 2-arity validator function that can be used by
+  `Ecto.Changeset.validate_change/3` on a dynamic content field. The argument
+  may be either the name of a template or it's flattened schema, as returned by
+  `Templates.content_schema/1`.
+  """
+  def validator(template_or_schema)
+
+  def validator({:error, reason}) do
+    fn field, _value ->
+      [{field, {"invalid template", [reason: reason]}}]
+    end
+  end
+
+  def validator(template) when is_binary(template) do
+    template
+    |> Templates.content_schema()
+    |> validator()
+  end
+
+  def validator(schema) when is_list(schema) do
+    fn field, value ->
+      case build_changeset(value, schema) do
+        %{valid?: false, errors: errors} -> [{field, {"invalid content", errors}}]
+        _ -> []
+      end
+    end
+  end
 end

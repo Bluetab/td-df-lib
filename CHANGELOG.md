@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.23.2] 2020-05-29
+
+### Added
+
+- [TD-2637] Improve support for audit of dynamic content changes
+  - `TdDfLib.Diff` provides support for calculating key-wise diffs on maps
+- [TD-2636] Improve support for dynamic content validation
+  - `TdDfLib.Validation.validator/2` can be used to create a validator function
+    that can be used by `Ecto.Changeset.validate_change/3`
+- Improve support for template-related tests. `TdDfLib.TemplateFactory` can be
+  used by `ExMachina` factories in other services to generate templates in tests
+
 ## [3.23.1] 2020-05-21
 
 ### Added
@@ -16,7 +28,8 @@
 
 ### Fixed
 
-- [TD-2341] Content validation for dependent field assumes to_be value to be a list
+- [TD-2341] Content validation for dependent field assumes `to_be` value to be a
+  list
 
 ## [3.15.0] 2020-02-12
 
@@ -46,25 +59,25 @@
 
 ### Fixed
 
-- [TD-1560] Default return value in apply_template
+- [TD-1560] Default return value in `apply_template`
 
 ## [3.3.1] 2019-08-02
 
 ### Changed
 
-- [TD-1560] Entry point to retrieve search_values 
+- [TD-1560] Entry point to retrieve search values
 
 ## [3.3.0] 2019-08-01
 
 ### Changed
 
-- [TD-1560] Add validation to new `enriched_text` type 
+- [TD-1560] Add validation to new `enriched_text` type
 
 ## [3.0.1] 2019-06-27
 
 ### Changed
 
-- Use TdCache.TemplateCache instead of TdPerms.DynamicFormCache in tests
+- Use `TdCache.TemplateCache` instead of `TdPerms.DynamicFormCache` in tests
 
 ## [2.21.4] 2019-06-06
 
@@ -92,9 +105,9 @@
 
 ### Changed
 
-- Decouple TdDfLib.Validation from cache
+- Decouple `TdDfLib.Validation` from cache
 - Dependencies: phoenix_ecto 4.0, credo 1.0, td_perms 2.19.1
-- Use :string as default field type
+- Use `:string` as default field type
 
 ## [2.19.0] 2019-05-08
 
@@ -172,6 +185,6 @@
 
 ### Added
 
-- Add map_list field type to validations
+- Add `map_list` field type to validations
 - Add field type validation
-- Use MockDfCache for testing
+- Use `MockDfCache` for testing
