@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.23.3] 2020-05-29
+
+### Added
+
+- [TD-2636] `TdDfLib.Content` provides support for merging dynamic content maps
+
 ## [3.23.2] 2020-05-29
 
 ### Added

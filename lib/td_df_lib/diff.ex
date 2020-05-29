@@ -29,7 +29,7 @@ defmodule TdDfLib.Diff do
       removed: key_diff(new, old),
       changed: val_diff(old, new)
     }
-    |> Enum.reject(fn {_, keys} -> length(keys) == 0 end)
+    |> Enum.reject(fn {_, keys} -> Enum.empty?(keys) end)
     |> Map.new()
   end
 
