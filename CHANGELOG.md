@@ -4,12 +4,13 @@
 
 ### Added
 
-- [TD-2637] Support for Audit improvements
+- [TD-2637] Improve support for audit of dynamic content changes
   - `TdDfLib.Diff` provides support for calculating key-wise diffs on maps
+- [TD-2636] Improve support for dynamic content validation
   - `TdDfLib.Validation.validator/2` can be used to create a validator function
     that can be used by `Ecto.Changeset.validate_change/3`
-  - `TdDfLib.TemplateFactory` can be used by `ExMachina` factories in other
-    services to generate templates in tests
+- Improve support for template-related tests. `TdDfLib.TemplateFactory` can be
+  used by `ExMachina` factories in other services to generate templates in tests
 
 ## [3.23.0] 2020-05-26
 
