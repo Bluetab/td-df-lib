@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2637] Improve support for audit of dynamic content changes
+  - `TdDfLib.MapDiff` provides support for calculating diffs on maps
+  - `TdDfLib.Masks` provides support for masking certain dynamic content values
+
 ## [3.23.3] 2020-05-29
 
 ### Added

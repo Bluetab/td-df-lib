@@ -34,5 +34,13 @@ defmodule TdDfLib.MapDiffTest do
       assert %{changed: %{"bar" => "barf"}} = MapDiff.diff(map1, map2)
       assert %{changed: %{"bar" => "bar"}} = MapDiff.diff(map2, map1)
     end
+
+    test "applies a mask to diff values", %{map1: map1, map2: map2} do
+      mask_fn = fn _ -> "hidden" end
+      assert %{added: %{"xyzzy" => "hidden"}} = MapDiff.diff(map1, map2, mask: mask_fn)
+      assert %{changed: %{"bar" => "hidden"}} = MapDiff.diff(map1, map2, mask: mask_fn)
+      assert %{changed: %{"bar" => "hidden"}} = MapDiff.diff(map2, map1, mask: mask_fn)
+      assert %{removed: %{"baz" => "hidden"}} = MapDiff.diff(map1, map2, mask: mask_fn)
+    end
   end
 end
