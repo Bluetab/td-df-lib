@@ -99,6 +99,19 @@ defmodule TdDfLib.Validation do
     end
   end
 
+  defp add_inclusion_validation(%{data: data} = changeset, %{"name" => name, "values" => %{"fixed_tuple" => fixed_tuple}}) do
+    field = String.to_atom(name)
+    fixed = Enum.map(fixed_tuple, &Map.get(&1, "value"))
+
+    data
+    |> Map.get(name)
+    |> is_list()
+    |> case do
+      true -> Changeset.validate_subset(changeset, field, fixed)
+      _ -> Changeset.validate_inclusion(changeset, field, fixed)
+    end
+  end
+
   defp add_inclusion_validation(changeset, %{}), do: changeset
 
   defp validate_no_empty_items(field, [_h | _t] = values) do
