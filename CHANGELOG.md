@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.23.4] 2020-06-15
+## [3.24.0] 2020-06-15
 
 - [TD-2705] Validate fixed_tuple values 
 
