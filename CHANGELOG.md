@@ -1,12 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [3.25.0] 2020-06-16
 
 ### Added
 
 - [TD-2637] Improve support for audit of dynamic content changes
   - `TdDfLib.MapDiff` provides support for calculating diffs on maps
   - `TdDfLib.Masks` provides support for masking certain dynamic content values
+
+## [3.24.0] 2020-06-15
+
+- [TD-2705] Validate fixed_tuple values 
 
 ## [3.23.3] 2020-05-29
 

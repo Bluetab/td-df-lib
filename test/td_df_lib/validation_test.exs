@@ -222,6 +222,78 @@ defmodule TdDfLib.ValidationTest do
       changeset = Validation.build_changeset(content, schema)
       assert changeset.valid?
     end
+
+    test "content with correct values for fixed and fixed tuple values returns valid changeset", %{
+      template: template
+    } do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "dropdown_fixed_list",
+            "type" => "string",
+            "cardinality" => "1",
+            "values" => %{"fixed" => ["Yes", "No"]}
+          },
+          %{
+            "name" => "dropdown_fixed_tuple",
+            "type" => "string",
+            "cardinality" => "1",
+            "values" => %{"fixed_tuple" => [%{value: "Yes", text: "Yes!"}, %{value: "No", text: "No!"}]}
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+
+      content = %{"dropdown_fixed_list" => "Yes", "dropdown_fixed_tuple" => "No"}
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+      assert changeset.valid?
+    end
+
+    test "content with values not in fixed values returns invalid changeset", %{
+      template: template
+    } do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "dropdown_fixed_list",
+            "type" => "string",
+            "cardinality" => "1",
+            "values" => %{"fixed" => ["Yes", "No"]}
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+
+      content = %{"dropdown_fixed_list" => "Other"}
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+      refute changeset.valid?
+    end
+
+    test "content with values not in fixed tuple values returns invalid changeset", %{
+      template: template
+    } do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "dropdown_fixed_tuple",
+            "type" => "string",
+            "cardinality" => "1",
+            "values" => %{"fixed_tuple" => [%{value: "Yes", text: "Yes!"}, %{value: "No", text: "No!"}]}
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+
+      content = %{"dropdown_fixed_tuple" => "Other"}
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+      refute changeset.valid?
+    end
   end
 
   describe "validator/1" do
