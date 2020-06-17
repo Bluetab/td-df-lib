@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-2679] Format field for user type fields
+
 ## [3.25.0] 2020-06-16
 
 ### Added
