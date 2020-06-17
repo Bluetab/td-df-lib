@@ -137,6 +137,11 @@ defmodule TdDfLib.Format do
     RichText.to_rich_text(content)
   end
 
+  def format_field(%{"content" => content, "type" => "user", "cardinality" => cardinality})
+      when cardinality in ["+", "*"] and is_binary(content) do
+    [content]
+  end
+
   def format_field(%{
         "content" => content
       }),

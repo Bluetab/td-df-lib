@@ -243,6 +243,12 @@ defmodule TdDfLib.FormatTest do
     assert formatted_value == RichText.to_rich_text("some enriched text")
   end
 
+  test "format_field of user type field" do
+    assert ["foo"] == Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
+    assert ["bar"] == Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
+    assert "bar" == Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
+  end
+
   test "flatten_content_fields will list all fields of content" do
     content = [
       %{
