@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.0.0] 2020-07-01
+
+### Changed
+
+- Update `td_cache` to 4.0.0
+
 ## [3.25.1] 2020-06-18
 
 ### Added
@@ -16,7 +22,7 @@
 
 ## [3.24.0] 2020-06-15
 
-- [TD-2705] Validate fixed_tuple values 
+- [TD-2705] Validate fixed_tuple values
 
 ## [3.23.3] 2020-05-29
 
