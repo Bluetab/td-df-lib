@@ -249,6 +249,11 @@ defmodule TdDfLib.FormatTest do
     assert "bar" == Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
   end
 
+  test "format_field of integer and float types" do
+    assert 1 == Format.format_field(%{"content" => "1", "type" => "integer"})
+    assert 1.5 == Format.format_field(%{"content" => "1.5", "type" => "float"})
+  end
+
   test "flatten_content_fields will list all fields of content" do
     content = [
       %{
