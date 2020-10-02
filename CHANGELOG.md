@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.5.0] 2020-10-02
+
+### Changed
+
+- [TD-2942] Format integer and float types when string
+
 ## [4.0.0] 2020-07-01
 
 ### Changed

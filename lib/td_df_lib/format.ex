@@ -142,6 +142,14 @@ defmodule TdDfLib.Format do
     [content]
   end
 
+  def format_field(%{"content" => content, "type" => "integer"}) when is_binary(content) do
+    String.to_integer(content)
+  end
+
+  def format_field(%{"content" => content, "type" => "float"}) when is_binary(content) do
+    String.to_float(content)
+  end
+
   def format_field(%{
         "content" => content
       }),
