@@ -142,6 +142,21 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "valid type system", %{template: template} do
+      changeset = get_changeset_for("system", %{}, "?", template)
+      assert changeset.valid?
+    end
+
+    test "valid type system in array", %{template: template} do
+      changeset = get_changeset_for("system", [%{}], "*", template)
+      assert changeset.valid?
+    end
+
+    test "invalid type system", %{template: template} do
+      changeset = get_changeset_for("system", "string", "?", template)
+      refute changeset.valid?
+    end
+
     test "content with hidden required field returns valid changeset", %{template: template} do
       template =
         template
