@@ -2,14 +2,19 @@ defmodule TdDfLib.Format do
   @moduledoc """
   Manages content formatting
   """
+  alias TdCache.SystemCache
   alias TdDfLib.RichText
+
+  @format_types ["enriched_text", "system"]
 
   def apply_template(nil, _), do: %{}
 
   def apply_template(_, nil), do: %{}
 
   def apply_template(%{} = content, fields) do
-    default_values(content, fields)
+    content
+    |> default_values(fields)
+    |> cached_values(fields)
   end
 
   def search_values(%{} = content, %{content: fields}) do
@@ -29,6 +34,22 @@ defmodule TdDfLib.Format do
     end)
   end
 
+  defp cached_values(content, fields) do
+    fields =
+      fields
+      |> Enum.filter(&Map.has_key?(&1, "type"))
+      |> Enum.filter(fn %{"type" => type} -> type == "system" end)
+
+    field_names = Enum.map(fields, &Map.get(&1, "name"))
+
+    cached_values =
+      content
+      |> Map.take(field_names)
+      |> set_cached_values(fields)
+
+    Map.merge(content, cached_values)
+  end
+
   defp drop_values(content, fields) do
     keys =
       fields
@@ -39,16 +60,17 @@ defmodule TdDfLib.Format do
   end
 
   def format_search_values(content, fields) do
-    field_names =
+    fields =
       fields
       |> Enum.filter(&Map.has_key?(&1, "type"))
-      |> Enum.filter(fn %{"type" => type} -> type == "enriched_text" end)
-      |> Enum.map(&Map.get(&1, "name"))
+      |> Enum.filter(fn %{"type" => type} -> type in @format_types end)
+
+    field_names = Enum.map(fields, &Map.get(&1, "name"))
 
     search_values =
       content
       |> Map.take(field_names)
-      |> set_search_values()
+      |> set_search_values(fields)
 
     Map.merge(content, search_values)
   end
@@ -65,17 +87,22 @@ defmodule TdDfLib.Format do
     Enum.reduce(fields, content, &set_default_value(&2, &1))
   end
 
-  def set_search_values(content) do
-    Enum.reduce(content, %{}, &set_search_value(&1, &2))
+  def set_search_values(content, fields) do
+    Enum.reduce(fields, content, &set_search_value(&1, &2))
   end
 
-  defp set_search_value({key, value}, acc) when is_map(value) do
-    Map.put(acc, key, RichText.to_plain_text(value))
+  defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
+    Map.put(acc, name, RichText.to_plain_text(Map.get(acc, name)))
   end
 
-  defp set_search_value({key, value}, acc) do
-    Map.put(acc, key, value)
+  defp set_search_value(%{"name" => name, "type" => "system", "cardinality" => cardinality}, acc) do
+    case cardinality in ["*", "+"] do
+      true -> Map.put(acc, name, Map.get(acc, name))
+      false -> Map.put(acc, name, [Map.get(acc, name)])
+    end
   end
+
+  defp set_search_value(_field, acc), do: acc
 
   def set_default_value(content, %{"name" => name, "default" => default}) do
     Map.put_new(content, name, default)
@@ -154,4 +181,41 @@ defmodule TdDfLib.Format do
         "content" => content
       }),
       do: content
+
+  defp set_cached_values(content, fields) do
+    Enum.reduce(fields, content, &set_cached_value(&1, &2))
+  end
+
+  defp set_cached_value(%{"name" => name, "type" => "system"}, acc) do
+    Map.put(acc, name, format_system(Map.get(acc, name)))
+  end
+
+  defp set_cached_value(_field, acc), do: acc
+
+  defp format_system(%{} = system) do
+    id = Map.get(system, "id")
+
+    case SystemCache.get(id) do
+      {:ok, system} -> system
+      _ -> system
+    end
+  end
+
+  defp format_system([_ | _] = systems) do
+    Enum.map(systems, &format_system/1)
+  end
+
+  defp format_system(external_id) when is_binary(external_id) do
+    {:ok, m} = SystemCache.external_id_to_id_map()
+
+    m
+    |> Map.get(external_id)
+    |> SystemCache.get()
+    |> case do
+      {:ok, system} -> system
+      _ -> nil
+    end
+  end
+
+  defp format_system(system), do: system
 end

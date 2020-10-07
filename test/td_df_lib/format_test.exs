@@ -2,6 +2,8 @@ defmodule TdDfLib.FormatTest do
   use ExUnit.Case
   doctest TdDfLib.Format
 
+  alias TdCache.Redix
+  alias TdCache.SystemCache
   alias TdDfLib.Format
   alias TdDfLib.RichText
 
@@ -84,131 +86,6 @@ defmodule TdDfLib.FormatTest do
     assert Format.apply_template(nil, fields) == %{}
   end
 
-  test "search_values/2 sets default values and removes redundant fields" do
-    content = %{
-      "xyzzy" => "spqr",
-      "bay" => %{
-        "object" => "value",
-        "document" => %{
-          "data" => %{},
-          "nodes" => [
-            %{
-              "data" => %{},
-              "type" => "paragraph",
-              "nodes" => [
-                %{
-                  "text" => "My Text",
-                  "marks" => [
-                    %{
-                      "data" => %{},
-                      "type" => "bold",
-                      "object" => "mark"
-                    }
-                  ],
-                  "object" => "text"
-                }
-              ],
-              "object" => "block"
-            }
-          ],
-          "object" => "document"
-        }
-      }
-    }
-
-    fields = [
-      %{
-        "name" => "group",
-        "fields" => [
-          %{"name" => "foo", "default" => "foo"},
-          %{"name" => "bar", "cardinality" => "+", "values" => []},
-          %{"name" => "baz", "cardinality" => "*", "values" => []},
-          %{"name" => "bay", "type" => "enriched_text"}
-        ]
-      }
-    ]
-
-    assert Format.search_values(content, %{content: fields}) == %{
-             "foo" => "foo",
-             "bar" => [""],
-             "baz" => [""],
-             "bay" => "My Text"
-           }
-  end
-
-  test "search_values/2 returns nil when no template is provided" do
-    content = %{"xyzzy" => "spqr"}
-    assert is_nil(Format.search_values(content, nil))
-  end
-
-  test "search_values/2 returns nil when no content is provided" do
-    fields = [
-      %{
-        "name" => "group",
-        "fields" => [
-          %{"name" => "foo", "default" => "foo"},
-          %{"name" => "bar", "cardinality" => "+", "values" => []},
-          %{"name" => "baz", "cardinality" => "*", "values" => []},
-          %{"name" => "bay", "type" => "enriched_text"}
-        ]
-      }
-    ]
-
-    assert is_nil(Format.search_values(nil, fields))
-  end
-
-  test "search_values/2 omits values of type image" do
-    content = %{
-      "xyzzy" => "spqr",
-      "foo" => %{
-        "object" => "value",
-        "document" => %{
-          "data" => %{},
-          "nodes" => [
-            %{
-              "data" => %{},
-              "type" => "paragraph",
-              "nodes" => [
-                %{
-                  "text" => "My Text",
-                  "marks" => [
-                    %{
-                      "data" => %{},
-                      "type" => "bold",
-                      "object" => "mark"
-                    }
-                  ],
-                  "object" => "text"
-                }
-              ],
-              "object" => "block"
-            }
-          ],
-          "object" => "document"
-        }
-      },
-      "bay" => "photo code..."
-    }
-
-    fields = [
-      %{
-        "name" => "group",
-        "fields" => [
-          %{"name" => "foo", "type" => "enriched_text"},
-          %{"name" => "bar", "cardinality" => "+", "values" => []},
-          %{"name" => "baz", "cardinality" => "*", "values" => []},
-          %{"name" => "bay", "type" => "image"}
-        ]
-      }
-    ]
-
-    assert Format.search_values(content, %{content: fields}) == %{
-             "bar" => [""],
-             "baz" => [""],
-             "foo" => "My Text"
-           }
-  end
-
   test "format_field returns url wrapped" do
     formatted_value = Format.format_field(%{"content" => "https://google.es", "type" => "url"})
 
@@ -244,9 +121,14 @@ defmodule TdDfLib.FormatTest do
   end
 
   test "format_field of user type field" do
-    assert ["foo"] == Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
-    assert ["bar"] == Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
-    assert "bar" == Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
+    assert ["foo"] ==
+             Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
+
+    assert ["bar"] ==
+             Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
+
+    assert "bar" ==
+             Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
   end
 
   test "format_field of integer and float types" do
@@ -287,5 +169,174 @@ defmodule TdDfLib.FormatTest do
     ]
 
     assert flat_content == expected_flat_content
+  end
+
+  describe "search_values/2" do
+    setup [:create_system]
+
+    test "search_values/2 sets default values and removes redundant fields" do
+      content = %{
+        "xyzzy" => "spqr",
+        "bay" => %{
+          "object" => "value",
+          "document" => %{
+            "data" => %{},
+            "nodes" => [
+              %{
+                "data" => %{},
+                "type" => "paragraph",
+                "nodes" => [
+                  %{
+                    "text" => "My Text",
+                    "marks" => [
+                      %{
+                        "data" => %{},
+                        "type" => "bold",
+                        "object" => "mark"
+                      }
+                    ],
+                    "object" => "text"
+                  }
+                ],
+                "object" => "block"
+              }
+            ],
+            "object" => "document"
+          }
+        }
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "foo", "default" => "foo"},
+            %{"name" => "bar", "cardinality" => "+", "values" => []},
+            %{"name" => "baz", "cardinality" => "*", "values" => []},
+            %{"name" => "bay", "type" => "enriched_text"}
+          ]
+        }
+      ]
+
+      assert Format.search_values(content, %{content: fields}) == %{
+               "foo" => "foo",
+               "bar" => [""],
+               "baz" => [""],
+               "bay" => "My Text"
+             }
+    end
+
+    test "search_values/2 gets system from cache formatted to index on elastic", %{system: system} do
+      content = %{"system" => %{"id" => system.id}}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "system", "type" => "system", "cardinality" => 1}
+          ]
+        }
+      ]
+
+      assert %{"system" => [system]} = Format.search_values(content, %{content: fields})
+
+      content = %{"system" => [%{"id" => system.id}]}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "system", "type" => "system", "cardinality" => "*"}
+          ]
+        }
+      ]
+
+      assert %{"system" => [system]} = Format.search_values(content, %{content: fields})
+    end
+
+    test "search_values/2 returns nil when no template is provided" do
+      content = %{"xyzzy" => "spqr"}
+      assert is_nil(Format.search_values(content, nil))
+    end
+
+    test "search_values/2 returns nil when no content is provided" do
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "foo", "default" => "foo"},
+            %{"name" => "bar", "cardinality" => "+", "values" => []},
+            %{"name" => "baz", "cardinality" => "*", "values" => []},
+            %{"name" => "bay", "type" => "enriched_text"}
+          ]
+        }
+      ]
+
+      assert is_nil(Format.search_values(nil, fields))
+    end
+
+    test "search_values/2 omits values of type image" do
+      content = %{
+        "xyzzy" => "spqr",
+        "foo" => %{
+          "object" => "value",
+          "document" => %{
+            "data" => %{},
+            "nodes" => [
+              %{
+                "data" => %{},
+                "type" => "paragraph",
+                "nodes" => [
+                  %{
+                    "text" => "My Text",
+                    "marks" => [
+                      %{
+                        "data" => %{},
+                        "type" => "bold",
+                        "object" => "mark"
+                      }
+                    ],
+                    "object" => "text"
+                  }
+                ],
+                "object" => "block"
+              }
+            ],
+            "object" => "document"
+          }
+        },
+        "bay" => "photo code..."
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "foo", "type" => "enriched_text"},
+            %{"name" => "bar", "cardinality" => "+", "values" => []},
+            %{"name" => "baz", "cardinality" => "*", "values" => []},
+            %{"name" => "bay", "type" => "image"}
+          ]
+        }
+      ]
+
+      assert Format.search_values(content, %{content: fields}) == %{
+               "bar" => [""],
+               "baz" => [""],
+               "foo" => "My Text"
+             }
+    end
+  end
+
+  defp create_system(_) do
+    system = %{id: :rand.uniform(100_000_000), external_id: "foo", name: "bar"}
+    SystemCache.put(system)
+
+    on_exit(fn ->
+      SystemCache.delete(system.id)
+      Redix.command(["DEL", "systems:ids_external_ids"])
+    end)
+
+    {:ok, system: system}
   end
 end
