@@ -42,10 +42,13 @@ defmodule TdDfLib.Format do
   end
 
   defp cached_values(content, fields) do
+    keys = Map.keys(content)
+    
     fields =
       fields
       |> Enum.filter(&Map.has_key?(&1, "type"))
       |> Enum.filter(fn %{"type" => type} -> type == "system" end)
+      |> Enum.filter(fn %{"name" => name} -> name in keys end)
 
     field_names = Enum.map(fields, &Map.get(&1, "name"))
 
