@@ -17,6 +17,13 @@ defmodule TdDfLib.Format do
     |> cached_values(fields)
   end
 
+  def enrich_content_values(%{} = content, %{content: fields}) do
+    fields = flatten_content_fields(fields)
+    cached_values(content, fields)
+  end
+
+  def enrich_content_values(content, _), do: content
+
   def search_values(%{} = content, %{content: fields}) do
     fields = flatten_content_fields(fields)
 
