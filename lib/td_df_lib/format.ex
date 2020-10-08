@@ -95,10 +95,10 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, RichText.to_plain_text(Map.get(acc, name)))
   end
 
-  defp set_search_value(%{"name" => name, "type" => "system", "cardinality" => cardinality}, acc) do
-    case cardinality in ["*", "+"] do
-      true -> Map.put(acc, name, Map.get(acc, name))
-      false -> Map.put(acc, name, [Map.get(acc, name)])
+  defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
+    case Map.get(acc, name) do
+      value = %{} -> Map.put(acc, name, [value])
+      value -> Map.put(acc, name, value)
     end
   end
 
@@ -186,13 +186,13 @@ defmodule TdDfLib.Format do
     Enum.reduce(fields, content, &set_cached_value(&1, &2))
   end
 
-  defp set_cached_value(%{"name" => name, "type" => "system"}, acc) do
-    Map.put(acc, name, format_system(Map.get(acc, name)))
+  defp set_cached_value(%{"name" => name, "type" => "system", "cardinality" => cardinality}, acc) do
+    Map.put(acc, name, format_system(Map.get(acc, name), cardinality))
   end
 
   defp set_cached_value(_field, acc), do: acc
 
-  defp format_system(%{} = system) do
+  defp format_system(%{} = system, _cardinality) do
     id = Map.get(system, "id")
 
     case SystemCache.get(id) do
@@ -201,21 +201,28 @@ defmodule TdDfLib.Format do
     end
   end
 
-  defp format_system([_ | _] = systems) do
-    Enum.map(systems, &format_system/1)
+  defp format_system([_ | _] = systems, cardinality) do
+    Enum.map(systems, &format_system(&1, cardinality))
   end
 
-  defp format_system(external_id) when is_binary(external_id) do
+  defp format_system(external_id, cardinality) when is_binary(external_id) do
     {:ok, m} = SystemCache.external_id_to_id_map()
 
-    m
-    |> Map.get(external_id)
-    |> SystemCache.get()
-    |> case do
-      {:ok, system} -> system
-      _ -> nil
-    end
+    system =
+      m
+      |> Map.get(external_id)
+      |> SystemCache.get()
+      |> case do
+        {:ok, system} -> system
+        _ -> nil
+      end
+
+    apply_cardinality(system, cardinality)
   end
 
-  defp format_system(system), do: system
+  defp format_system(system, _cardinality), do: system
+
+  defp apply_cardinality(system = %{}, cardinality) when cardinality in ["*", "+"], do: [system]
+
+  defp apply_cardinality(system, _cardinality), do: system
 end
