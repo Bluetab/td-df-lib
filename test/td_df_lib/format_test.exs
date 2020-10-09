@@ -328,6 +328,25 @@ defmodule TdDfLib.FormatTest do
     end
   end
 
+  describe "enrich_content_values/2"  do
+    setup [:create_system]
+    test "enrich_content_values/2 gets cached values", %{system: system} do
+      content = %{"system" => %{"id" => system.id}, "foo" => "bar"}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "system", "type" => "system", "cardinality" => 1},
+            %{"name" => "foo", "type" => "string", "cardinality" => "?"}
+          ]
+        }
+      ]
+
+      assert %{"system" => system, "foo" => "bar"} = Format.enrich_content_values(content, %{content: fields})
+    end
+  end
+
   defp create_system(_) do
     system = %{id: :rand.uniform(100_000_000), external_id: "foo", name: "bar"}
     SystemCache.put(system)
