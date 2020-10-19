@@ -14,7 +14,8 @@ defmodule TdDfLib.Validation do
     "enriched_text" => :map,
     "table" => :map,
     "integer" => :integer,
-    "float" => :float
+    "float" => :float,
+    "system" => :map
   }
 
   def build_changeset(content, content_schema) do

@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.6.0] 2020-10-19
+
+### Added
+
+- [TD-2485] System type fields
+
 ## [4.5.0] 2020-10-02
 
 ### Changed

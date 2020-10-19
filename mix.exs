@@ -4,7 +4,7 @@ defmodule TdDfLib.MixProject do
   def project do
     [
       app: :td_df_lib,
-      version: "4.5.0",
+      version: "4.6.0",
       elixir: "~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -32,7 +32,7 @@ defmodule TdDfLib.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ecto, "~> 3.0"},
       {:ex_machina, "~> 2.3", only: [:test]},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.0.0"}
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.6.0"}
     ]
   end
 end
