@@ -142,6 +142,26 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "copy field is valid with string value", %{template: template} do
+      changeset = get_changeset_for("copy", "{value: string}", "1", template)
+      assert changeset.valid?
+    end
+
+    test "copy field is invalid with integer value", %{template: template} do
+      changeset = get_changeset_for("copy", 123, "1", template)
+      refute changeset.valid?
+    end
+
+    test "copy field is invalid when mandatory and uniformed", %{template: template} do
+      changeset = get_changeset_for("copy", nil, "1", template)
+      refute changeset.valid?
+    end
+
+    test "copy field is invalid when mandatory and empty", %{template: template} do
+      changeset = get_changeset_for("copy", "", "1", template)
+      refute changeset.valid?
+    end
+
     test "valid type system", %{template: template} do
       changeset = get_changeset_for("system", %{}, "?", template)
       assert changeset.valid?

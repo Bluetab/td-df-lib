@@ -275,7 +275,7 @@ defmodule TdDfLib.FormatTest do
       assert is_nil(Format.search_values(nil, fields))
     end
 
-    test "search_values/2 omits values of type image" do
+    test "search_values/2 omits values of type image and copy" do
       content = %{
         "xyzzy" => "spqr",
         "foo" => %{
@@ -305,7 +305,8 @@ defmodule TdDfLib.FormatTest do
             "object" => "document"
           }
         },
-        "bay" => "photo code..."
+        "bay" => "photo code...",
+        "xyz" => "some json code as tring..."
       }
 
       fields = [
@@ -315,7 +316,8 @@ defmodule TdDfLib.FormatTest do
             %{"name" => "foo", "type" => "enriched_text"},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
-            %{"name" => "bay", "type" => "image"}
+            %{"name" => "bay", "type" => "image"},
+            %{"name" => "xyz", "type" => "image"}
           ]
         }
       ]

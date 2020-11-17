@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.9.0] 2020-10-17
+
+### Added
+
+- [TD-3089] Copy type fields
+
 ## [4.6.0] 2020-10-19
 
 ### Added

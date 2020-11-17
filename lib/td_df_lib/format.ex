@@ -43,7 +43,7 @@ defmodule TdDfLib.Format do
 
   defp cached_values(content, fields) do
     keys = Map.keys(content)
-    
+
     fields =
       fields
       |> Enum.filter(&Map.has_key?(&1, "type"))
@@ -63,7 +63,7 @@ defmodule TdDfLib.Format do
   defp drop_values(content, fields) do
     keys =
       fields
-      |> Enum.filter(&(Map.get(&1, "type") == "image"))
+      |> Enum.filter(&(Map.get(&1, "type") in ["image", "copy"]))
       |> Enum.map(&Map.get(&1, "name"))
 
     Map.drop(content, keys)

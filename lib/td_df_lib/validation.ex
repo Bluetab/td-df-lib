@@ -15,7 +15,8 @@ defmodule TdDfLib.Validation do
     "table" => :map,
     "integer" => :integer,
     "float" => :float,
-    "system" => :map
+    "system" => :map,
+    "copy" => :string
   }
 
   def build_changeset(content, content_schema) do

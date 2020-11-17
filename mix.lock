@@ -12,6 +12,6 @@
   "ex_machina": {:hex, :ex_machina, "2.4.0", "09a34c5d371bfb5f78399029194a8ff67aff340ebe8ba19040181af35315eabb", [:mix], [{:ecto, "~> 2.2 or ~> 3.0", [hex: :ecto, repo: "hexpm", optional: true]}, {:ecto_sql, "~> 3.0", [hex: :ecto_sql, repo: "hexpm", optional: true]}], "hexpm", "a20bc9ddc721b33ea913b93666c5d0bdca5cbad7a67540784ae277228832d72c"},
   "jason": {:hex, :jason, "1.2.1", "12b22825e22f468c02eb3e4b9985f3d0cb8dc40b9bd704730efa11abd2708c44", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "b659b8571deedf60f79c5a608e15414085fa141344e2716fbd6988a084b5f993"},
   "redix": {:hex, :redix, "0.11.1", "cc3c8c938f9fcc98f31162d088131ffbebbe68e5b21c8a3dd4967f8812f8a97a", [:mix], [{:castore, "~> 0.1.0", [hex: :castore, repo: "hexpm", optional: true]}, {:telemetry, "~> 0.4.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "9593ab0f6f39efbfb2d49634ee215297723ff614bba89fdfa7414f3cbb74a17e"},
-  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "67fe18c8985a7c9e9f630d82072d6b2332cf6088", [tag: "4.6.0"]},
+  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "c3a9585457cbba540ed4b64b98c0b32007c9ba34", [tag: "4.7.1"]},
   "telemetry": {:hex, :telemetry, "0.4.2", "2808c992455e08d6177322f14d3bdb6b625fbcfd233a73505870d8738a2f4599", [:rebar3], [], "hexpm", "2d1419bd9dda6a206d7b5852179511722e2b18812310d304620c7bd92a13fcef"},
 }
