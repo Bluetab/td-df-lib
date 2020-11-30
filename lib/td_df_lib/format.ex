@@ -3,9 +3,11 @@ defmodule TdDfLib.Format do
   Manages content formatting
   """
   alias TdCache.SystemCache
+  alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
 
-  @format_types ["enriched_text", "system"]
+  @cached ["domain", "system"]
+  @format_types ["domain", "enriched_text", "system"]
 
   def apply_template(nil, _), do: %{}
 
@@ -47,7 +49,7 @@ defmodule TdDfLib.Format do
     fields =
       fields
       |> Enum.filter(&Map.has_key?(&1, "type"))
-      |> Enum.filter(fn %{"type" => type} -> type == "system" end)
+      |> Enum.filter(fn %{"type" => type} -> type in @cached end)
       |> Enum.filter(fn %{"name" => name} -> name in keys end)
 
     field_names = Enum.map(fields, &Map.get(&1, "name"))
@@ -105,7 +107,7 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, RichText.to_plain_text(Map.get(acc, name)))
   end
 
-  defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
+  defp set_search_value(%{"name" => name, "type" => type}, acc) when type in @cached do
     case Map.get(acc, name) do
       value = %{} -> Map.put(acc, name, [value])
       value -> Map.put(acc, name, value)
@@ -200,6 +202,10 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, format_system(Map.get(acc, name), cardinality))
   end
 
+  defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
+    Map.put(acc, name, format_domain(Map.get(acc, name), cardinality))
+  end
+
   defp set_cached_value(_field, acc), do: acc
 
   defp format_system(%{} = system, _cardinality) do
@@ -232,7 +238,25 @@ defmodule TdDfLib.Format do
 
   defp format_system(system, _cardinality), do: system
 
-  defp apply_cardinality(system = %{}, cardinality) when cardinality in ["*", "+"], do: [system]
+  defp format_domain(%{} = domain, _cardinality) do
+    id = Map.get(domain, "id")
+    TaxonomyCache.get_domain(id) || domain
+  end
 
-  defp apply_cardinality(system, _cardinality), do: system
+  defp format_domain([_ | _] = domains, cardinality) do
+    Enum.map(domains, &format_domain(&1, cardinality))
+  end
+
+  defp format_domain(external_id, cardinality) when is_binary(external_id) do
+    TaxonomyCache.get_domain_external_id_to_id_map()
+    |> Map.get(external_id)
+    |> TaxonomyCache.get_domain()
+    |> apply_cardinality(cardinality)
+  end
+
+  defp format_domain(domain, _cardinality), do: domain
+
+  defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
+
+  defp apply_cardinality(value, _cardinality), do: value
 end

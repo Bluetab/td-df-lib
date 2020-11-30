@@ -2,6 +2,7 @@ defmodule TdDfLib.FormatTest do
   use ExUnit.Case
   doctest TdDfLib.Format
 
+  alias TdCache.DomainCache
   alias TdCache.Redix
   alias TdCache.SystemCache
   alias TdDfLib.Format
@@ -173,6 +174,7 @@ defmodule TdDfLib.FormatTest do
 
   describe "search_values/2" do
     setup [:create_system]
+    setup [:create_domain]
 
     test "search_values/2 sets default values and removes redundant fields" do
       content = %{
@@ -226,7 +228,7 @@ defmodule TdDfLib.FormatTest do
              }
     end
 
-    test "search_values/2 gets system from cache formatted to index on elastic", %{system: system} do
+    test "search_values/2 gets system from cache and formats it", %{system: system} do
       content = %{"system" => %{"id" => system.id}}
 
       fields = [
@@ -252,6 +254,34 @@ defmodule TdDfLib.FormatTest do
       ]
 
       assert %{"system" => [system]} = Format.search_values(content, %{content: fields})
+    end
+
+    test "search_values/2 gets domain from cache and formats it", %{domain: domain} do
+      content = %{"domain" => %{"id" => domain.id}}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "domain", "type" => "domain", "cardinality" => 1}
+          ]
+        }
+      ]
+
+      assert %{"domain" => [domain]} = Format.search_values(content, %{content: fields})
+
+      content = %{"domain" => [%{"id" => domain.id}]}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "domain", "type" => "domain", "cardinality" => "*"}
+          ]
+        }
+      ]
+
+      assert %{"domain" => [domain]} = Format.search_values(content, %{content: fields})
     end
 
     test "search_values/2 returns nil when no template is provided" do
@@ -330,22 +360,33 @@ defmodule TdDfLib.FormatTest do
     end
   end
 
-  describe "enrich_content_values/2"  do
+  describe "enrich_content_values/2" do
     setup [:create_system]
-    test "enrich_content_values/2 gets cached values", %{system: system} do
-      content = %{"system" => %{"id" => system.id}, "foo" => "bar"}
+    setup [:create_domain]
+
+    test "enrich_content_values/2 gets cached values on cached type fields", %{
+      domain: domain,
+      system: system
+    } do
+      content = %{
+        "system" => %{"id" => system.id},
+        "domain" => %{"id" => domain.id},
+        "foo" => "bar"
+      }
 
       fields = [
         %{
           "name" => "group",
           "fields" => [
             %{"name" => "system", "type" => "system", "cardinality" => 1},
+            %{"name" => "domain", "type" => "domain", "cardinality" => "?"},
             %{"name" => "foo", "type" => "string", "cardinality" => "?"}
           ]
         }
       ]
 
-      assert %{"system" => system, "foo" => "bar"} = Format.enrich_content_values(content, %{content: fields})
+      assert %{"system" => system, "domain" => domain, "foo" => "bar"} =
+               Format.enrich_content_values(content, %{content: fields})
     end
   end
 
@@ -359,5 +400,23 @@ defmodule TdDfLib.FormatTest do
     end)
 
     {:ok, system: system}
+  end
+
+  defp create_domain(_) do
+    domain = %{
+      id: :rand.uniform(100_000_000),
+      external_id: "foo",
+      name: "bar",
+      updated_at: DateTime.utc_now()
+    }
+
+    DomainCache.put(domain)
+
+    on_exit(fn ->
+      DomainCache.delete(domain.id)
+      Redix.command(["DEL", "domains:ids_to_external_ids"])
+    end)
+
+    {:ok, domain: domain}
   end
 end
