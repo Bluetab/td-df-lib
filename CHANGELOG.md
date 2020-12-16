@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.11.0] 2020-12-16
+
+### Changed
+
+- Updated dependencies
+
 ## [4.10.0] 2020-11-30
 
 ### Added
