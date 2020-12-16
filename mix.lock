@@ -13,6 +13,6 @@
   "file_system": {:hex, :file_system, "0.2.10", "fb082005a9cd1711c05b5248710f8826b02d7d1784e7c3451f9c1231d4fc162d", [:mix], [], "hexpm", "41195edbfb562a593726eda3b3e8b103a309b733ad25f3d642ba49696bf715dc"},
   "jason": {:hex, :jason, "1.2.2", "ba43e3f2709fd1aa1dce90aaabfd039d000469c05c56f0b8e31978e03fa39052", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "18a228f5f0058ee183f29f9eae0805c6e59d61c3b006760668d8d18ff0d12179"},
   "redix": {:hex, :redix, "1.0.0", "4f310341744ffceab3031394450a4e603d4d1001a697c3f18ae57ae776cbd3fb", [:mix], [{:castore, "~> 0.1.0", [hex: :castore, repo: "hexpm", optional: true]}, {:telemetry, "~> 0.4.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "8c8d9b33b5491737adcd5bb9e0f43b85212a384ac0042f64c156113518266ecb"},
-  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "d7c718a190d57a7130f4852f176295959a3be194", [branch: "feature/td-3103"]},
+  "td_cache": {:git, "https://github.com/Bluetab/td-cache.git", "f8b133ed2528efe988b426e3ed6d83edd012b76f", [branch: "feature/td-3103"]},
   "telemetry": {:hex, :telemetry, "0.4.2", "2808c992455e08d6177322f14d3bdb6b625fbcfd233a73505870d8738a2f4599", [:rebar3], [], "hexpm", "2d1419bd9dda6a206d7b5852179511722e2b18812310d304620c7bd92a13fcef"},
 }
