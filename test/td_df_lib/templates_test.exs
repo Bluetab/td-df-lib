@@ -42,7 +42,7 @@ defmodule TdDfLib.TemplatesTest do
   } do
     assert [_ | _] = fields = Templates.subscribable_fields(template_name)
     assert Enum.count(fields) == 1
-    assert [_ | _] = fields = Templates.subscribable_fields(template) |> IO.inspect
+    assert [_ | _] = fields = Templates.subscribable_fields(template)
     assert Enum.count(fields) == 1
   end
 
