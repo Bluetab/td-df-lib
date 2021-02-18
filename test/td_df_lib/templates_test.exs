@@ -13,7 +13,9 @@ defmodule TdDfLib.TemplatesTest do
     end
   end
 
-  test "optional_fields/1 returns the optional fields of a template", %{template_name: template_name} do
+  test "optional_fields/1 returns the optional fields of a template", %{
+    template_name: template_name
+  } do
     optional_fields = Templates.optional_fields(template_name)
     assert Enum.count(optional_fields) == 15
   end
@@ -27,9 +29,21 @@ defmodule TdDfLib.TemplatesTest do
     assert Templates.group_name(template_name, "linked_dropdown") == "Lists"
   end
 
-  test "content_schema/2 returns the content schema of a template", %{template_name: template_name} do
-    assert [_|_] = fields = Templates.content_schema(template_name)
+  test "content_schema/2 returns the content schema of a template", %{
+    template_name: template_name
+  } do
+    assert [_ | _] = fields = Templates.content_schema(template_name)
     assert Enum.count(fields) == 18
+  end
+
+  test "subscribable_fields/1 returns the content schema of a template", %{
+    template_name: template_name,
+    template: template
+  } do
+    assert [_ | _] = fields = Templates.subscribable_fields(template_name)
+    assert Enum.count(fields) == 1
+    assert [_ | _] = fields = Templates.subscribable_fields(template) |> IO.inspect
+    assert Enum.count(fields) == 1
   end
 
   defp test_template do
@@ -66,6 +80,7 @@ defmodule TdDfLib.TemplatesTest do
                   "Elemento12"
                 ]
               },
+              "subscribable" => true,
               "widget" => "dropdown"
             },
             %{

@@ -31,6 +31,20 @@ defmodule TdDfLib.Templates do
 
   def optional_fields(nil = _template), do: []
 
+  def subscribable_fields(template_name) when is_binary(template_name) do
+    template_name
+    |> TemplateCache.get_by_name!()
+    |> subscribable_fields()
+  end
+
+  def subscribable_fields(%{content: content} = _template) do
+    content
+    |> Enum.flat_map(&Map.get(&1, "fields", []))
+    |> Enum.filter(&is_subscribable?/1)
+  end
+
+  def subscribable_fields(nil = _template), do: []
+
   def group_name(template_name, field_name) when is_binary(template_name) do
     template_name
     |> TemplateCache.get_by_name!()
@@ -110,4 +124,6 @@ defmodule TdDfLib.Templates do
   end
 
   defp is_complete?(_value), do: true
+
+  defp is_subscribable?(field), do: Map.get(field, "subscribable")
 end
