@@ -41,6 +41,7 @@ defmodule TdDfLib.Templates do
     content
     |> Enum.flat_map(&Map.get(&1, "fields", []))
     |> Enum.filter(&is_subscribable?/1)
+    |> Enum.map(&Map.get(&1, "name"))
   end
 
   def subscribable_fields(nil = _template), do: []
