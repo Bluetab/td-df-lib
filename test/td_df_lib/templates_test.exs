@@ -36,7 +36,7 @@ defmodule TdDfLib.TemplatesTest do
     assert Enum.count(fields) == 18
   end
 
-  test "subscribable_fields/1 returns the content schema of a template", %{
+  test "subscribable_fields/1 returns subscribable fields", %{
     template_name: template_name,
     template: template
   } do
@@ -44,6 +44,12 @@ defmodule TdDfLib.TemplatesTest do
     assert Enum.count(fields) == 1
     assert [_ | _] = fields = Templates.subscribable_fields(template)
     assert Enum.count(fields) == 1
+  end
+
+  test "subscribable_fields_by_type/1 returns subscribable fields grouped by type", %{
+    template: %{name: name, scope: scope}
+  } do
+    %{^name => ["lista_dropdown"]} = Templates.subscribable_fields_by_type(scope)
   end
 
   defp test_template do

@@ -46,6 +46,14 @@ defmodule TdDfLib.Templates do
 
   def subscribable_fields(nil = _template), do: []
 
+  def subscribable_fields_by_type(scope) do
+    scope
+    |> TemplateCache.list_by_scope!()
+    |> Enum.map(fn t -> {t.name, subscribable_fields(t)} end)
+    |> Enum.reject(fn {_, v} -> Enum.empty?(v) end)
+    |> Map.new()
+  end
+
   def group_name(template_name, field_name) when is_binary(template_name) do
     template_name
     |> TemplateCache.get_by_name!()
