@@ -40,10 +40,8 @@ defmodule TdDfLib.TemplatesTest do
     template_name: template_name,
     template: template
   } do
-    assert [_ | _] = fields = Templates.subscribable_fields(template_name)
-    assert Enum.count(fields) == 1
-    assert [_ | _] = fields = Templates.subscribable_fields(template)
-    assert Enum.count(fields) == 1
+    assert ["lista_dropdown"] = Templates.subscribable_fields(template_name)
+    assert ["lista_dropdown"] = Templates.subscribable_fields(template)
   end
 
   test "subscribable_fields_by_type/1 returns subscribable fields grouped by type", %{
