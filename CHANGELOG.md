@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.15.0] 2021-03-05
+
+### Changed
+
+- [TD-3063] Get subscribable fields from template
+
 ## [4.12.0] 2021-01-13
 
 ### Changed
