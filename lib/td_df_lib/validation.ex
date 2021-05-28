@@ -61,6 +61,7 @@ defmodule TdDfLib.Validation do
     changeset
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec)
+    |> add_image_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [tail | head]) do
@@ -86,13 +87,6 @@ defmodule TdDfLib.Validation do
     |> Changeset.validate_required(field)
     |> Changeset.validate_length(field, min: 1)
     |> Changeset.validate_change(field, &validate_no_empty_items/2)
-  end
-
-  defp add_require_validation(changeset, %{"name" => name, "type" => "image"}) do
-    field = String.to_atom(name)
-
-    changeset
-    |> Changeset.validate_change(field, &image_validation/2)
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
@@ -129,6 +123,15 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_inclusion_validation(changeset, %{}), do: changeset
+
+  defp add_image_validation(changeset, %{"name" => name, "type" => "image"}) do
+    field = String.to_atom(name)
+
+    changeset
+    |> Changeset.validate_change(field, &image_validation/2)
+  end
+
+  defp add_image_validation(changeset, %{}), do: changeset
 
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do

@@ -203,7 +203,6 @@ defmodule TdDfLib.ValidationTest do
           %{"image_name" => <<"data:image/jpeg;base64,/888j/4QAYRXhXXXX">>},
           schema
         )
-
       assert changeset.valid?
     end
 

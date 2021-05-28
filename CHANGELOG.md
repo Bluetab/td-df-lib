@@ -1,5 +1,9 @@
 # Changelog
 
+### Unrelease
+
+- [TD-3502] image type validation
+
 ## [4.15.0] 2021-03-05
 
 ### Changed
