@@ -8,9 +8,9 @@ defmodule TdDfLib.ValidationTest do
 
   describe "validations" do
     setup do
-      #template = random_template()
+      # template = random_template()
       %{id: template_id} = template = build(:template)
-      #TemplateCache.put(template, publish: false)
+      # TemplateCache.put(template, publish: false)
 
       on_exit(fn -> TemplateCache.delete(template_id) end)
 
@@ -177,6 +177,65 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "valid image type", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "cardinality" => "?",
+              "default" => "",
+              "label" => "image_label",
+              "name" => "image_name",
+              "type" => "image",
+              "values" => nil,
+              "widget" => "image"
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{"image_name" => <<"data:image/jpeg;base64,/888j/4QAYRXhXXXX">>},
+          schema
+        )
+      assert changeset.valid?
+    end
+
+    test "invalid image type", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "cardinality" => "?",
+              "default" => "",
+              "label" => "image_label",
+              "name" => "image_name",
+              "type" => "image",
+              "values" => nil,
+              "widget" => "image"
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{"image_name" => <<"data:application/pdf;base64,JVBERi0xLjUNJeLj">>},
+          schema
+        )
+
+      refute changeset.valid?
+    end
+
     test "content with hidden required field returns valid changeset", %{template: template} do
       template =
         template
@@ -258,9 +317,10 @@ defmodule TdDfLib.ValidationTest do
       assert changeset.valid?
     end
 
-    test "content with correct values for fixed and fixed tuple values returns valid changeset", %{
-      template: template
-    } do
+    test "content with correct values for fixed and fixed tuple values returns valid changeset",
+         %{
+           template: template
+         } do
       template =
         template
         |> Map.put(:content, [
@@ -274,7 +334,9 @@ defmodule TdDfLib.ValidationTest do
             "name" => "dropdown_fixed_tuple",
             "type" => "string",
             "cardinality" => "1",
-            "values" => %{"fixed_tuple" => [%{value: "Yes", text: "Yes!"}, %{value: "No", text: "No!"}]}
+            "values" => %{
+              "fixed_tuple" => [%{value: "Yes", text: "Yes!"}, %{value: "No", text: "No!"}]
+            }
           }
         ])
 
@@ -318,7 +380,9 @@ defmodule TdDfLib.ValidationTest do
             "name" => "dropdown_fixed_tuple",
             "type" => "string",
             "cardinality" => "1",
-            "values" => %{"fixed_tuple" => [%{value: "Yes", text: "Yes!"}, %{value: "No", text: "No!"}]}
+            "values" => %{
+              "fixed_tuple" => [%{value: "Yes", text: "Yes!"}, %{value: "No", text: "No!"}]
+            }
           }
         ])
 

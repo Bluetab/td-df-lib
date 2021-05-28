@@ -1,5 +1,12 @@
 # Changelog
 
+### [4.21.0] 2021-05-28
+
+### Changed
+
+- [TD-3502] image type validation
+- [TD-3502] update cache version
+
 ## [4.15.0] 2021-03-05
 
 ### Changed

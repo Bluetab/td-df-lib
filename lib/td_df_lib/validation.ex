@@ -61,6 +61,7 @@ defmodule TdDfLib.Validation do
     changeset
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec)
+    |> add_image_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [tail | head]) do
@@ -90,7 +91,10 @@ defmodule TdDfLib.Validation do
 
   defp add_require_validation(changeset, %{}), do: changeset
 
-  defp add_inclusion_validation(%{data: data} = changeset, %{"name" => name, "values" => %{"fixed" => fixed}}) do
+  defp add_inclusion_validation(%{data: data} = changeset, %{
+         "name" => name,
+         "values" => %{"fixed" => fixed}
+       }) do
     field = String.to_atom(name)
 
     data
@@ -102,7 +106,10 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp add_inclusion_validation(%{data: data} = changeset, %{"name" => name, "values" => %{"fixed_tuple" => fixed_tuple}}) do
+  defp add_inclusion_validation(%{data: data} = changeset, %{
+         "name" => name,
+         "values" => %{"fixed_tuple" => fixed_tuple}
+       }) do
     field = String.to_atom(name)
     fixed = Enum.map(fixed_tuple, &Map.get(&1, "value"))
 
@@ -116,6 +123,15 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_inclusion_validation(changeset, %{}), do: changeset
+
+  defp add_image_validation(changeset, %{"name" => name, "type" => "image"}) do
+    field = String.to_atom(name)
+
+    changeset
+    |> Changeset.validate_change(field, &image_validation/2)
+  end
+
+  defp add_image_validation(changeset, %{}), do: changeset
 
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
@@ -132,6 +148,18 @@ defmodule TdDfLib.Validation do
   end
 
   defp validate_no_empty_items(_, _), do: []
+
+  defp image_validation(_field, nil), do: []
+
+  defp image_validation(field, image_data) do
+    {start, _length} = :binary.match(image_data, ";base64,")
+    type = :binary.part(image_data, 0, start)
+
+    case Regex.match?(~r/(jpg|jpeg|png|gif)/, type) do
+      true -> []
+      _ -> Keyword.new([{field, "invalid image type"}])
+    end
+  end
 
   @doc """
   Returns a 2-arity validator function that can be used by
