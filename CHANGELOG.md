@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Update `td_cache` to 4.25.3
+- Update `td_cache` to 4.25.4
 
 ## [4.21.0] 2021-05-28
 
