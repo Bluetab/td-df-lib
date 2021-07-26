@@ -173,8 +173,7 @@ defmodule TdDfLib.FormatTest do
   end
 
   describe "search_values/2" do
-    setup [:create_system]
-    setup [:create_domain]
+    setup [:create_system, :create_domain]
 
     test "search_values/2 sets default values and removes redundant fields" do
       content = %{
@@ -253,7 +252,7 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => [system]} = Format.search_values(content, %{content: fields})
+      assert %{"system" => [_system]} = Format.search_values(content, %{content: fields})
     end
 
     test "search_values/2 gets domain from cache and formats it", %{domain: domain} do
@@ -281,7 +280,7 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"domain" => [domain]} = Format.search_values(content, %{content: fields})
+      assert %{"domain" => [_domain]} = Format.search_values(content, %{content: fields})
     end
 
     test "search_values/2 returns nil when no template is provided" do
@@ -361,8 +360,7 @@ defmodule TdDfLib.FormatTest do
   end
 
   describe "enrich_content_values/2" do
-    setup [:create_system]
-    setup [:create_domain]
+    setup [:create_system, :create_domain]
 
     test "enrich_content_values/2 gets cached values on cached type fields", %{
       domain: domain,
@@ -385,13 +383,13 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => system, "domain" => domain, "foo" => "bar"} =
+      assert %{"system" => _system, "domain" => _domain, "foo" => "bar"} =
                Format.enrich_content_values(content, %{content: fields})
     end
   end
 
   defp create_system(_) do
-    system = %{id: :rand.uniform(100_000_000), external_id: "foo", name: "bar"}
+    system = %{id: System.unique_integer([:positive]), external_id: "foo", name: "bar"}
     SystemCache.put(system)
 
     on_exit(fn ->
@@ -404,7 +402,7 @@ defmodule TdDfLib.FormatTest do
 
   defp create_domain(_) do
     domain = %{
-      id: :rand.uniform(100_000_000),
+      id: System.unique_integer([:positive]),
       external_id: "foo",
       name: "bar",
       updated_at: DateTime.utc_now()

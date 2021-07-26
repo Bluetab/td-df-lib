@@ -51,7 +51,7 @@ defmodule TdDfLib.TemplatesTest do
   end
 
   defp test_template do
-    id = :rand.uniform(100_000_000)
+    id = System.unique_integer([:positive])
 
     %{
       id: id,
