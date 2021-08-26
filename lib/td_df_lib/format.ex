@@ -116,6 +116,24 @@ defmodule TdDfLib.Format do
 
   defp set_search_value(_field, acc), do: acc
 
+  def set_default_value(
+        content,
+        %{"name" => name, "default" => default = %{}, "values" => %{"switch" => %{"on" => on}}} =
+          field
+      ) do
+    dependent_value = Map.get(content, on)
+    default_value = Map.get(default, dependent_value)
+
+    case default_value do
+      nil ->
+        field = Map.delete(field, "default")
+        set_default_value(content, field)
+
+      default_value ->
+        Map.put_new(content, name, default_value)
+    end
+  end
+
   def set_default_value(content, %{"name" => name, "default" => default}) do
     Map.put_new(content, name, default)
   end
