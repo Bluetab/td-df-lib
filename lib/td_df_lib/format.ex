@@ -116,6 +116,16 @@ defmodule TdDfLib.Format do
 
   defp set_search_value(_field, acc), do: acc
 
+  def set_default_value(content, %{"depends" => %{"on" => on, "to_be" => to_be}} = field) do
+    dependent_value = Map.get(content, on)
+
+    if Enum.member?(to_be, dependent_value) do
+      set_default_value(content, Map.delete(field, "depends"))
+    else
+      content
+    end
+  end
+
   def set_default_value(
         content,
         %{"name" => name, "default" => default = %{}, "values" => %{"switch" => %{"on" => on}}} =

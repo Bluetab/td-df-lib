@@ -200,6 +200,56 @@ defmodule TdDfLib.FormatTest do
            }
   end
 
+  test "set_default_values/2 sets default values for dependent values" do
+    content = %{"bar" => "1", "foo" => "6"}
+
+    fields = [
+      %{"name" => "foo", "cardinality" => "?", "values" => %{"fixed" => ["6", "7", "8"]}},
+      %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
+      %{
+        "name" => "baz",
+        "cardinality" => "+",
+        "depends" => %{"on" => "foo", "to_be" => ["7", "8"]},
+        "default" => %{"1" => ["a"], "2" => ["c"]},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      },
+      %{
+        "name" => "xyz",
+        "cardinality" => "?",
+        "depends" => %{"on" => "foo", "to_be" => ["6", "7"]},
+        "default" => %{"1" => "b", "2" => "d"},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      }
+    ]
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "6",
+             "bar" => "1",
+             "xyz" => "b"
+           }
+
+    content = %{"bar" => "1", "foo" => "7"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "7",
+             "bar" => "1",
+             "baz" => ["a"],
+             "xyz" => "b"
+           }
+
+    content = %{"bar" => "2", "foo" => "8"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "8",
+             "bar" => "2",
+             "baz" => ["c"]
+           }
+  end
+
   test "apply_template/2 returns nil when no template is provided" do
     content = %{"xyzzy" => "spqr"}
     assert Format.apply_template(content, nil) == %{}
