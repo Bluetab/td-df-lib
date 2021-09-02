@@ -56,6 +56,70 @@ defmodule TdDfLib.FormatTest do
            }
   end
 
+  test "set_default_values/2 sets default values for switch" do
+    content = %{"xyzzy" => "spqr", "bar" => "1"}
+
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
+      %{
+        "name" => "baz",
+        "cardinality" => "+",
+        "default" => %{"1" => ["a"], "2" => ["c"]},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      },
+      %{
+        "name" => "xyz",
+        "cardinality" => "?",
+        "default" => %{"1" => "b", "2" => "d"},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      },
+      %{"name" => "xyzzy", "default" => "xyzzy"}
+    ]
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "1",
+             "baz" => ["a"],
+             "xyz" => "b",
+             "xyzzy" => "spqr"
+           }
+
+    content = %{"xyzzy" => "spqr", "bar" => "2"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "2",
+             "baz" => ["c"],
+             "xyz" => "d",
+             "xyzzy" => "spqr"
+           }
+
+    content = %{"xyzzy" => "spqr", "bar" => "3"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "3",
+             "baz" => [""],
+             "xyz" => "",
+             "xyzzy" => "spqr"
+           }
+
+    content = %{"xyzzy" => "spqr"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "",
+             "baz" => [""],
+             "xyz" => "",
+             "xyzzy" => "spqr"
+           }
+  end
+
   test "apply_template/2 sets default values and removes redundant fields" do
     content = %{"xyzzy" => "spqr"}
 
@@ -69,6 +133,120 @@ defmodule TdDfLib.FormatTest do
              "foo" => "foo",
              "bar" => [""],
              "baz" => [""]
+           }
+  end
+
+  test "apply_template/2 sets default values of switch like fields" do
+    content = %{"xyzzy" => "spqr", "bar" => "1"}
+
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
+      %{
+        "name" => "baz",
+        "cardinality" => "+",
+        "default" => %{"1" => ["a"], "2" => ["c"]},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      },
+      %{
+        "name" => "xyz",
+        "cardinality" => "?",
+        "default" => %{"1" => "b", "2" => "d"},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      },
+      %{"name" => "xyzzy", "default" => "xyzzy"}
+    ]
+
+    assert Format.apply_template(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "1",
+             "baz" => ["a"],
+             "xyz" => "b",
+             "xyzzy" => "spqr"
+           }
+
+    content = %{"xyzzy" => "spqr", "bar" => "2"}
+
+    assert Format.apply_template(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "2",
+             "baz" => ["c"],
+             "xyz" => "d",
+             "xyzzy" => "spqr"
+           }
+
+    content = %{"xyzzy" => "spqr", "bar" => "3"}
+
+    assert Format.apply_template(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "3",
+             "baz" => [""],
+             "xyz" => "",
+             "xyzzy" => "spqr"
+           }
+
+    content = %{"xyzzy" => "spqr"}
+
+    assert Format.apply_template(content, fields) == %{
+             "foo" => "foo",
+             "bar" => "",
+             "baz" => [""],
+             "xyz" => "",
+             "xyzzy" => "spqr"
+           }
+  end
+
+  test "set_default_values/2 sets default values for dependent values" do
+    content = %{"bar" => "1", "foo" => "6"}
+
+    fields = [
+      %{"name" => "foo", "cardinality" => "?", "values" => %{"fixed" => ["6", "7", "8"]}},
+      %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
+      %{
+        "name" => "baz",
+        "cardinality" => "+",
+        "depends" => %{"on" => "foo", "to_be" => ["7", "8"]},
+        "default" => %{"1" => ["a"], "2" => ["c"]},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      },
+      %{
+        "name" => "xyz",
+        "cardinality" => "?",
+        "depends" => %{"on" => "foo", "to_be" => ["6", "7"]},
+        "default" => %{"1" => "b", "2" => "d"},
+        "values" => %{
+          "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
+        }
+      }
+    ]
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "6",
+             "bar" => "1",
+             "xyz" => "b"
+           }
+
+    content = %{"bar" => "1", "foo" => "7"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "7",
+             "bar" => "1",
+             "baz" => ["a"],
+             "xyz" => "b"
+           }
+
+    content = %{"bar" => "2", "foo" => "8"}
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "8",
+             "bar" => "2",
+             "baz" => ["c"]
            }
   end
 

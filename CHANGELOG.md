@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.27.0] 2021-09-02
+
+### Added
+
+- [TD-3973] Default value over switch fields
+
 ## [4.25.0] 2021-07-26
 
 ### Changed
