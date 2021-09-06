@@ -16,7 +16,7 @@ defmodule TdDfLib.TemplatesTest do
   test "optional_fields/1 returns the optional fields of a template", %{
     template_name: template_name
   } do
-    optional_fields = Templates.optional_fields(template_name)
+    optional_fields = Templates.optional_fields(template_name, %{})
     assert Enum.count(optional_fields) == 15
   end
 

@@ -26,14 +26,12 @@ defmodule TdDfLib.RichText do
 
     case String.last(plain_text) do
       " " -> String.slice(plain_text, 0..-2)
-      # "\n" -> String.slice(plain_text, 0..-2)
       _ -> plain_text
     end
   end
 
   def to_plain_text(%{"object" => "block", "nodes" => nodes}) do
     [to_plain_text(nodes), " "] |> Enum.join("")
-    # [to_plain_text(nodes), "\n"] |> Enum.join("")
   end
 
   def to_plain_text(%{"object" => "text", "leaves" => leaves}) do

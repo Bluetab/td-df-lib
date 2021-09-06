@@ -16,20 +16,20 @@ defmodule TdDfLib.Templates do
     |> template_completeness(content)
   end
 
-  def optional_fields(template_name) when is_binary(template_name) do
+  def optional_fields(template_name, %{} = content) when is_binary(template_name) do
     template_name
     |> TemplateCache.get_by_name!()
-    |> optional_fields()
+    |> optional_fields(content)
   end
 
-  def optional_fields(%{content: content} = _template) do
-    content
+  def optional_fields(%{content: template_content} = _template, %{} = content) do
+    template_content
     |> Enum.flat_map(&Map.get(&1, "fields", []))
-    |> Enum.filter(&is_optional?/1)
+    |> Enum.filter(&is_optional?(&1, content))
     |> Enum.map(&Map.get(&1, "name"))
   end
 
-  def optional_fields(nil = _template), do: []
+  def optional_fields(nil = _template, _content), do: []
 
   def subscribable_fields(template_name) when is_binary(template_name) do
     template_name
@@ -89,16 +89,33 @@ defmodule TdDfLib.Templates do
     |> Enum.member?(field_name)
   end
 
-  defp is_optional?(%{"cardinality" => cardinality}), do: is_optional?(cardinality)
+  defp is_optional?(
+         %{"mandatory" => %{"on" => on, "to_be" => target = [_ | _]}} =
+           field,
+         content
+       ) do
+    field = Map.delete(field, "mandatory")
+    value = Map.get(content, on)
+    is_optional?(field) && not meets_dependency?(value, target)
+  end
+  defp is_optional?(%{"cardinality" => cardinality}, _content), do: is_optional?(cardinality)
   defp is_optional?("*"), do: true
   defp is_optional?("?"), do: true
   defp is_optional?(_), do: false
+
+  defp meets_dependency?(value = [_ | _], target) do
+    not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
+  end 
+
+  defp meets_dependency?(value, target) do
+    Enum.member?(value, target)
+  end 
 
   defp template_completeness(nil = _template, _content), do: 0.0
 
   defp template_completeness(%{} = template, content) do
     template
-    |> optional_fields()
+    |> optional_fields(content)
     |> field_completeness(content)
   end
 
