@@ -8,9 +8,7 @@ defmodule TdDfLib.ValidationTest do
 
   describe "validations" do
     setup do
-      # template = random_template()
       %{id: template_id} = template = build(:template)
-      # TemplateCache.put(template, publish: false)
 
       on_exit(fn -> TemplateCache.delete(template_id) end)
 

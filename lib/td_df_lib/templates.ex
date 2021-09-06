@@ -76,6 +76,14 @@ defmodule TdDfLib.Templates do
     end
   end
 
+  def meets_dependency?(value = [_ | _], target) do
+    not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
+  end
+
+  def meets_dependency?(value, target) do
+    Enum.member?(target, value)
+  end
+
   defp do_group_name(content, field_name) do
     content
     |> Enum.filter(&has_field?(&1, field_name))
@@ -90,26 +98,20 @@ defmodule TdDfLib.Templates do
   end
 
   defp is_optional?(
-         %{"mandatory" => %{"on" => on, "to_be" => target = [_ | _]}} =
-           field,
+         %{
+           "cardinality" => cardinality,
+           "mandatory" => %{"on" => on, "to_be" => target = [_ | _]}
+         },
          content
        ) do
-    field = Map.delete(field, "mandatory")
     value = Map.get(content, on)
-    is_optional?(field) && not meets_dependency?(value, target)
+    is_optional?(cardinality) && not meets_dependency?(value, target)
   end
+
   defp is_optional?(%{"cardinality" => cardinality}, _content), do: is_optional?(cardinality)
   defp is_optional?("*"), do: true
   defp is_optional?("?"), do: true
   defp is_optional?(_), do: false
-
-  defp meets_dependency?(value = [_ | _], target) do
-    not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
-  end 
-
-  defp meets_dependency?(value, target) do
-    Enum.member?(value, target)
-  end 
 
   defp template_completeness(nil = _template, _content), do: 0.0
 

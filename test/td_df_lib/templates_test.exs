@@ -13,17 +13,44 @@ defmodule TdDfLib.TemplatesTest do
     end
   end
 
-  test "optional_fields/1 returns the optional fields of a template", %{
+  test "optional_fields/2 returns the optional fields of a template", %{
     template_name: template_name
   } do
     optional_fields = Templates.optional_fields(template_name, %{})
-    assert Enum.count(optional_fields) == 15
+    assert Enum.count(optional_fields) == 18
+  end
+
+  test "optional_fields/2 returns the optional fields of a template excluding dependent mandatory fields",
+       %{
+         template_name: template_name
+       } do
+    optional_fields = Templates.optional_fields(template_name, %{"demo.filter" => "a"})
+    assert Enum.count(optional_fields) == 17
+    refute Enum.member?(optional_fields, "mandatory.dependent.on_single")
+
+    optional_fields = Templates.optional_fields(template_name, %{"demo.filter" => "b"})
+    assert Enum.count(optional_fields) == 18
+    assert Enum.member?(optional_fields, "mandatory.dependent.on_single")
+
+    optional_fields =
+      Templates.optional_fields(template_name, %{"independent_multiple" => ["foo"]})
+
+    assert Enum.count(optional_fields) == 17
+    refute Enum.member?(optional_fields, "mandatory.dependent.on_multiple")
+
+    optional_fields =
+      Templates.optional_fields(template_name, %{"independent_multiple" => ["bar"]})
+
+    assert Enum.count(optional_fields) == 18
+    assert Enum.member?(optional_fields, "mandatory.dependent.on_multiple")
   end
 
   test "completeness/2 returns the completeness of some content", %{template_name: template_name} do
     content = %{"texto" => "foo"}
-    assert Templates.completeness(content, template_name) == Float.round(100.0 / 15.0, 2)
+    assert Templates.completeness(content, template_name) == Float.round(100.0 / 18.0, 2)
   end
+
+  # TODO: Completeness with dependent
 
   test "group_name/2 returns the group name of a field", %{template_name: template_name} do
     assert Templates.group_name(template_name, "linked_dropdown") == "Lists"
@@ -33,7 +60,7 @@ defmodule TdDfLib.TemplatesTest do
     template_name: template_name
   } do
     assert [_ | _] = fields = Templates.content_schema(template_name)
-    assert Enum.count(fields) == 18
+    assert Enum.count(fields) == 21
   end
 
   test "subscribable_fields/1 returns subscribable fields", %{
@@ -126,6 +153,19 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "*",
+              "label" => "Independent multiple",
+              "name" => "independent_multiple",
+              "type" => "string",
+              "values" => %{
+                "fixed" => [
+                  "foo",
+                  "bar"
+                ]
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "*",
               "depends" => %{"on" => "lista_dropdown", "to_be" => ["Elemento3"]},
               "label" => "Selección múltiple",
               "name" => "dropdown_multiple",
@@ -195,6 +235,26 @@ defmodule TdDfLib.TemplatesTest do
               "name" => "demo.filter",
               "type" => "string",
               "values" => %{"fixed" => ["a", "b", "c", "d", "e"]},
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => "",
+              "label" => "Mandatory dependent on single field",
+              "name" => "mandatory.dependent.on_single",
+              "mandatory" => %{"on" => "demo.filter", "to_be" => ["a", "e"]},
+              "type" => "string",
+              "values" => %{"fixed" => ["a", "b", "c", "d", "e"]},
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => "",
+              "label" => "Mandatory dependent on multiple field",
+              "name" => "mandatory.dependent.on_multiple",
+              "mandatory" => %{"on" => "independent_multiple", "to_be" => ["foo"]},
+              "type" => "string",
+              "values" => %{"fixed" => ["foo", "bar"]},
               "widget" => "dropdown"
             },
             %{
