@@ -76,7 +76,7 @@ defmodule TdDfLib.Templates do
     end
   end
 
-  def meets_dependency?(value = [_ | _], target) do
+  def meets_dependency?([_ | _] = value, target) do
     not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
   end
 

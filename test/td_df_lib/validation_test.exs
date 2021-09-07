@@ -26,7 +26,6 @@ defmodule TdDfLib.ValidationTest do
     end
 
     test "valid type string cardinality 1", %{template: template} do
-      IO.inspect(template)
       changeset = get_changeset_for("string", "string_value", "1", template)
       assert changeset.valid?
     end
