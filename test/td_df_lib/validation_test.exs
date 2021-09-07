@@ -26,6 +26,7 @@ defmodule TdDfLib.ValidationTest do
     end
 
     test "valid type string cardinality 1", %{template: template} do
+      IO.inspect(template)
       changeset = get_changeset_for("string", "string_value", "1", template)
       assert changeset.valid?
     end
@@ -391,6 +392,69 @@ defmodule TdDfLib.ValidationTest do
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       refute changeset.valid?
+    end
+
+    test "build_changeset/1 validates conditional mandatory fields", %{
+      template: template
+    } do
+      %{content: [group = %{"fields" => fields} | _]} = template
+
+      dependent_multiple = %{
+        "name" => "dependent_multiple",
+        "label" => "Dependent mandatory multiple",
+        "type" => "string",
+        "cardinality" => "*",
+        "mandatory" => %{"on" => "list", "to_be" => ["one", "three"]},
+        "values" => %{
+          "fixed" => ["foo", "bar", "baz"]
+        }
+      }
+
+      dependent_single = %{
+        "name" => "dependent_single",
+        "label" => "Dependent mandatory single",
+        "type" => "string",
+        "cardinality" => "?",
+        "mandatory" => %{"on" => "list", "to_be" => ["two"]},
+        "values" => nil
+      }
+
+      fields = fields ++ [dependent_multiple, dependent_single]
+      group = Map.put(group, "fields", fields)
+      template = Map.put(template, :content, [group])
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      schema = Enum.flat_map(schema, &Map.get(&1, "fields"))
+      content = %{"string" => "xyx", "list" => "three"}
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{
+               errors: [dependent_multiple: {"can't be blank", [validation: :required]}],
+               valid?: false
+             } = changeset
+
+      content = %{"string" => "xyx", "list" => "one"}
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{
+               errors: [dependent_multiple: {"can't be blank", [validation: :required]}],
+               valid?: false
+             } = changeset
+
+      content = %{"string" => "xyx", "list" => "one", "dependent_multiple" => ["foo"]}
+      changeset = Validation.build_changeset(content, schema)
+      assert %{valid?: true} = changeset
+      content = %{"string" => "xyx", "list" => "two"}
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{
+               errors: [dependent_single: {"can't be blank", [validation: :required]}],
+               valid?: false
+             } = changeset
+
+      content = %{"string" => "xyx", "list" => "two", "dependent_single" => "bar"}
+      changeset = Validation.build_changeset(content, schema)
+      assert %{valid?: true} = changeset
     end
   end
 

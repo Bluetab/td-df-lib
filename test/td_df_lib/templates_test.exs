@@ -49,9 +49,12 @@ defmodule TdDfLib.TemplatesTest do
     content = %{"texto" => "foo"}
     assert Templates.completeness(content, template_name) == Float.round(100.0 / 18.0, 2)
   end
-
-  # TODO: Completeness with dependent
-
+  
+  test "completeness/2 returns the completeness of some content excluding mandatory dependent", %{template_name: template_name} do
+    content = %{"texto" => "foo", "demo.filter" => "a", "independent_multiple" => ["foo"]}
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 16.0, 2)
+  end
+  
   test "group_name/2 returns the group name of a field", %{template_name: template_name} do
     assert Templates.group_name(template_name, "linked_dropdown") == "Lists"
   end
