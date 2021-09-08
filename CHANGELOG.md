@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] 
+
+### Added
+
+- [TD-3971] Mandatory field depending on previous field value
+
 ## [4.27.0] 2021-09-02
 
 ### Added
