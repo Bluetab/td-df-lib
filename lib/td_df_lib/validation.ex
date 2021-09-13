@@ -73,20 +73,24 @@ defmodule TdDfLib.Validation do
   defp add_content_validation(changeset, []), do: changeset
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "1"}) do
-    field = String.to_atom(name)
-
-    changeset
-    |> Changeset.validate_required(field)
-    |> Changeset.validate_change(field, &validate_no_empty_items/2)
+    validate_single(name, changeset)
   end
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "+"}) do
-    field = String.to_atom(name)
+    validate_multiple(name, changeset)
+  end
 
-    changeset
-    |> Changeset.validate_required(field)
-    |> Changeset.validate_length(field, min: 1)
-    |> Changeset.validate_change(field, &validate_no_empty_items/2)
+  defp add_require_validation(
+         changeset,
+         %{"mandatory" => %{"on" => on, "to_be" => target = [_ | _]}} = field
+       ) do
+    dependent = Changeset.get_field(changeset, on)
+
+    if Templates.meets_dependency?(dependent, target) do
+      validate_required_field(changeset, field)
+    else
+      changeset
+    end
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
@@ -126,9 +130,7 @@ defmodule TdDfLib.Validation do
 
   defp add_image_validation(changeset, %{"name" => name, "type" => "image"}) do
     field = String.to_atom(name)
-
-    changeset
-    |> Changeset.validate_change(field, &image_validation/2)
+    Changeset.validate_change(changeset, field, &image_validation/2)
   end
 
   defp add_image_validation(changeset, %{}), do: changeset
@@ -159,6 +161,33 @@ defmodule TdDfLib.Validation do
       true -> []
       _ -> Keyword.new([{field, "invalid image type"}])
     end
+  end
+
+  defp validate_required_field(changeset, %{"name" => name, "cardinality" => "*"}) do
+    validate_multiple(name, changeset)
+  end
+
+  defp validate_required_field(changeset, %{"name" => name, "cardinality" => "?"}) do
+    validate_single(name, changeset)
+  end
+
+  defp validate_required_field(changeset, _field), do: changeset
+
+  defp validate_multiple(name, changeset) do
+    field = String.to_atom(name)
+
+    changeset
+    |> Changeset.validate_required(field)
+    |> Changeset.validate_length(field, min: 1)
+    |> Changeset.validate_change(field, &validate_no_empty_items/2)
+  end
+
+  defp validate_single(name, changeset) do
+    field = String.to_atom(name)
+
+    changeset
+    |> Changeset.validate_required(field)
+    |> Changeset.validate_change(field, &validate_no_empty_items/2)
   end
 
   @doc """

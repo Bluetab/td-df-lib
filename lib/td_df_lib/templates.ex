@@ -16,20 +16,20 @@ defmodule TdDfLib.Templates do
     |> template_completeness(content)
   end
 
-  def optional_fields(template_name) when is_binary(template_name) do
+  def optional_fields(template_name, %{} = content) when is_binary(template_name) do
     template_name
     |> TemplateCache.get_by_name!()
-    |> optional_fields()
+    |> optional_fields(content)
   end
 
-  def optional_fields(%{content: content} = _template) do
-    content
+  def optional_fields(%{content: template_content} = _template, %{} = content) do
+    template_content
     |> Enum.flat_map(&Map.get(&1, "fields", []))
-    |> Enum.filter(&is_optional?/1)
+    |> Enum.filter(&is_optional?(&1, content))
     |> Enum.map(&Map.get(&1, "name"))
   end
 
-  def optional_fields(nil = _template), do: []
+  def optional_fields(nil = _template, _content), do: []
 
   def subscribable_fields(template_name) when is_binary(template_name) do
     template_name
@@ -76,6 +76,14 @@ defmodule TdDfLib.Templates do
     end
   end
 
+  def meets_dependency?([_ | _] = value, target) do
+    not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
+  end
+
+  def meets_dependency?(value, target) do
+    Enum.member?(target, value)
+  end
+
   defp do_group_name(content, field_name) do
     content
     |> Enum.filter(&has_field?(&1, field_name))
@@ -89,7 +97,18 @@ defmodule TdDfLib.Templates do
     |> Enum.member?(field_name)
   end
 
-  defp is_optional?(%{"cardinality" => cardinality}), do: is_optional?(cardinality)
+  defp is_optional?(
+         %{
+           "cardinality" => cardinality,
+           "mandatory" => %{"on" => on, "to_be" => target = [_ | _]}
+         },
+         content
+       ) do
+    value = Map.get(content, on)
+    is_optional?(cardinality) && not meets_dependency?(value, target)
+  end
+
+  defp is_optional?(%{"cardinality" => cardinality}, _content), do: is_optional?(cardinality)
   defp is_optional?("*"), do: true
   defp is_optional?("?"), do: true
   defp is_optional?(_), do: false
@@ -98,7 +117,7 @@ defmodule TdDfLib.Templates do
 
   defp template_completeness(%{} = template, content) do
     template
-    |> optional_fields()
+    |> optional_fields(content)
     |> field_completeness(content)
   end
 
