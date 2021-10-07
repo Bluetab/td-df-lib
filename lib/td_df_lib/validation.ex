@@ -4,6 +4,7 @@ defmodule TdDfLib.Validation do
   """
 
   alias Ecto.Changeset
+  alias TdDfLib.Format
   alias TdDfLib.Templates
 
   @types %{
@@ -128,7 +129,7 @@ defmodule TdDfLib.Validation do
          opts
        ) do
     field = String.to_atom(name)
-    domain_id = string_format(opts[:domain_id])
+    domain_id = Format.to_string_format(opts[:domain_id])
 
     case Map.get(domain_values, domain_id) do
       [_ | _] = available ->
@@ -218,10 +219,6 @@ defmodule TdDfLib.Validation do
   end
 
   defp validate_inclusion(changeset, _, _), do: changeset
-
-  defp string_format(id) when is_number(id), do: Integer.to_string(id)
-
-  defp string_format(id), do: id
 
   @doc """
   Returns a 2-arity validator function that can be used by
