@@ -28,16 +28,18 @@ defmodule TdDfLib.Format do
 
   def enrich_content_values(content, _), do: content
 
-  def search_values(%{} = content, %{content: fields}) do
+  def search_values(content, fields, opts \\ [])
+
+  def search_values(%{} = content, %{content: fields}, opts) do
     fields = flatten_content_fields(fields)
 
     content
-    |> apply_template(fields)
+    |> apply_template(fields, opts)
     |> drop_values(fields)
     |> format_search_values(fields)
   end
 
-  def search_values(_, _), do: nil
+  def search_values(_, _, _), do: nil
 
   def flatten_content_fields(content) do
     Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
