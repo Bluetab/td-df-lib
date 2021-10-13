@@ -226,23 +226,23 @@ defmodule TdDfLib.Validation do
   may be either the name of a template or it's flattened schema, as returned by
   `Templates.content_schema/1`.
   """
-  def validator(template_or_schema)
+  def validator(template_or_schema, opts \\ [])
 
-  def validator({:error, reason}) do
+  def validator({:error, reason}, _opts) do
     fn field, _value ->
       [{field, {"invalid template", [reason: reason]}}]
     end
   end
 
-  def validator(template) when is_binary(template) do
+  def validator(template, opts) when is_binary(template) do
     template
     |> Templates.content_schema()
-    |> validator()
+    |> validator(opts)
   end
 
-  def validator(schema) when is_list(schema) do
+  def validator(schema, opts) when is_list(schema) do
     fn field, value ->
-      case build_changeset(value, schema) do
+      case build_changeset(value, schema, opts) do
         %{valid?: false, errors: errors} -> [{field, {"invalid content", errors}}]
         _ -> []
       end
