@@ -492,11 +492,11 @@ defmodule TdDfLib.ValidationTest do
       assert %{valid?: true} = Validation.build_changeset(content, schema, domain_id: 2)
 
       assert %{
-               errors: [
-                 domain_dependent: {"no values found for domain id '%{domain}'", [domain: nil]}
-               ],
-               valid?: false
+               changes: changes,
+               valid?: true
              } = Validation.build_changeset(content, schema)
+
+      refute Map.has_key?(changes, :domain_dependent)
     end
   end
 

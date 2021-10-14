@@ -136,9 +136,7 @@ defmodule TdDfLib.Validation do
         validate_inclusion(changeset, name, available)
 
       _ ->
-        Changeset.add_error(changeset, field, "no values found for domain id '%{domain}'",
-          domain: domain_id
-        )
+        Changeset.delete_change(changeset, field)
     end
   end
 
