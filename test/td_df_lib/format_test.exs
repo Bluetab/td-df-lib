@@ -120,6 +120,59 @@ defmodule TdDfLib.FormatTest do
            }
   end
 
+  test "set_default_values/2 domain dependent field" do
+    content = %{"xyzzy" => "spqr"}
+
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{
+        "name" => "bar",
+        "cardinality" => "+",
+        "default" => %{"1" => ["a"], "2" => ["f"]},
+        "values" => %{
+          "domain" => %{"1" => ["a", "b", "c"], "2" => ["d", "e", "f"]}
+        }
+      },
+      %{
+        "name" => "xyz",
+        "cardinality" => "?",
+        "default" => %{"2" => "b", "5" => "d"},
+        "values" => %{
+          "domain" => %{"2" => ["i", "b"], "5" => ["d", "p"]}
+        }
+      },
+      %{"name" => "xyzzy", "default" => "xyzzy"}
+    ]
+
+    assert Format.set_default_values(content, fields) == %{
+             "foo" => "foo",
+             "bar" => [""],
+             "xyzzy" => "spqr",
+             "xyz" => ""
+           }
+
+    assert Format.set_default_values(content, fields, domain_id: 1) == %{
+             "foo" => "foo",
+             "bar" => ["a"],
+             "xyzzy" => "spqr",
+             "xyz" => ""
+           }
+
+    assert Format.set_default_values(content, fields, domain_id: 2) == %{
+             "foo" => "foo",
+             "bar" => ["f"],
+             "xyzzy" => "spqr",
+             "xyz" => "b"
+           }
+
+    assert Format.set_default_values(content, fields, domain_id: 5) == %{
+             "foo" => "foo",
+             "bar" => [""],
+             "xyzzy" => "spqr",
+             "xyz" => "d"
+           }
+  end
+
   test "apply_template/2 sets default values and removes redundant fields" do
     content = %{"xyzzy" => "spqr"}
 
@@ -197,6 +250,59 @@ defmodule TdDfLib.FormatTest do
              "baz" => [""],
              "xyz" => "",
              "xyzzy" => "spqr"
+           }
+  end
+
+  test "apply_template/2 sets default values of domain dependent field" do
+    content = %{"xyzzy" => "spqr"}
+
+    fields = [
+      %{"name" => "foo", "default" => "foo"},
+      %{
+        "name" => "bar",
+        "cardinality" => "+",
+        "default" => %{"1" => ["a"], "2" => ["f"]},
+        "values" => %{
+          "domain" => %{"1" => ["a", "b", "c"], "2" => ["d", "e", "f"]}
+        }
+      },
+      %{
+        "name" => "xyz",
+        "cardinality" => "?",
+        "default" => %{"2" => "b", "5" => "d"},
+        "values" => %{
+          "domain" => %{"2" => ["i", "b"], "5" => ["d", "p"]}
+        }
+      },
+      %{"name" => "xyzzy", "default" => "xyzzy"}
+    ]
+
+    assert Format.apply_template(content, fields) == %{
+             "foo" => "foo",
+             "bar" => [""],
+             "xyzzy" => "spqr",
+             "xyz" => ""
+           }
+
+    assert Format.apply_template(content, fields, domain_id: 1) == %{
+             "foo" => "foo",
+             "bar" => ["a"],
+             "xyzzy" => "spqr",
+             "xyz" => ""
+           }
+
+    assert Format.apply_template(content, fields, domain_id: 2) == %{
+             "foo" => "foo",
+             "bar" => ["f"],
+             "xyzzy" => "spqr",
+             "xyz" => "b"
+           }
+
+    assert Format.apply_template(content, fields, domain_id: 5) == %{
+             "foo" => "foo",
+             "bar" => [""],
+             "xyzzy" => "spqr",
+             "xyz" => "d"
            }
   end
 

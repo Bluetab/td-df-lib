@@ -455,6 +455,49 @@ defmodule TdDfLib.ValidationTest do
       changeset = Validation.build_changeset(content, schema)
       assert %{valid?: true} = changeset
     end
+
+    test "build_changeset/1 validates field dependent on domain", %{
+      template: template
+    } do
+      %{content: [group = %{"fields" => fields} | _]} = template
+
+      domain = %{
+        "name" => "domain_dependent",
+        "label" => "Domain dependent field",
+        "type" => "string",
+        "cardinality" => "*",
+        "values" => %{
+          "domain" => %{1 => ["foo", "bar", "baz"], 2 => ["xyz"]}
+        }
+      }
+
+      fields = fields ++ [domain]
+      group = Map.put(group, "fields", fields)
+      template = Map.put(template, :content, [group])
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      schema = Enum.flat_map(schema, &Map.get(&1, "fields"))
+      content = %{"string" => "foo", "list" => "one", "domain_dependent" => ["xyz"]}
+      changeset = Validation.build_changeset(content, schema, domain_id: 1)
+
+      assert %{
+               errors: [
+                 domain_dependent:
+                   {"has an invalid entry", [validation: :subset, enum: ["foo", "bar", "baz"]]}
+               ],
+               valid?: false
+             } = changeset
+
+      content = %{"string" => "foo", "list" => "one", "domain_dependent" => ["xyz"]}
+      assert %{valid?: true} = Validation.build_changeset(content, schema, domain_id: 2)
+
+      assert %{
+               changes: changes,
+               valid?: true
+             } = Validation.build_changeset(content, schema)
+
+      refute Map.has_key?(changes, :domain_dependent)
+    end
   end
 
   describe "validator/1" do

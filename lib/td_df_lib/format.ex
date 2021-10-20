@@ -9,13 +9,15 @@ defmodule TdDfLib.Format do
   @cached ["domain", "system"]
   @format_types ["domain", "enriched_text", "system"]
 
-  def apply_template(nil, _), do: %{}
+  def apply_template(content, fields, opts \\ [])
 
-  def apply_template(_, nil), do: %{}
+  def apply_template(nil, _, _opts), do: %{}
 
-  def apply_template(%{} = content, fields) do
+  def apply_template(_, nil, _opts), do: %{}
+
+  def apply_template(%{} = content, fields, opts) do
     content
-    |> default_values(fields)
+    |> default_values(fields, opts)
     |> cached_values(fields)
   end
 
@@ -26,16 +28,18 @@ defmodule TdDfLib.Format do
 
   def enrich_content_values(content, _), do: content
 
-  def search_values(%{} = content, %{content: fields}) do
+  def search_values(content, fields, opts \\ [])
+
+  def search_values(%{} = content, %{content: fields}, opts) do
     fields = flatten_content_fields(fields)
 
     content
-    |> apply_template(fields)
+    |> apply_template(fields, opts)
     |> drop_values(fields)
     |> format_search_values(fields)
   end
 
-  def search_values(_, _), do: nil
+  def search_values(_, _, _), do: nil
 
   def flatten_content_fields(content) do
     Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
@@ -87,16 +91,16 @@ defmodule TdDfLib.Format do
     Map.merge(content, search_values)
   end
 
-  def default_values(content, fields) do
+  defp default_values(content, fields, opts) do
     field_names = Enum.map(fields, &Map.get(&1, "name"))
 
     content
     |> Map.take(field_names)
-    |> set_default_values(fields)
+    |> set_default_values(fields, opts)
   end
 
-  def set_default_values(content, fields) do
-    Enum.reduce(fields, content, &set_default_value(&2, &1))
+  def set_default_values(content, fields, opts \\ []) do
+    Enum.reduce(fields, content, &set_default_value(&2, &1, opts))
   end
 
   def set_search_values(content, fields) do
@@ -116,11 +120,13 @@ defmodule TdDfLib.Format do
 
   defp set_search_value(_field, acc), do: acc
 
-  def set_default_value(content, %{"depends" => %{"on" => on, "to_be" => to_be}} = field) do
+  def set_default_value(content, field, opts \\ [])
+
+  def set_default_value(content, %{"depends" => %{"on" => on, "to_be" => to_be}} = field, opts) do
     dependent_value = Map.get(content, on)
 
     if Enum.member?(to_be, dependent_value) do
-      set_default_value(content, Map.delete(field, "depends"))
+      set_default_value(content, Map.delete(field, "depends"), opts)
     else
       content
     end
@@ -129,7 +135,8 @@ defmodule TdDfLib.Format do
   def set_default_value(
         content,
         %{"name" => name, "default" => default = %{}, "values" => %{"switch" => %{"on" => on}}} =
-          field
+          field,
+        opts
       ) do
     dependent_value = Map.get(content, on)
     default_value = Map.get(default, dependent_value)
@@ -137,32 +144,60 @@ defmodule TdDfLib.Format do
     case default_value do
       nil ->
         field = Map.delete(field, "default")
-        set_default_value(content, field)
+        set_default_value(content, field, opts)
 
       default_value ->
         Map.put_new(content, name, default_value)
     end
   end
 
-  def set_default_value(content, %{"name" => name, "default" => default}) do
+  def set_default_value(
+        content,
+        %{"name" => name, "default" => default = %{}, "values" => values} = field,
+        opts
+      )
+      when is_map_key(values, "domain") do
+    domain_id = to_string_format(opts[:domain_id])
+    default_value = Map.get(default, domain_id)
+
+    case default_value do
+      nil ->
+        field = Map.delete(field, "default")
+        set_default_value(content, field, opts)
+
+      default_value ->
+        Map.put_new(content, name, default_value)
+    end
+  end
+
+  def set_default_value(content, %{"name" => name, "default" => default}, _opts) do
     Map.put_new(content, name, default)
   end
 
-  def set_default_value(content, %{"name" => name, "cardinality" => "*", "values" => values})
+  def set_default_value(
+        content,
+        %{"name" => name, "cardinality" => "*", "values" => values},
+        _opts
+      )
       when not is_nil(values) do
     Map.put_new(content, name, [""])
   end
 
-  def set_default_value(content, %{"name" => name, "cardinality" => "+", "values" => values})
+  def set_default_value(
+        content,
+        %{"name" => name, "cardinality" => "+", "values" => values},
+        _opts
+      )
       when not is_nil(values) do
     Map.put_new(content, name, [""])
   end
 
-  def set_default_value(content, %{"name" => name, "values" => values}) when not is_nil(values) do
+  def set_default_value(content, %{"name" => name, "values" => values}, _opts)
+      when not is_nil(values) do
     Map.put_new(content, name, "")
   end
 
-  def set_default_value(content, %{}), do: content
+  def set_default_value(content, %{}, _opts), do: content
 
   def format_field(%{"content" => content, "type" => "url"}) do
     link_value = [
@@ -287,4 +322,8 @@ defmodule TdDfLib.Format do
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
   defp apply_cardinality(value, _cardinality), do: value
+
+  def to_string_format(id) when is_number(id), do: Integer.to_string(id)
+
+  def to_string_format(id), do: id
 end
