@@ -5,6 +5,7 @@ defmodule TdDfLib.Format do
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
+  alias TdDfLib.Templates
 
   @cached ["domain", "system"]
   @format_types ["domain", "enriched_text", "system"]
@@ -20,6 +21,52 @@ defmodule TdDfLib.Format do
     |> default_values(fields, opts)
     |> cached_values(fields)
   end
+
+  def maybe_put_identifier(current_content, content, template) when is_binary(template) do
+    Templates.content_schema(template)
+    |> maybe_put_identifier_template(current_content, content)
+  end
+
+  def maybe_put_identifier(_, content, _), do: content
+
+  def maybe_put_identifier_template({:error, :template_not_found}, _current_content, content) do
+    content
+  end
+
+  def maybe_put_identifier_template(fields, current_content, content) when is_list(fields) do
+    Enum.find(
+      fields,
+      &has_identifier_widget?/1
+    )
+    |> get_identifier_name()
+    |> maybe_put_identifier_idname(current_content, content)
+  end
+
+  def get_identifier_name(%{"name" => identifier_name} = _identifier_field) do
+    identifier_name
+  end
+
+  def get_identifier_name(nil), do: nil
+
+  def maybe_put_identifier_idname(nil, _current_content, content) do
+    content
+  end
+
+  def maybe_put_identifier_idname(
+        identifier_name,
+        current_content,
+        content
+      ) do
+    # IO.puts("MAYBE_PUT_IDENTIFIER__2")
+    Map.put(
+      content,
+      identifier_name,
+      Map.get(current_content, identifier_name, Ecto.UUID.generate())
+    )
+  end
+
+  def has_identifier_widget?(%{"widget" => "identifier"}), do: true
+  def has_identifier_widget?(_), do: false
 
   def enrich_content_values(%{} = content, %{content: fields}) do
     fields = flatten_content_fields(fields)

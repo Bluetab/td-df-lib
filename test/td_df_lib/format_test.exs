@@ -8,6 +8,112 @@ defmodule TdDfLib.FormatTest do
   alias TdDfLib.Format
   alias TdDfLib.RichText
 
+  describe "create_changeset/2" do
+    setup do
+      identifier_name = "identifier"
+
+      with_identifier = %{
+        id: System.unique_integer([:positive]),
+        name: "Ingesta template with identifier field",
+        label: "ingesta_with_identifier",
+        scope: "ie",
+        content: [
+          %{
+            "fields" => [
+              %{
+                "cardinality" => "1",
+                "default" => "",
+                "label" => "Identifier",
+                "name" => identifier_name,
+                "subscribable" => false,
+                "type" => "string",
+                "values" => nil,
+                "widget" => "identifier"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => "",
+                "label" => "Text",
+                "name" => "text",
+                "subscribable" => false,
+                "type" => "string",
+                "values" => nil,
+                "widget" => "text"
+              }
+            ],
+            "name" => ""
+          }
+        ]
+      }
+
+      without_identifier = %{
+        id: System.unique_integer([:positive]),
+        name: "Ingesta template without identifier field",
+        label: "ingesta_without_identifier",
+        scope: "ie",
+        content: [
+          %{
+            "fields" => [
+              %{
+                "cardinality" => "1",
+                "default" => "",
+                "label" => "Text",
+                "name" => "text",
+                "subscribable" => false,
+                "type" => "string",
+                "values" => nil,
+                "widget" => "text"
+              }
+            ],
+            "name" => ""
+          }
+        ]
+      }
+
+      template_with_identifier = CacheHelpers.insert_template(with_identifier)
+      template_without_identifier = CacheHelpers.insert_template(without_identifier)
+
+      [
+        template_with_identifier: template_with_identifier,
+        template_without_identifier: template_without_identifier,
+        identifier_name: identifier_name
+      ]
+    end
+
+    test "keeps an already present identifier", %{
+      template_with_identifier: template_with_identifier,
+      identifier_name: identifier_name
+    } do
+      current_content = %{identifier_name => "1234"}
+      content = %{}
+
+      assert %{^identifier_name => "1234"} =
+               Format.maybe_put_identifier(
+                 current_content,
+                 content,
+                 template_with_identifier.name
+               )
+    end
+
+    test "puts a new identifier if the template has an identifier field", %{
+      template_with_identifier: template_with_identifier,
+      identifier_name: identifier_name
+    } do
+      assert %{^identifier_name => _identifier} =
+               Format.maybe_put_identifier(%{}, %{}, template_with_identifier.name)
+    end
+
+    test "avoids putting new identifier if template lacks an identifier field", %{
+      template_without_identifier: template_without_identifier,
+      identifier_name: identifier_name
+    } do
+      refute match?(
+               %{^identifier_name => _identifier},
+               Format.maybe_put_identifier(%{}, %{}, template_without_identifier.name)
+             )
+    end
+  end
+
   test "set_default_value/2 has no effect if value is present in content" do
     content = %{"foo" => "bar"}
     field = %{"name" => "foo", "default" => "baz"}
