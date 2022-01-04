@@ -5,6 +5,7 @@ defmodule TdDfLib.Format do
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
+  alias TdDfLib.Templates
 
   @cached ["domain", "system"]
   @format_types ["domain", "enriched_text", "system"]
@@ -20,6 +21,70 @@ defmodule TdDfLib.Format do
     |> default_values(fields, opts)
     |> cached_values(fields)
   end
+
+  def maybe_put_identifier_by_id(current_content, content, template_id)
+      when is_number(template_id) do
+    Templates.content_schema_by_id(template_id)
+    |> maybe_put_identifier_template(current_content, content)
+  end
+
+  def maybe_put_identifier_by_id(_, content, _), do: content
+
+  def maybe_put_identifier(current_content, content, template) when is_binary(template) do
+    Templates.content_schema(template)
+    |> maybe_put_identifier_template(current_content, content)
+  end
+
+  def maybe_put_identifier(_, content, _), do: content
+
+  def maybe_put_identifier_template({:error, :template_not_found}, _current_content, content) do
+    content
+  end
+
+  def maybe_put_identifier_template(fields, nil, content) do
+    maybe_put_identifier_template(fields, %{}, content)
+  end
+
+  def maybe_put_identifier_template(fields, current_content, content) when is_list(fields) do
+    Enum.find(
+      fields,
+      &has_identifier_widget?/1
+    )
+    |> get_identifier_name()
+    |> maybe_put_identifier_idname(current_content, content)
+  end
+
+  def get_identifier_name(%{"name" => identifier_name} = _identifier_field) do
+    identifier_name
+  end
+
+  def get_identifier_name(nil), do: nil
+
+  def maybe_put_identifier_idname(nil, _current_content, content) do
+    content
+  end
+
+  def maybe_put_identifier_idname(
+        identifier_name,
+        current_content,
+        content
+      ) do
+    Map.put(
+      content,
+      identifier_name,
+      get_identifier_value(Map.get(current_content, identifier_name))
+    )
+  end
+
+  defp get_identifier_value(""), do: get_identifier_value(nil)
+
+  defp get_identifier_value(identifier_value) when not is_nil(identifier_value),
+    do: identifier_value
+
+  defp get_identifier_value(_), do: Ecto.UUID.generate()
+
+  def has_identifier_widget?(%{"widget" => "identifier"}), do: true
+  def has_identifier_widget?(_), do: false
 
   def enrich_content_values(%{} = content, %{content: fields}) do
     fields = flatten_content_fields(fields)

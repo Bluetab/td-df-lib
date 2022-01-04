@@ -76,6 +76,18 @@ defmodule TdDfLib.Templates do
     end
   end
 
+  def content_schema_by_id(template_id) do
+    case TemplateCache.get(template_id) do
+      {:ok, template} ->
+        template
+        |> Map.get(:content)
+        |> Format.flatten_content_fields()
+
+      nil ->
+        {:error, :template_not_found}
+    end
+  end
+
   def meets_dependency?([_ | _] = value, target) do
     not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
   end
