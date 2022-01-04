@@ -22,6 +22,14 @@ defmodule TdDfLib.Format do
     |> cached_values(fields)
   end
 
+  def maybe_put_identifier_by_id(current_content, content, template_id)
+      when is_number(template_id) do
+    Templates.content_schema_by_id(template_id)
+    |> maybe_put_identifier_template(current_content, content)
+  end
+
+  def maybe_put_identifier_by_id(_, content, _), do: content
+
   def maybe_put_identifier(current_content, content, template) when is_binary(template) do
     Templates.content_schema(template)
     |> maybe_put_identifier_template(current_content, content)
@@ -31,6 +39,10 @@ defmodule TdDfLib.Format do
 
   def maybe_put_identifier_template({:error, :template_not_found}, _current_content, content) do
     content
+  end
+
+  def maybe_put_identifier_template(fields, nil, content) do
+    maybe_put_identifier_template(fields, %{}, content)
   end
 
   def maybe_put_identifier_template(fields, current_content, content) when is_list(fields) do
@@ -57,13 +69,19 @@ defmodule TdDfLib.Format do
         current_content,
         content
       ) do
-    # IO.puts("MAYBE_PUT_IDENTIFIER__2")
     Map.put(
       content,
       identifier_name,
-      Map.get(current_content, identifier_name, Ecto.UUID.generate())
+      get_identifier_value(Map.get(current_content, identifier_name))
     )
   end
+
+  defp get_identifier_value(""), do: get_identifier_value(nil)
+
+  defp get_identifier_value(identifier_value) when not is_nil(identifier_value),
+    do: identifier_value
+
+  defp get_identifier_value(_), do: Ecto.UUID.generate()
 
   def has_identifier_widget?(%{"widget" => "identifier"}), do: true
   def has_identifier_widget?(_), do: false
