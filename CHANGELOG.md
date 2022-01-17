@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-4125] `TemplateFactory` now returns groups and fields with binary keys
+  instead of atom keys
+
 ## [4.35.0] 2022-01-04
 
 ### Added

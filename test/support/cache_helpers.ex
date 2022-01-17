@@ -13,5 +13,4 @@ defmodule CacheHelpers do
     ExUnit.Callbacks.on_exit(fn -> TemplateCache.delete(template_id) end)
     template
   end
-
 end

@@ -18,6 +18,8 @@ defmodule TdDfLib.TemplateFactory do
       end
 
       def template_group_factory(attrs) do
+        attrs = attrs |> Jason.encode!() |> Jason.decode!()
+
         %{
           "name" => sequence("group_name"),
           "fields" => [
@@ -32,7 +34,9 @@ defmodule TdDfLib.TemplateFactory do
         |> merge_attributes(attrs)
       end
 
-      def template_field_factory do
+      def template_field_factory(attrs) do
+        attrs = attrs |> Jason.encode!() |> Jason.decode!()
+
         %{
           "name" => sequence("field_name"),
           "type" => "string",
@@ -40,6 +44,7 @@ defmodule TdDfLib.TemplateFactory do
           "values" => nil,
           "cardinality" => "1"
         }
+        |> merge_attributes(attrs)
       end
     end
   end
