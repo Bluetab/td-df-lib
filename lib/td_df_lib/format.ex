@@ -116,10 +116,10 @@ defmodule TdDfLib.Format do
     keys = Map.keys(content)
 
     fields =
-      fields
-      |> Enum.filter(&Map.has_key?(&1, "type"))
-      |> Enum.filter(fn %{"type" => type} -> type in @cached end)
-      |> Enum.filter(fn %{"name" => name} -> name in keys end)
+      Enum.filter(fields, fn
+        %{"type" => type, "name" => name} -> type in @cached and name in keys
+        _ -> false
+      end)
 
     field_names = Enum.map(fields, &Map.get(&1, "name"))
 
@@ -142,9 +142,10 @@ defmodule TdDfLib.Format do
 
   def format_search_values(content, fields) do
     fields =
-      fields
-      |> Enum.filter(&Map.has_key?(&1, "type"))
-      |> Enum.filter(fn %{"type" => type} -> type in @format_types end)
+      Enum.filter(fields, fn
+        %{"type" => type} -> type in @format_types
+        _ -> false
+      end)
 
     field_names = Enum.map(fields, &Map.get(&1, "name"))
 
