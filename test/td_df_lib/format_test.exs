@@ -84,15 +84,15 @@ defmodule TdDfLib.FormatTest do
       template_with_identifier: template_with_identifier,
       identifier_name: identifier_name
     } do
-      current_content = %{identifier_name => "1234"}
-      content = %{}
+      old_content = %{identifier_name => "1234"}
+      changeset_content = %{}
 
       assert %{^identifier_name => "1234"} =
-               Format.maybe_put_identifier(
-                 current_content,
-                 content,
-                 template_with_identifier.name
-               )
+        Format.maybe_put_identifier(
+          changeset_content,
+          old_content,
+          template_with_identifier.name
+        )
     end
 
     test "puts a new identifier if the template has an identifier field", %{

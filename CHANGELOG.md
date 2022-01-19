@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.36.0] 2022-01-19
+
+### Fixed
+
+- [TD-4312] Prevent identifier change if a new version is created
+
 ## [4.35.0] 2022-01-04
 
 ### Added
