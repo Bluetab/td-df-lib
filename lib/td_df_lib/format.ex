@@ -22,57 +22,66 @@ defmodule TdDfLib.Format do
     |> cached_values(fields)
   end
 
-  def maybe_put_identifier_by_id(current_content, content, template_id)
+  def maybe_put_identifier_by_id(changeset_content, old_content, template_id)
       when is_number(template_id) do
     Templates.content_schema_by_id(template_id)
-    |> maybe_put_identifier_template(current_content, content)
+    |> maybe_put_identifier_template(changeset_content, old_content)
   end
 
-  def maybe_put_identifier_by_id(_, content, _), do: content
+  def maybe_put_identifier_by_id(changeset_content, _old_content, _template_id), do: changeset_content
 
-  def maybe_put_identifier(current_content, content, template) when is_binary(template) do
+  def maybe_put_identifier(changeset_content, old_content, template) when is_binary(template) do
     Templates.content_schema(template)
-    |> maybe_put_identifier_template(current_content, content)
+    |> maybe_put_identifier_template(changeset_content, old_content)
   end
 
   def maybe_put_identifier(_, content, _), do: content
 
-  def maybe_put_identifier_template({:error, :template_not_found}, _current_content, content) do
-    content
+  def maybe_put_identifier_template({:error, :template_not_found}, changeset_content, _old_content) do
+    changeset_content
   end
 
-  def maybe_put_identifier_template(fields, nil, content) do
-    maybe_put_identifier_template(fields, %{}, content)
+  def maybe_put_identifier_template(fields, nil, old_content) do
+    maybe_put_identifier_template(fields, %{}, old_content)
   end
 
-  def maybe_put_identifier_template(fields, current_content, content) when is_list(fields) do
+  def maybe_put_identifier_template(fields, changeset_content, old_content) when is_list(fields) do
+    fields
+    |> get_identifier_name()
+    |> maybe_put_identifier_idname(changeset_content, old_content)
+  end
+
+  def get_identifier_name(fields) do
     Enum.find(
       fields,
       &has_identifier_widget?/1
     )
-    |> get_identifier_name()
-    |> maybe_put_identifier_idname(current_content, content)
+    |> identifier_name_aux()
   end
 
-  def get_identifier_name(%{"name" => identifier_name} = _identifier_field) do
+  def identifier_name_aux(%{"name" => identifier_name} = _identifier_field) do
     identifier_name
   end
 
-  def get_identifier_name(nil), do: nil
+  def identifier_name_aux(nil), do: nil
 
-  def maybe_put_identifier_idname(nil, _current_content, content) do
-    content
+  def maybe_put_identifier_idname(identifier_name, changeset_content, nil = _old_content) do
+    maybe_put_identifier_idname(identifier_name, changeset_content, %{})
+  end
+
+  def maybe_put_identifier_idname(nil, changeset_content, _old_content) do
+    changeset_content
   end
 
   def maybe_put_identifier_idname(
         identifier_name,
-        current_content,
-        content
+        changeset_content,
+        old_content
       ) do
     Map.put(
-      content,
+      changeset_content,
       identifier_name,
-      get_identifier_value(Map.get(current_content, identifier_name))
+      get_identifier_value(Map.get(old_content, identifier_name))
     )
   end
 
