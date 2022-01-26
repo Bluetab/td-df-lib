@@ -28,7 +28,8 @@ defmodule TdDfLib.Format do
     |> maybe_put_identifier_template(changeset_content, old_content)
   end
 
-  def maybe_put_identifier_by_id(changeset_content, _old_content, _template_id), do: changeset_content
+  def maybe_put_identifier_by_id(changeset_content, _old_content, _template_id),
+    do: changeset_content
 
   def maybe_put_identifier(changeset_content, old_content, template) when is_binary(template) do
     Templates.content_schema(template)
@@ -37,7 +38,11 @@ defmodule TdDfLib.Format do
 
   def maybe_put_identifier(_, content, _), do: content
 
-  def maybe_put_identifier_template({:error, :template_not_found}, changeset_content, _old_content) do
+  def maybe_put_identifier_template(
+        {:error, :template_not_found},
+        changeset_content,
+        _old_content
+      ) do
     changeset_content
   end
 
@@ -45,7 +50,8 @@ defmodule TdDfLib.Format do
     maybe_put_identifier_template(fields, %{}, old_content)
   end
 
-  def maybe_put_identifier_template(fields, changeset_content, old_content) when is_list(fields) do
+  def maybe_put_identifier_template(fields, changeset_content, old_content)
+      when is_list(fields) do
     fields
     |> get_identifier_name()
     |> maybe_put_identifier_idname(changeset_content, old_content)
