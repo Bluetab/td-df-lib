@@ -333,10 +333,7 @@ defmodule TdDfLib.Format do
     String.to_float(content)
   end
 
-  def format_field(%{
-        "content" => content
-      }),
-      do: content
+  def format_field(%{"content" => content}), do: content
 
   defp set_cached_values(content, fields) do
     Enum.reduce(fields, content, &set_cached_value(&1, &2))
@@ -382,19 +379,22 @@ defmodule TdDfLib.Format do
 
   defp format_system(system, _cardinality), do: system
 
-  defp format_domain(%{} = domain, _cardinality) do
-    id = Map.get(domain, "id")
-    TaxonomyCache.get_domain(id) || domain
+  defp format_domain(%{"id" => id} = domain, _cardinality) when not is_nil(id) do
+    case TaxonomyCache.get_domain(id) do
+      nil -> domain
+      domain -> domain
+    end
   end
 
   defp format_domain([_ | _] = domains, cardinality) do
     Enum.map(domains, &format_domain(&1, cardinality))
   end
 
+  defp format_domain("", _cardinality), do: nil
+
   defp format_domain(external_id, cardinality) when is_binary(external_id) do
-    TaxonomyCache.get_domain_external_id_to_id_map()
-    |> Map.get(external_id)
-    |> TaxonomyCache.get_domain()
+    external_id
+    |> TaxonomyCache.get_by_external_id()
     |> apply_cardinality(cardinality)
   end
 

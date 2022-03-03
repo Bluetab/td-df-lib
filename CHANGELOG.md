@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- [TD-4491] Use `TaxonomyCache.get_by_external_id/1` to read domain from cache,
+  only if `external_id` is a valid identifier
+
 ## [4.36.1] 2022-01-24
 
 ### Fixed
