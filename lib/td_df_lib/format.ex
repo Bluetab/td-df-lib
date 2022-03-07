@@ -28,7 +28,8 @@ defmodule TdDfLib.Format do
     |> maybe_put_identifier_template(changeset_content, old_content)
   end
 
-  def maybe_put_identifier_by_id(changeset_content, _old_content, _template_id), do: changeset_content
+  def maybe_put_identifier_by_id(changeset_content, _old_content, _template_id),
+    do: changeset_content
 
   def maybe_put_identifier(changeset_content, old_content, template) when is_binary(template) do
     Templates.content_schema(template)
@@ -37,7 +38,11 @@ defmodule TdDfLib.Format do
 
   def maybe_put_identifier(_, content, _), do: content
 
-  def maybe_put_identifier_template({:error, :template_not_found}, changeset_content, _old_content) do
+  def maybe_put_identifier_template(
+        {:error, :template_not_found},
+        changeset_content,
+        _old_content
+      ) do
     changeset_content
   end
 
@@ -45,7 +50,8 @@ defmodule TdDfLib.Format do
     maybe_put_identifier_template(fields, %{}, old_content)
   end
 
-  def maybe_put_identifier_template(fields, changeset_content, old_content) when is_list(fields) do
+  def maybe_put_identifier_template(fields, changeset_content, old_content)
+      when is_list(fields) do
     fields
     |> get_identifier_name()
     |> maybe_put_identifier_idname(changeset_content, old_content)
@@ -327,10 +333,7 @@ defmodule TdDfLib.Format do
     String.to_float(content)
   end
 
-  def format_field(%{
-        "content" => content
-      }),
-      do: content
+  def format_field(%{"content" => content}), do: content
 
   defp set_cached_values(content, fields) do
     Enum.reduce(fields, content, &set_cached_value(&1, &2))
@@ -376,19 +379,22 @@ defmodule TdDfLib.Format do
 
   defp format_system(system, _cardinality), do: system
 
-  defp format_domain(%{} = domain, _cardinality) do
-    id = Map.get(domain, "id")
-    TaxonomyCache.get_domain(id) || domain
+  defp format_domain(%{"id" => id} = domain, _cardinality) when not is_nil(id) do
+    case TaxonomyCache.get_domain(id) do
+      nil -> domain
+      domain -> domain
+    end
   end
 
   defp format_domain([_ | _] = domains, cardinality) do
     Enum.map(domains, &format_domain(&1, cardinality))
   end
 
+  defp format_domain("", _cardinality), do: nil
+
   defp format_domain(external_id, cardinality) when is_binary(external_id) do
-    TaxonomyCache.get_domain_external_id_to_id_map()
-    |> Map.get(external_id)
-    |> TaxonomyCache.get_domain()
+    external_id
+    |> TaxonomyCache.get_by_external_id()
     |> apply_cardinality(cardinality)
   end
 
