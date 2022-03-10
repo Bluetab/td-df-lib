@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-4500] Support for `domain_ids` opt in `Format.set_default_value` and
+  `Validation.build_changeset/2`
+
 ## [4.40.0] 2022-03-07
 
 ### Fixed

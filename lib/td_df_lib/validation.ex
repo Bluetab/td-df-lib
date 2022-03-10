@@ -129,16 +129,30 @@ defmodule TdDfLib.Validation do
          opts
        ) do
     field = String.to_atom(name)
-    # FIXME: TD-4500 support domain_id or domain_ids?
-    domain_id = Format.to_string_format(opts[:domain_id])
 
-    case Map.get(domain_values, domain_id) do
+    case take_domain_values(domain_values, opts[:domain_id], opts[:domain_ids]) do
       [_ | _] = available -> validate_inclusion(changeset, name, available)
       _ -> Changeset.delete_change(changeset, field)
     end
   end
 
   defp add_inclusion_validation(changeset, %{}, _opts), do: changeset
+
+  defp take_domain_values(%{} = _domain_values, nil, nil), do: :none
+
+  defp take_domain_values(%{} = domain_values, nil, domain_ids) do
+    keys = Enum.map(domain_ids, &Format.to_string_format/1)
+
+    domain_values
+    |> Map.take(keys)
+    |> Map.values()
+    |> Enum.flat_map(& &1)
+    |> Enum.uniq()
+  end
+
+  defp take_domain_values(%{} = domain_values, domain_id, domain_ids) do
+    take_domain_values(domain_values, nil, [domain_id | List.wrap(domain_ids)])
+  end
 
   defp add_image_validation(changeset, %{"name" => name, "type" => "image"}) do
     field = String.to_atom(name)
