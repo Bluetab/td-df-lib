@@ -238,6 +238,7 @@ defmodule TdDfLib.Format do
         opts
       )
       when is_map_key(values, "domain") do
+    # FIXME: TD-4500 support domain_id or domain_ids?
     domain_id = to_string_format(opts[:domain_id])
     default_value = Map.get(default, domain_id)
 

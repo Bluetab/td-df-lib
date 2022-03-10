@@ -129,6 +129,7 @@ defmodule TdDfLib.Validation do
          opts
        ) do
     field = String.to_atom(name)
+    # FIXME: TD-4500 support domain_id or domain_ids?
     domain_id = Format.to_string_format(opts[:domain_id])
 
     case Map.get(domain_values, domain_id) do
