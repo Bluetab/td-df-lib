@@ -133,11 +133,8 @@ defmodule TdDfLib.Validation do
     domain_id = Format.to_string_format(opts[:domain_id])
 
     case Map.get(domain_values, domain_id) do
-      [_ | _] = available ->
-        validate_inclusion(changeset, name, available)
-
-      _ ->
-        Changeset.delete_change(changeset, field)
+      [_ | _] = available -> validate_inclusion(changeset, name, available)
+      _ -> Changeset.delete_change(changeset, field)
     end
   end
 
@@ -208,16 +205,11 @@ defmodule TdDfLib.Validation do
   defp validate_inclusion(%{data: data} = changeset, name, items) do
     field = String.to_atom(name)
 
-    data
-    |> Map.get(name)
-    |> is_list()
-    |> case do
-      true -> Changeset.validate_subset(changeset, field, items)
-      _ -> Changeset.validate_inclusion(changeset, field, items)
+    case Map.get(data, name) do
+      l when is_list(l) -> Changeset.validate_subset(changeset, field, items)
+      _not_list -> Changeset.validate_inclusion(changeset, field, items)
     end
   end
-
-  defp validate_inclusion(changeset, _, _), do: changeset
 
   @doc """
   Returns a 2-arity validator function that can be used by

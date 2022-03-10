@@ -364,18 +364,10 @@ defmodule TdDfLib.Format do
   end
 
   defp format_system(external_id, cardinality) when is_binary(external_id) do
-    {:ok, m} = SystemCache.external_id_to_id_map()
-
-    system =
-      m
-      |> Map.get(external_id)
-      |> SystemCache.get()
-      |> case do
-        {:ok, system} -> system
-        _ -> nil
-      end
-
-    apply_cardinality(system, cardinality)
+    case SystemCache.get_by_external_id(external_id) do
+      {:ok, system} -> apply_cardinality(system, cardinality)
+      _ -> nil
+    end
   end
 
   defp format_system(system, _cardinality), do: system
