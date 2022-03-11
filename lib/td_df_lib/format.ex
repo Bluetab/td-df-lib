@@ -238,8 +238,8 @@ defmodule TdDfLib.Format do
         opts
       )
       when is_map_key(values, "domain") do
-    domain_id = to_string_format(opts[:domain_id])
-    default_value = Map.get(default, domain_id)
+    domain_ids = domain_ids(opts)
+    default_value = take_first_value(default, domain_ids)
 
     case default_value do
       nil ->
@@ -363,18 +363,10 @@ defmodule TdDfLib.Format do
   end
 
   defp format_system(external_id, cardinality) when is_binary(external_id) do
-    {:ok, m} = SystemCache.external_id_to_id_map()
-
-    system =
-      m
-      |> Map.get(external_id)
-      |> SystemCache.get()
-      |> case do
-        {:ok, system} -> system
-        _ -> nil
-      end
-
-    apply_cardinality(system, cardinality)
+    case SystemCache.get_by_external_id(external_id) do
+      {:ok, system} -> apply_cardinality(system, cardinality)
+      _ -> nil
+    end
   end
 
   defp format_system(system, _cardinality), do: system
@@ -403,6 +395,21 @@ defmodule TdDfLib.Format do
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
   defp apply_cardinality(value, _cardinality), do: value
+
+  defp domain_ids(opts) do
+    opts
+    |> Keyword.take([:domain_id, :domain_ids])
+    |> Keyword.values()
+    |> Enum.flat_map(&List.wrap/1)
+    |> Enum.map(&to_string_format/1)
+  end
+
+  defp take_first_value(map, keys) do
+    map
+    |> Map.take(keys)
+    |> Map.values()
+    |> Enum.at(0)
+  end
 
   def to_string_format(id) when is_number(id), do: Integer.to_string(id)
 

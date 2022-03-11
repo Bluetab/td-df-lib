@@ -467,7 +467,7 @@ defmodule TdDfLib.ValidationTest do
         "type" => "string",
         "cardinality" => "*",
         "values" => %{
-          "domain" => %{1 => ["foo", "bar", "baz"], 2 => ["xyz"]}
+          "domain" => %{1 => ["foo", "bar", "baz"], 2 => ["xyz"], 3 => ["wtf"]}
         }
       }
 
@@ -478,12 +478,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, schema} = TemplateCache.get(template.id, :content)
       schema = Enum.flat_map(schema, &Map.get(&1, "fields"))
       content = %{"string" => "foo", "list" => "one", "domain_dependent" => ["xyz"]}
-      changeset = Validation.build_changeset(content, schema, domain_id: 1)
+      changeset = Validation.build_changeset(content, schema, domain_ids: [1, 3])
 
       assert %{
                errors: [
                  domain_dependent:
-                   {"has an invalid entry", [validation: :subset, enum: ["foo", "bar", "baz"]]}
+                   {"has an invalid entry",
+                    [validation: :subset, enum: ["foo", "bar", "baz", "wtf"]]}
                ],
                valid?: false
              } = changeset

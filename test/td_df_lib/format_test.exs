@@ -410,6 +410,13 @@ defmodule TdDfLib.FormatTest do
              "xyzzy" => "spqr",
              "xyz" => "d"
            }
+
+    assert Format.apply_template(content, fields, domain_ids: [1, 2, 5]) == %{
+             "foo" => "foo",
+             "bar" => ["a"],
+             "xyzzy" => "spqr",
+             "xyz" => "b"
+           }
   end
 
   test "set_default_values/2 sets default values for dependent values" do
