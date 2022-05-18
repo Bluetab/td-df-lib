@@ -555,7 +555,7 @@ defmodule TdDfLib.FormatTest do
              Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
   end
 
-  test "format_field of string type with multiple fields" do
+  test "format_field with multiple fields" do
     assert ["foo"] ==
              Format.format_field(%{"content" => "foo", "type" => "string", "cardinality" => "+"})
 
