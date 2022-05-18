@@ -70,12 +70,38 @@ defmodule TdDfLib.FormatTest do
         ]
       }
 
+      with_multifields = %{
+        id: System.unique_integer([:positive]),
+        name: "Ingesta template with multiple fields option",
+        label: "ingesta_with_multifields",
+        scope: "ie",
+        content: [
+          %{
+            "fields" => [
+              %{
+                "cardinality" => "*",
+                "default" => "",
+                "label" => "Text",
+                "name" => "text",
+                "subscribable" => false,
+                "type" => "string",
+                "values" => nil,
+                "widget" => "text"
+              }
+            ],
+            "name" => ""
+          }
+        ]
+      }
+
       template_with_identifier = CacheHelpers.insert_template(with_identifier)
       template_without_identifier = CacheHelpers.insert_template(without_identifier)
+      template_with_multifields = CacheHelpers.insert_template(with_multifields)
 
       [
         template_with_identifier: template_with_identifier,
         template_without_identifier: template_without_identifier,
+        template_with_multifields: template_with_multifields,
         identifier_name: identifier_name
       ]
     end
@@ -527,6 +553,55 @@ defmodule TdDfLib.FormatTest do
 
     assert "bar" ==
              Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
+  end
+
+  test "format_field of string type with multiple fields" do
+    assert ["foo"] ==
+             Format.format_field(%{"content" => "foo", "type" => "string", "cardinality" => "+"})
+
+    assert ["foo"] ==
+             Format.format_field(%{"content" => "foo", "type" => "string", "cardinality" => "*"})
+
+    assert ["foo", "bar"] ==
+             Format.format_field(%{
+               "content" => "foo|bar",
+               "type" => "string",
+               "cardinality" => "+"
+             })
+
+    assert ["foo", "bar"] ==
+             Format.format_field(%{
+               "content" => "foo|bar",
+               "type" => "string",
+               "cardinality" => "*"
+             })
+
+    assert ["bar"] ==
+             Format.format_field(%{"content" => "bar", "type" => "string", "cardinality" => "+"})
+
+    assert [] ==
+             Format.format_field(%{"content" => "", "type" => "string", "cardinality" => "+"})
+
+    assert ["bar|foo"] ==
+             Format.format_field(%{
+               "content" => "bar|foo",
+               "type" => "string",
+               "cardinality" => "1"
+             })
+
+    assert [1, 23, 45] ==
+             Format.format_field(%{
+               "content" => "1|23|45|",
+               "type" => "integer",
+               "cardinality" => "*"
+             })
+
+    assert [1, 2.3, 4.5] ==
+             Format.format_field(%{
+               "content" => "1.0|2.3|4.5|",
+               "type" => "float",
+               "cardinality" => "*"
+             })
   end
 
   test "format_field of integer and float types" do

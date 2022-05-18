@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-4548] Format support for multiple selection fields separted by `|`
+
 ## [4.40.1] 2022-03-11
 
 ### Changed

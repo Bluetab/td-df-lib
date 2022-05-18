@@ -312,6 +312,14 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
+  def format_field(%{"content" => content, "type" => type, "cardinality" => cardinality})
+      when cardinality in ["+", "*"] and is_binary(content) and type !== "user" do
+    content
+    |> String.split("|", trim: true)
+    |> Enum.map(fn c -> format_field(%{"content" => c, "type" => type}) end)
+    |> List.flatten()
+  end
+
   def format_field(%{"content" => content, "type" => "string"}) do
     [content]
   end
