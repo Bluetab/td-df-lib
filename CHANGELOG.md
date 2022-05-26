@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-3920] `TdDfLib.Format.apply_template/3` takes only template fields of the
+            content.
+
 ## [4.44.0] 2022-05-20
 
 ### Added

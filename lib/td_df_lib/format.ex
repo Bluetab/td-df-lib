@@ -20,6 +20,7 @@ defmodule TdDfLib.Format do
     content
     |> default_values(fields, opts)
     |> cached_values(fields)
+    |> take_template_fields(fields)
   end
 
   def maybe_put_identifier_by_id(changeset_content, old_content, template_id)
@@ -103,7 +104,10 @@ defmodule TdDfLib.Format do
 
   def enrich_content_values(%{} = content, %{content: fields}) do
     fields = flatten_content_fields(fields)
-    cached_values(content, fields)
+
+    content
+    |> cached_values(fields)
+    |> take_template_fields(fields)
   end
 
   def enrich_content_values(content, _), do: content
@@ -144,6 +148,11 @@ defmodule TdDfLib.Format do
       |> set_cached_values(fields)
 
     Map.merge(content, cached_values)
+  end
+
+  defp take_template_fields(content, fields) do
+    field_names = Enum.map(fields, &Map.get(&1, "name"))
+    Map.take(content, field_names)
   end
 
   defp drop_values(content, fields) do
