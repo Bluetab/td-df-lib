@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [4.45.0] 2022-05-31
 
 ### Changed
 
