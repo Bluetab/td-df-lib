@@ -179,7 +179,7 @@
 
 - [TD-2629] Omit `image` fields on search values
 
-## [3.16.0]
+## [3.16.0] 2020-02-18
 
 ### Fixed
 
