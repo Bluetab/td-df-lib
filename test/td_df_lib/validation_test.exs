@@ -533,6 +533,9 @@ defmodule TdDfLib.ValidationTest do
 
       assert [{:content, {"invalid content", _errors}}] =
                validator.(:content, %{"list" => "four"})
+
+      assert [{:content, "invalid content"}] =
+               validator.(:content, %{"list" => "one", "string" => @unsafe})
     end
   end
 

@@ -265,7 +265,7 @@ defmodule TdDfLib.Validation do
     fn field, value ->
       case build_changeset(value, schema, opts) do
         %{valid?: false, errors: errors} -> [{field, {"invalid content", errors}}]
-        _ -> []
+        _ -> validate_safe(field, value)
       end
     end
   end
