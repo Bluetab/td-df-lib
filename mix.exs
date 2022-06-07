@@ -32,7 +32,7 @@ defmodule TdDfLib.MixProject do
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:ecto, "~> 3.0"},
       {:ex_machina, "~> 2.3", only: :test},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.40.3"}
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "4.45.0"},
     ]
   end
 end
