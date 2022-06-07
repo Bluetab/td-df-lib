@@ -6,6 +6,8 @@ defmodule TdDfLib.ValidationTest do
   alias TdCache.TemplateCache
   alias TdDfLib.Validation
 
+  @unsafe "javascript:alert(document)"
+
   describe "validations" do
     setup do
       %{id: template_id} = template = build(:template)
@@ -531,6 +533,23 @@ defmodule TdDfLib.ValidationTest do
 
       assert [{:content, {"invalid content", _errors}}] =
                validator.(:content, %{"list" => "four"})
+    end
+  end
+
+  describe "validate_safe/2" do
+    test "returns an empty list if content is safe" do
+      assert Validation.validate_safe(:foo, %{"href" => "http:/foo.bar"}) == []
+      assert Validation.validate_safe(:foo, [%{id: 1}, %{foo: "bar"}]) == []
+      assert Validation.validate_safe(:foo, "a safe sting") == []
+      assert Validation.validate_safe(:foo, nil) == []
+    end
+
+    test "returns error keyword list if content in unsafe" do
+      expected = [foo: "invalid content"]
+
+      assert Validation.validate_safe(:foo, @unsafe) == expected
+      assert Validation.validate_safe(:foo, [@unsafe, "hello"]) == expected
+      assert Validation.validate_safe(:foo, %{"doc" => %{"href" => @unsafe}}) == expected
     end
   end
 

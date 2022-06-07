@@ -1,6 +1,6 @@
 defmodule TdDfLib.RichText do
   @moduledoc """
-    Helper module to manipulate rich text.
+  Helper module to manipulate rich text.
   """
 
   def to_rich_text(nil), do: %{}

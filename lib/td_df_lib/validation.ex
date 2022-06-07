@@ -64,6 +64,8 @@ defmodule TdDfLib.Validation do
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec, opts)
     |> add_image_validation(field_spec)
+    |> add_richtext_validation(field_spec)
+    |> add_url_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [tail | head], opts) do
@@ -161,6 +163,20 @@ defmodule TdDfLib.Validation do
 
   defp add_image_validation(changeset, %{}), do: changeset
 
+  defp add_richtext_validation(changeset, %{"name" => name, "type" => "enriched_text"}) do
+    field = String.to_atom(name)
+    Changeset.validate_change(changeset, field, &validate_safe/2)
+  end
+
+  defp add_richtext_validation(changeset, %{}), do: changeset
+
+  defp add_url_validation(changeset, %{"name" => name, "type" => "url"}) do
+    field = String.to_atom(name)
+    Changeset.validate_change(changeset, field, &validate_safe/2)
+  end
+
+  defp add_url_validation(changeset, %{}), do: changeset
+
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
       true -> Keyword.new([{field, "should not contain empty values"}])
@@ -252,5 +268,13 @@ defmodule TdDfLib.Validation do
         _ -> []
       end
     end
+  end
+
+  def validate_safe(field, value) when is_binary(value) do
+    if String.contains?(value, "javascript:"), do: [{field, "invalid content"}], else: []
+  end
+
+  def validate_safe(field, value) do
+    validate_safe(field, Jason.encode!(value))
   end
 end
