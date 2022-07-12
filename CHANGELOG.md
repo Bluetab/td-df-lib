@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.48.0] 2022-07-12
+
+### Fixed
+
+- [TD-5011] `TemplateCache.list/0` was returning duplicate entries
+
 ## [4.46.0] 2022-06-15
 
 ### Added
