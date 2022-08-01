@@ -7,9 +7,6 @@ defmodule TdDfLib.Format do
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
-  @cached ["domain", "system"]
-  @format_types ["domain", "enriched_text", "system"]
-
   def apply_template(content, fields, opts \\ [])
 
   def apply_template(nil, _, _opts), do: %{}
@@ -136,7 +133,8 @@ defmodule TdDfLib.Format do
 
     fields =
       Enum.filter(fields, fn
-        %{"type" => type, "name" => name} -> type in @cached and name in keys
+        %{"type" => "domain", "name" => name} -> name in keys
+        %{"type" => "system", "name" => name} -> name in keys
         _ -> false
       end)
 
@@ -167,7 +165,7 @@ defmodule TdDfLib.Format do
   def format_search_values(content, fields) do
     fields =
       Enum.filter(fields, fn
-        %{"type" => type} -> type in @format_types
+        %{"type" => type} -> type in ["enriched_text", "system"]
         _ -> false
       end)
 
@@ -201,7 +199,7 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, RichText.to_plain_text(Map.get(acc, name)))
   end
 
-  defp set_search_value(%{"name" => name, "type" => type}, acc) when type in @cached do
+  defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
     case Map.get(acc, name) do
       value = %{} -> Map.put(acc, name, [value])
       value -> Map.put(acc, name, value)

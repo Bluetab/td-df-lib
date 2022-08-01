@@ -727,8 +727,8 @@ defmodule TdDfLib.FormatTest do
       assert %{"system" => [_system]} = Format.search_values(content, %{content: fields})
     end
 
-    test "search_values/2 gets domain from cache and formats it", %{domain: domain} do
-      content = %{"domain" => %{"id" => domain.id}}
+    test "search_values/2 gets domain from cache and formats it", %{domain: %{id: domain_id}} do
+      content = %{"domain" => domain_id}
 
       fields = [
         %{
@@ -739,9 +739,9 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"domain" => [domain]} = Format.search_values(content, %{content: fields})
+      assert %{"domain" => ^domain_id} = Format.search_values(content, %{content: fields})
 
-      content = %{"domain" => [%{"id" => domain.id}]}
+      content = %{"domain" => [domain_id]}
 
       fields = [
         %{
@@ -752,7 +752,7 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"domain" => [_domain]} = Format.search_values(content, %{content: fields})
+      assert %{"domain" => [^domain_id]} = Format.search_values(content, %{content: fields})
     end
 
     test "search_values/2 returns nil when no template is provided" do
