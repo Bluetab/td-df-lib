@@ -379,8 +379,8 @@ defmodule TdDfLib.Format do
 
   defp format_domain(%{"id" => id} = domain, _cardinality) when not is_nil(id) do
     case TaxonomyCache.get_domain(id) do
-      nil -> domain
-      domain -> domain
+      nil -> Map.take(domain, ["id", "name", "external_id"])
+      domain -> Map.take(domain, [:id, :name, :external_id])
     end
   end
 
