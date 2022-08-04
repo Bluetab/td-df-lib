@@ -1,8 +1,6 @@
 defmodule TdDfLib.FormatTest do
   use ExUnit.Case
 
-  import Assertions
-
   alias TdCache.DomainCache
   alias TdCache.Redix
   alias TdCache.SystemCache
@@ -835,13 +833,13 @@ defmodule TdDfLib.FormatTest do
   describe "enrich_content_values/2" do
     setup [:create_system, :create_domain]
 
-    test "enrich_content_values/2 gets cached values for system and domain fields", %{
-      domain: domain,
+    test "enrich_content_values/2 gets cached values for system fields", %{
+      domain: %{id: domain_id},
       system: system
     } do
       content = %{
         "system" => %{"id" => system.id},
-        "domain" => domain.id,
+        "domain" => domain_id,
         "foo" => "bar"
       }
 
@@ -856,10 +854,8 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => ^system, "domain" => cached_domain, "foo" => "bar"} =
+      assert %{"system" => ^system, "domain" => ^domain_id, "foo" => "bar"} =
                Format.enrich_content_values(content, %{content: fields})
-
-      assert_maps_equal(cached_domain, domain, [:id, :external_id, :name])
     end
   end
 

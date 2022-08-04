@@ -16,7 +16,7 @@ defmodule TdDfLib.Format do
   def apply_template(%{} = content, fields, opts) do
     content
     |> default_values(fields, opts)
-    |> cached_values(fields, opts)
+    |> cached_values(fields)
     |> take_template_fields(fields)
   end
 
@@ -89,7 +89,7 @@ defmodule TdDfLib.Format do
     fields = flatten_content_fields(fields)
 
     content
-    |> cached_values(fields, types: ["domain", "system"])
+    |> cached_values(fields)
     |> take_template_fields(fields)
   end
 
@@ -114,13 +114,12 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields, opts) do
-    types = Keyword.get(opts, :types, ["system"])
+  defp cached_values(content, fields) do
     keys = Map.keys(content)
 
     fields =
       Enum.filter(fields, fn
-        %{"type" => type, "name" => name} -> type in types and name in keys
+        %{"type" => "system", "name" => name} -> name in keys
         _ -> false
       end)
 
@@ -275,14 +274,7 @@ defmodule TdDfLib.Format do
   def set_default_value(content, %{}, _opts), do: content
 
   def format_field(%{"content" => content, "type" => "url"}) do
-    link_value = [
-      %{
-        "url_name" => content,
-        "url_value" => content
-      }
-    ]
-
-    link_value
+    [%{"url_name" => content, "url_value" => content}]
   end
 
   def format_field(%{
