@@ -1,5 +1,13 @@
 # Changelog
 
+
+## [Unreleased]
+
+### Changed
+
+- [TD-5091] `domain` fields are now stored as integers instead of embedded
+  documents
+
 ## [4.48.0] 2022-07-12
 
 ### Fixed

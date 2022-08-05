@@ -1,6 +1,6 @@
 defmodule CacheHelpers do
   @moduledoc """
-  Support creation of domains in cache
+  Support creation of templates in cache
   """
 
   import TdDfLib.Factory

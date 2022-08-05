@@ -3,7 +3,6 @@ defmodule TdDfLib.Format do
   Manages content formatting
   """
   alias TdCache.SystemCache
-  alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
@@ -149,20 +148,12 @@ defmodule TdDfLib.Format do
   end
 
   defp format_search_values(content, fields) do
-    fields =
-      Enum.filter(fields, fn
-        %{"type" => type} -> type in ["enriched_text", "system"]
-        _ -> false
-      end)
-
-    field_names = Enum.map(fields, &Map.get(&1, "name"))
-
-    search_values =
-      content
-      |> Map.take(field_names)
-      |> set_search_values(fields)
-
-    Map.merge(content, search_values)
+    fields
+    |> Enum.filter(fn
+      %{"type" => type} -> type in ["enriched_text", "system"]
+      _ -> false
+    end)
+    |> Enum.reduce(content, &set_search_value(&1, &2))
   end
 
   defp default_values(content, fields, opts) do
@@ -175,10 +166,6 @@ defmodule TdDfLib.Format do
 
   def set_default_values(content, fields, opts \\ []) do
     Enum.reduce(fields, content, &set_default_value(&2, &1, opts))
-  end
-
-  defp set_search_values(content, fields) do
-    Enum.reduce(fields, content, &set_search_value(&1, &2))
   end
 
   defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
@@ -232,9 +219,8 @@ defmodule TdDfLib.Format do
       )
       when is_map_key(values, "domain") do
     domain_ids = domain_ids(opts)
-    default_value = take_first_value(default, domain_ids)
 
-    case default_value do
+    case take_first_value(default, domain_ids) do
       nil ->
         field = Map.delete(field, "default")
         set_default_value(content, field, opts)
@@ -337,10 +323,6 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, format_system(Map.get(acc, name), cardinality))
   end
 
-  defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
-    Map.put(acc, name, format_domain(Map.get(acc, name), cardinality))
-  end
-
   defp set_cached_value(_field, acc), do: acc
 
   defp format_system(%{} = system, _cardinality) do
@@ -348,7 +330,6 @@ defmodule TdDfLib.Format do
 
     case SystemCache.get(id) do
       {:ok, system} -> system
-      _ -> system
     end
   end
 
@@ -364,31 +345,6 @@ defmodule TdDfLib.Format do
   end
 
   defp format_system(system, _cardinality), do: system
-
-  defp format_domain(id, cardinality) when is_integer(id) do
-    format_domain(%{"id" => id}, cardinality)
-  end
-
-  defp format_domain(%{"id" => id} = domain, _cardinality) when not is_nil(id) do
-    case TaxonomyCache.get_domain(id) do
-      nil -> Map.take(domain, ["id", "name", "external_id"])
-      domain -> Map.take(domain, [:id, :name, :external_id])
-    end
-  end
-
-  defp format_domain([_ | _] = domains, cardinality) do
-    Enum.map(domains, &format_domain(&1, cardinality))
-  end
-
-  defp format_domain("", _cardinality), do: nil
-
-  defp format_domain(external_id, cardinality) when is_binary(external_id) do
-    external_id
-    |> TaxonomyCache.get_by_external_id()
-    |> apply_cardinality(cardinality)
-  end
-
-  defp format_domain(domain, _cardinality), do: domain
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
