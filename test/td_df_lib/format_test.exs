@@ -1,8 +1,6 @@
 defmodule TdDfLib.FormatTest do
   use ExUnit.Case
 
-  alias TdCache.Redix
-  alias TdCache.SystemCache
   alias TdDfLib.Format
   alias TdDfLib.RichText
 
@@ -830,12 +828,15 @@ defmodule TdDfLib.FormatTest do
   end
 
   describe "enrich_content_values/2" do
-    setup :create_system
+    setup [:create_domain, :create_system]
 
-    test "enrich_content_values/2 gets cached values for system fields", %{system: system} do
+    test "enrich_content_values/2 gets cached values for system and domain fields", %{
+      domain: %{id: domain_id} = domain,
+      system: system
+    } do
       content = %{
         "system" => %{"id" => system.id},
-        "domain" => 123,
+        "domain" => domain.id,
         "foo" => "bar"
       }
 
@@ -850,20 +851,19 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => ^system, "domain" => 123, "foo" => "bar"} =
+      assert %{"system" => ^system, "domain" => ^domain_id, "foo" => "bar"} =
                Format.enrich_content_values(content, %{content: fields})
+
+      assert %{"domain" => %{id: ^domain_id}} =
+               Format.enrich_content_values(content, %{content: fields}, [:domain])
     end
   end
 
   defp create_system(_) do
-    system = %{id: System.unique_integer([:positive]), external_id: "foo", name: "bar"}
-    SystemCache.put(system)
+    [system: CacheHelpers.put_system()]
+  end
 
-    on_exit(fn ->
-      SystemCache.delete(system.id)
-      Redix.command(["DEL", "systems:ids_external_ids"])
-    end)
-
-    [system: system]
+  defp create_domain(_) do
+    [domain: CacheHelpers.put_domain()]
   end
 end

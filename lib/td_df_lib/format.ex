@@ -3,6 +3,7 @@ defmodule TdDfLib.Format do
   Manages content formatting
   """
   alias TdCache.SystemCache
+  alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
@@ -84,15 +85,17 @@ defmodule TdDfLib.Format do
 
   defp get_identifier_value(_), do: Ecto.UUID.generate()
 
-  def enrich_content_values(%{} = content, %{content: fields}) do
+  def enrich_content_values(content, template, types \\ [:system])
+
+  def enrich_content_values(%{} = content, %{content: fields}, types) do
     fields = flatten_content_fields(fields)
 
     content
-    |> cached_values(fields)
+    |> cached_values(fields, types)
     |> take_template_fields(fields)
   end
 
-  def enrich_content_values(content, _), do: content
+  def enrich_content_values(content, _, _), do: content
 
   def search_values(content, fields, opts \\ [])
 
@@ -113,12 +116,13 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields) do
+  defp cached_values(content, fields, types \\ [:system]) do
     keys = Map.keys(content)
 
     fields =
       Enum.filter(fields, fn
-        %{"type" => "system", "name" => name} -> name in keys
+        %{"type" => "system", "name" => name} -> name in keys and :system in types
+        %{"type" => "domain", "name" => name} -> name in keys and :domain in types
         _ -> false
       end)
 
@@ -323,6 +327,10 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, format_system(Map.get(acc, name), cardinality))
   end
 
+  defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
+    Map.put(acc, name, format_domain(Map.get(acc, name), cardinality))
+  end
+
   defp set_cached_value(_field, acc), do: acc
 
   defp format_system(%{} = system, _cardinality) do
@@ -345,6 +353,19 @@ defmodule TdDfLib.Format do
   end
 
   defp format_system(system, _cardinality), do: system
+
+  defp format_domain([_ | _] = domain_ids, cardinality) do
+    Enum.map(domain_ids, &format_domain(&1, cardinality))
+  end
+
+  defp format_domain(domain_id, cardinality) when is_integer(domain_id) do
+    case TaxonomyCache.get_domain(domain_id) do
+      nil -> nil
+      %{} = domain -> apply_cardinality(domain, cardinality)
+    end
+  end
+
+  defp format_domain(domain_id, _cardinality), do: domain_id
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
