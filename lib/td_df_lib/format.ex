@@ -7,9 +7,6 @@ defmodule TdDfLib.Format do
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
-  @cached ["domain", "system"]
-  @format_types ["domain", "enriched_text", "system"]
-
   def apply_template(content, fields, opts \\ [])
 
   def apply_template(nil, _, _opts), do: %{}
@@ -39,52 +36,41 @@ defmodule TdDfLib.Format do
 
   def maybe_put_identifier(_, content, _), do: content
 
-  def maybe_put_identifier_template(
-        {:error, :template_not_found},
-        changeset_content,
-        _old_content
-      ) do
+  defp maybe_put_identifier_template(
+         {:error, :template_not_found},
+         changeset_content,
+         _old_content
+       ) do
     changeset_content
   end
 
-  def maybe_put_identifier_template(fields, nil, old_content) do
+  defp maybe_put_identifier_template(fields, nil, old_content) do
     maybe_put_identifier_template(fields, %{}, old_content)
   end
 
-  def maybe_put_identifier_template(fields, changeset_content, old_content)
-      when is_list(fields) do
+  defp maybe_put_identifier_template(fields, changeset_content, old_content)
+       when is_list(fields) do
     fields
     |> get_identifier_name()
     |> maybe_put_identifier_idname(changeset_content, old_content)
   end
 
-  def get_identifier_name(fields) do
-    Enum.find(
-      fields,
-      &has_identifier_widget?/1
-    )
-    |> identifier_name_aux()
+  defp get_identifier_name(fields) do
+    Enum.find_value(fields, fn
+      %{"widget" => "identifier", "name" => name} -> name
+      _ -> false
+    end)
   end
 
-  def identifier_name_aux(%{"name" => identifier_name} = _identifier_field) do
-    identifier_name
-  end
-
-  def identifier_name_aux(nil), do: nil
-
-  def maybe_put_identifier_idname(identifier_name, changeset_content, nil = _old_content) do
+  defp maybe_put_identifier_idname(identifier_name, changeset_content, nil = _old_content) do
     maybe_put_identifier_idname(identifier_name, changeset_content, %{})
   end
 
-  def maybe_put_identifier_idname(nil, changeset_content, _old_content) do
+  defp maybe_put_identifier_idname(nil, changeset_content, _old_content) do
     changeset_content
   end
 
-  def maybe_put_identifier_idname(
-        identifier_name,
-        changeset_content,
-        old_content
-      ) do
+  defp maybe_put_identifier_idname(identifier_name, changeset_content, old_content) do
     Map.put(
       changeset_content,
       identifier_name,
@@ -99,18 +85,17 @@ defmodule TdDfLib.Format do
 
   defp get_identifier_value(_), do: Ecto.UUID.generate()
 
-  def has_identifier_widget?(%{"widget" => "identifier"}), do: true
-  def has_identifier_widget?(_), do: false
+  def enrich_content_values(content, template, types \\ [:system])
 
-  def enrich_content_values(%{} = content, %{content: fields}) do
+  def enrich_content_values(%{} = content, %{content: fields}, types) do
     fields = flatten_content_fields(fields)
 
     content
-    |> cached_values(fields)
+    |> cached_values(fields, types)
     |> take_template_fields(fields)
   end
 
-  def enrich_content_values(content, _), do: content
+  def enrich_content_values(content, _, _), do: content
 
   def search_values(content, fields, opts \\ [])
 
@@ -131,12 +116,13 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields) do
+  defp cached_values(content, fields, types \\ [:system]) do
     keys = Map.keys(content)
 
     fields =
       Enum.filter(fields, fn
-        %{"type" => type, "name" => name} -> type in @cached and name in keys
+        %{"type" => "system", "name" => name} -> name in keys and :system in types
+        %{"type" => "domain", "name" => name} -> name in keys and :domain in types
         _ -> false
       end)
 
@@ -157,28 +143,21 @@ defmodule TdDfLib.Format do
 
   defp drop_values(content, fields) do
     keys =
-      fields
-      |> Enum.filter(&(Map.get(&1, "type") in ["image", "copy"]))
-      |> Enum.map(&Map.get(&1, "name"))
+      Enum.flat_map(fields, fn
+        %{"type" => type, "name" => name} when type in ["image", "copy"] -> [name]
+        _ -> []
+      end)
 
     Map.drop(content, keys)
   end
 
-  def format_search_values(content, fields) do
-    fields =
-      Enum.filter(fields, fn
-        %{"type" => type} -> type in @format_types
-        _ -> false
-      end)
-
-    field_names = Enum.map(fields, &Map.get(&1, "name"))
-
-    search_values =
-      content
-      |> Map.take(field_names)
-      |> set_search_values(fields)
-
-    Map.merge(content, search_values)
+  defp format_search_values(content, fields) do
+    fields
+    |> Enum.filter(fn
+      %{"type" => type} -> type in ["enriched_text", "system"]
+      _ -> false
+    end)
+    |> Enum.reduce(content, &set_search_value(&1, &2))
   end
 
   defp default_values(content, fields, opts) do
@@ -193,15 +172,11 @@ defmodule TdDfLib.Format do
     Enum.reduce(fields, content, &set_default_value(&2, &1, opts))
   end
 
-  def set_search_values(content, fields) do
-    Enum.reduce(fields, content, &set_search_value(&1, &2))
-  end
-
   defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
     Map.put(acc, name, RichText.to_plain_text(Map.get(acc, name)))
   end
 
-  defp set_search_value(%{"name" => name, "type" => type}, acc) when type in @cached do
+  defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
     case Map.get(acc, name) do
       value = %{} -> Map.put(acc, name, [value])
       value -> Map.put(acc, name, value)
@@ -248,9 +223,8 @@ defmodule TdDfLib.Format do
       )
       when is_map_key(values, "domain") do
     domain_ids = domain_ids(opts)
-    default_value = take_first_value(default, domain_ids)
 
-    case default_value do
+    case take_first_value(default, domain_ids) do
       nil ->
         field = Map.delete(field, "default")
         set_default_value(content, field, opts)
@@ -290,14 +264,7 @@ defmodule TdDfLib.Format do
   def set_default_value(content, %{}, _opts), do: content
 
   def format_field(%{"content" => content, "type" => "url"}) do
-    link_value = [
-      %{
-        "url_name" => content,
-        "url_value" => content
-      }
-    ]
-
-    link_value
+    [%{"url_name" => content, "url_value" => content}]
   end
 
   def format_field(%{
@@ -371,7 +338,6 @@ defmodule TdDfLib.Format do
 
     case SystemCache.get(id) do
       {:ok, system} -> system
-      _ -> system
     end
   end
 
@@ -388,26 +354,18 @@ defmodule TdDfLib.Format do
 
   defp format_system(system, _cardinality), do: system
 
-  defp format_domain(%{"id" => id} = domain, _cardinality) when not is_nil(id) do
-    case TaxonomyCache.get_domain(id) do
-      nil -> domain
-      domain -> domain
+  defp format_domain([_ | _] = domain_ids, cardinality) do
+    Enum.map(domain_ids, &format_domain(&1, cardinality))
+  end
+
+  defp format_domain(domain_id, cardinality) when is_integer(domain_id) do
+    case TaxonomyCache.get_domain(domain_id) do
+      nil -> nil
+      %{} = domain -> apply_cardinality(domain, cardinality)
     end
   end
 
-  defp format_domain([_ | _] = domains, cardinality) do
-    Enum.map(domains, &format_domain(&1, cardinality))
-  end
-
-  defp format_domain("", _cardinality), do: nil
-
-  defp format_domain(external_id, cardinality) when is_binary(external_id) do
-    external_id
-    |> TaxonomyCache.get_by_external_id()
-    |> apply_cardinality(cardinality)
-  end
-
-  defp format_domain(domain, _cardinality), do: domain
+  defp format_domain(domain_id, _cardinality), do: domain_id
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
