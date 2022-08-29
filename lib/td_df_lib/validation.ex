@@ -18,7 +18,7 @@ defmodule TdDfLib.Validation do
     "float" => :float,
     "system" => :map,
     "copy" => :string,
-    "domain" => :integer
+    "domain" => :map
   }
 
   def build_changeset(content, content_schema, opts \\ []) do
@@ -30,12 +30,14 @@ defmodule TdDfLib.Validation do
   end
 
   defp get_changeset_fields(content_schema) do
-    Map.new(content_schema, fn item ->
+    item_mapping = fn item ->
       name = Map.get(item, "name")
       type = Map.get(@types, Map.get(item, "type"), :string)
       cardinality = Map.get(item, "cardinality")
       {String.to_atom(name), get_field_type(type, cardinality)}
-    end)
+    end
+
+    Map.new(content_schema, item_mapping)
   end
 
   defp get_field_type(type, "*"), do: {:array, type}
@@ -66,13 +68,13 @@ defmodule TdDfLib.Validation do
     |> add_url_validation(field_spec)
   end
 
-  defp add_content_validation(changeset, [], _opts), do: changeset
-
-  defp add_content_validation(changeset, [head | tail], opts) do
+  defp add_content_validation(changeset, [tail | head], opts) do
     changeset
-    |> add_content_validation(head, opts)
     |> add_content_validation(tail, opts)
+    |> add_content_validation(head, opts)
   end
+
+  defp add_content_validation(changeset, [], _opts), do: changeset
 
   defp add_require_validation(changeset, %{"name" => name, "cardinality" => "1"}) do
     validate_single(name, changeset)
@@ -99,7 +101,10 @@ defmodule TdDfLib.Validation do
 
   defp add_inclusion_validation(
          changeset,
-         %{"name" => name, "values" => %{"fixed" => fixed}},
+         %{
+           "name" => name,
+           "values" => %{"fixed" => fixed}
+         },
          _opts
        ) do
     validate_inclusion(changeset, name, fixed)
@@ -107,7 +112,10 @@ defmodule TdDfLib.Validation do
 
   defp add_inclusion_validation(
          changeset,
-         %{"name" => name, "values" => %{"fixed_tuple" => fixed_tuple}},
+         %{
+           "name" => name,
+           "values" => %{"fixed_tuple" => fixed_tuple}
+         },
          _opts
        ) do
     fixed = Enum.map(fixed_tuple, &Map.get(&1, "value"))
@@ -116,7 +124,10 @@ defmodule TdDfLib.Validation do
 
   defp add_inclusion_validation(
          changeset,
-         %{"name" => name, "values" => %{"domain" => domain_values = %{}}},
+         %{
+           "name" => name,
+           "values" => %{"domain" => domain_values = %{}}
+         },
          opts
        ) do
     field = String.to_atom(name)
