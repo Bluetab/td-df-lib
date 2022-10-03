@@ -13,48 +13,42 @@ defmodule TdDfLib.TemplatesTest do
     end
   end
 
-  test "optional_fields/2 returns the optional fields of a template", %{
+  test "visible_fields/2 returns the visible fields of a template", %{
     template_name: template_name
   } do
-    optional_fields = Templates.optional_fields(template_name, %{})
-    assert Enum.count(optional_fields) == 18
+    visible_fields = Templates.visible_fields(template_name, %{})
+    assert Enum.count(visible_fields) == 18
   end
 
-  test "optional_fields/2 returns the optional fields of a template excluding dependent mandatory fields",
-       %{
-         template_name: template_name
-       } do
-    optional_fields = Templates.optional_fields(template_name, %{"demo.filter" => "a"})
-    assert Enum.count(optional_fields) == 17
-    refute Enum.member?(optional_fields, "mandatory.dependent.on_single")
+  test "visible_fields/2 returns the visible fields of a template including dependent fields", %{
+    template_name: template_name
+  } do
+    visible_fields = Templates.visible_fields(template_name, %{"lista_radio" => "Si"})
+    assert Enum.count(visible_fields) == 20
+    assert Enum.member?(visible_fields, "texto_dependiente")
 
-    optional_fields = Templates.optional_fields(template_name, %{"demo.filter" => "b"})
-    assert Enum.count(optional_fields) == 18
-    assert Enum.member?(optional_fields, "mandatory.dependent.on_single")
-
-    optional_fields =
-      Templates.optional_fields(template_name, %{"independent_multiple" => ["foo"]})
-
-    assert Enum.count(optional_fields) == 17
-    refute Enum.member?(optional_fields, "mandatory.dependent.on_multiple")
-
-    optional_fields =
-      Templates.optional_fields(template_name, %{"independent_multiple" => ["bar"]})
-
-    assert Enum.count(optional_fields) == 18
-    assert Enum.member?(optional_fields, "mandatory.dependent.on_multiple")
+    visible_fields = Templates.visible_fields(template_name, %{"lista_radio" => "No"})
+    assert Enum.count(visible_fields) == 18
+    refute Enum.member?(visible_fields, "texto_dependiente")
+    refute Enum.member?(visible_fields, "lista_dependiente")
   end
 
   test "completeness/2 returns the completeness of some content", %{template_name: template_name} do
     content = %{"texto" => "foo"}
-    assert Templates.completeness(content, template_name) == Float.round(100.0 / 18.0, 2)
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 1.0 / 18.0, 2)
   end
 
-  test "completeness/2 returns the completeness of some content excluding mandatory dependent", %{
-    template_name: template_name
-  } do
-    content = %{"texto" => "foo", "demo.filter" => "a", "independent_multiple" => ["foo"]}
-    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 16.0, 2)
+  test "completeness/2 returns the completeness of some content including hidden conditional fields",
+       %{
+         template_name: template_name
+       } do
+    content = %{
+      "demo.filter" => "a",
+      "independent_multiple" => ["foo"],
+      "lista_radio" => "Si"
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 20.0, 2)
   end
 
   test "group_name/2 returns the group name of a field", %{template_name: template_name} do
