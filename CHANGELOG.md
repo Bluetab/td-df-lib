@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.53.0] 2022-10-03
+
+### Changed
+
+- [TD-4857] Completeness calculation now considers ratio of completed
+  visible fields rather than completed optional fields
+
 ## [4.50.0] 2022-08-29
 
 ### Changed

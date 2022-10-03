@@ -16,20 +16,20 @@ defmodule TdDfLib.Templates do
     |> template_completeness(content)
   end
 
-  def optional_fields(template_name, %{} = content) when is_binary(template_name) do
+  def visible_fields(template_name, %{} = content) when is_binary(template_name) do
     template_name
     |> TemplateCache.get_by_name!()
-    |> optional_fields(content)
+    |> visible_fields(content)
   end
 
-  def optional_fields(%{content: template_content} = _template, %{} = content) do
+  def visible_fields(%{content: template_content} = _template, %{} = content) do
     template_content
     |> Enum.flat_map(&Map.get(&1, "fields", []))
-    |> Enum.filter(&is_optional?(&1, content))
+    |> Enum.filter(&is_visible?(&1, content))
     |> Enum.map(&Map.get(&1, "name"))
   end
 
-  def optional_fields(nil = _template, _content), do: []
+  def visible_fields(nil = _template, _content), do: []
 
   def subscribable_fields(template_name) when is_binary(template_name) do
     template_name
@@ -109,37 +109,32 @@ defmodule TdDfLib.Templates do
     |> Enum.member?(field_name)
   end
 
-  defp is_optional?(
-         %{
-           "cardinality" => cardinality,
-           "mandatory" => %{"on" => on, "to_be" => target = [_ | _]}
-         },
+  defp is_visible?(
+         %{"depends" => %{"on" => on, "to_be" => target = [_ | _]}},
          content
        ) do
     value = Map.get(content, on)
-    is_optional?(cardinality) && not meets_dependency?(value, target)
+    meets_dependency?(value, target)
   end
 
-  defp is_optional?(%{"cardinality" => cardinality}, _content), do: is_optional?(cardinality)
-  defp is_optional?("*"), do: true
-  defp is_optional?("?"), do: true
-  defp is_optional?(_), do: false
+  defp is_visible?(_, _), do: true
 
   defp template_completeness(nil = _template, _content), do: 0.0
 
   defp template_completeness(%{} = template, content) do
     template
-    |> optional_fields(content)
+    |> visible_fields(content)
     |> field_completeness(content)
   end
 
-  defp field_completeness([] = _optional_fields, _content), do: 100.0
+  defp field_completeness([] = _visible_fields, _content), do: 100.0
 
-  defp field_completeness([_ | _] = _optional_fields, %{} = content) when content == %{}, do: 0.0
+  defp field_completeness([_ | _] = _visible_fields, %{} = content) when content == %{},
+    do: 0.0
 
-  defp field_completeness([_ | _] = optional_fields, %{} = content) do
+  defp field_completeness([_ | _] = visible_fields, %{} = content) do
     {completed_count, count} =
-      optional_fields
+      visible_fields
       |> Enum.map(&Map.get(content, &1))
       |> Enum.map(&is_complete?/1)
       |> Enum.reduce({0, 0}, fn
