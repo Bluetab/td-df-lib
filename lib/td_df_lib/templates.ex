@@ -113,8 +113,18 @@ defmodule TdDfLib.Templates do
          %{"depends" => %{"on" => on, "to_be" => target = [_ | _]}},
          content
        ) do
-    value = Map.get(content, on)
-    meets_dependency?(value, target)
+    content
+    |> Map.get(on)
+    |> meets_dependency?(target)
+  end
+
+  defp is_visible?(
+         %{"values" => %{"switch" => %{"on" => on, "values" => %{} = target}}},
+         content
+       ) do
+    content
+    |> Map.get(on)
+    |> meets_dependency?(Map.keys(target))
   end
 
   defp is_visible?(_, _), do: true

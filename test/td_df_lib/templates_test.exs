@@ -17,25 +17,37 @@ defmodule TdDfLib.TemplatesTest do
     template_name: template_name
   } do
     visible_fields = Templates.visible_fields(template_name, %{})
-    assert Enum.count(visible_fields) == 18
+    assert Enum.count(visible_fields) == 17
   end
 
   test "visible_fields/2 returns the visible fields of a template including dependent fields", %{
     template_name: template_name
   } do
     visible_fields = Templates.visible_fields(template_name, %{"lista_radio" => "Si"})
-    assert Enum.count(visible_fields) == 20
+    assert Enum.count(visible_fields) == 19
     assert Enum.member?(visible_fields, "texto_dependiente")
 
     visible_fields = Templates.visible_fields(template_name, %{"lista_radio" => "No"})
-    assert Enum.count(visible_fields) == 18
+    assert Enum.count(visible_fields) == 17
     refute Enum.member?(visible_fields, "texto_dependiente")
     refute Enum.member?(visible_fields, "lista_dependiente")
   end
 
+  test "visible_fields/2 returns the visible fields of a template including switch fields", %{
+    template_name: template_name
+  } do
+    visible_fields = Templates.visible_fields(template_name, %{"lista_dropdown" => "Elemento1"})
+    assert Enum.count(visible_fields) == 18
+    assert Enum.member?(visible_fields, "linked_dropdown")
+
+    visible_fields = Templates.visible_fields(template_name, %{"lista_dropdown" => "other_value"})
+    assert Enum.count(visible_fields) == 17
+    refute Enum.member?(visible_fields, "linked_dropdown")
+  end
+
   test "completeness/2 returns the completeness of some content", %{template_name: template_name} do
     content = %{"texto" => "foo"}
-    assert Templates.completeness(content, template_name) == Float.round(100.0 * 1.0 / 18.0, 2)
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 1.0 / 17.0, 2)
   end
 
   test "completeness/2 returns the completeness of some content including hidden conditional fields",
@@ -48,7 +60,7 @@ defmodule TdDfLib.TemplatesTest do
       "lista_radio" => "Si"
     }
 
-    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 20.0, 2)
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 19.0, 2)
   end
 
   test "group_name/2 returns the group name of a field", %{template_name: template_name} do

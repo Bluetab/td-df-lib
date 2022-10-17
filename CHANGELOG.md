@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.53.1] 2022-10-17
+
+### Changed
+
+- [TD-5254] Completeness calculation now considers "switch" fields when
+  determining field visibility
+
 ## [4.53.0] 2022-10-03
 
 ### Changed
