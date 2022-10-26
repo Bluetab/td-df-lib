@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.54.0] 2022-10-26
+
+### Changed
+
+- [TD-5284] Update dependencies
+
 ## [4.53.1] 2022-10-17
 
 ### Changed
