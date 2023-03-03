@@ -117,14 +117,14 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields, types \\ [:system]) do
+  defp cached_values(content, fields, types \\ [:system, :hierarchy]) do
     keys = Map.keys(content)
 
     fields =
       Enum.filter(fields, fn
         %{"type" => "system", "name" => name} -> name in keys and :system in types
         %{"type" => "domain", "name" => name} -> name in keys and :domain in types
-        %{"type" => "hierarchy", "name" => name} -> name in keys and :hierachy in types
+        %{"type" => "hierarchy", "name" => name} -> name in keys and :hierarchy in types
         _ -> false
       end)
 
@@ -333,8 +333,16 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, format_domain(Map.get(acc, name), cardinality))
   end
 
-  defp set_cached_value(%{"name" => name, "type" => "hierarchy", "cardinality" => cardinality}, acc) do
-    Map.put(acc, name, format_hierarchy(Map.get(acc, name), cardinality))
+  defp set_cached_value(
+         %{
+           "name" => name,
+           "values" => values,
+           "type" => "hierarchy",
+           "cardinality" => cardinality
+         },
+         acc
+       ) do
+    Map.put(acc, name, format_hierarchy(Map.get(acc, name), values, cardinality))
   end
 
   defp set_cached_value(_field, acc), do: acc
@@ -373,20 +381,26 @@ defmodule TdDfLib.Format do
 
   defp format_domain(domain_id, _cardinality), do: domain_id
 
-  defp format_hierarchy(hierarchy_id, _cardinality) when is_integer(hierarchy_id) do
-    IO.inspect(hierarchy_id, label: "format hierachy")
-    # case HierarchyCache.get(hierarchy_id) do
-    #   {:ok, hierarchy} -> apply_cardinality(hierarchy, cardinality)
-    #   _ -> nil
-    # end
+  defp format_hierarchy(node_id, %{"hierarchy" => hierarchy_id}, cardinality)
+       when is_integer(node_id) do
+    case HierarchyCache.get(hierarchy_id) do
+      {:ok, %{nodes: nodes}} ->
+        if Enum.find(nodes, &(Map.get(&1, "node_id") === node_id)) do
+          apply_cardinality(node_id, cardinality)
+        else
+          nil
+        end
 
+      _ ->
+        nil
+    end
   end
 
-  defp format_hierarchy([_ | _] = hierarchies, cardinality) do
-    Enum.map(hierarchies, &format_hierarchy(&1, cardinality))
+  defp format_hierarchy([_ | _] = nodes_id, hierarchy, cardinality) do
+    Enum.map(nodes_id, &format_hierarchy(&1, hierarchy, cardinality))
   end
 
-  defp format_hierarchy(hierarchy, _cardinality), do: hierarchy
+  defp format_hierarchy(hierarchy, _, _cardinality), do: hierarchy
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 

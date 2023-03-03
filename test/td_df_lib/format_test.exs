@@ -1,6 +1,7 @@
 defmodule TdDfLib.FormatTest do
   use ExUnit.Case
 
+  import TdDfLib.Factory
   alias TdDfLib.Format
   alias TdDfLib.RichText
 
@@ -441,6 +442,38 @@ defmodule TdDfLib.FormatTest do
            }
   end
 
+  test "apply_template/2 return node correctly when template and node exist" do
+    create_hierarchy(nil)
+    content = %{"hierarchy_field" => 51}
+
+    fields = [
+      %{
+        "cardinality" => 1,
+        "name" => "hierarchy_field",
+        "type" => "hierarchy",
+        "values" => %{"hierarchy" => 1927}
+      }
+    ]
+
+    assert Format.apply_template(content, fields) == %{"hierarchy_field" => 51}
+  end
+
+  test "apply_template/2 return nil when template not exist" do
+    create_hierarchy(nil)
+    content = %{"hierarchy_field" => 51}
+
+    fields = [
+      %{
+        "cardinality" => 1,
+        "name" => "hierarchy_field",
+        "type" => "hierarchy",
+        "values" => %{"hierarchy" => 1}
+      }
+    ]
+
+    assert Format.apply_template(content, fields) == %{"hierarchy_field" => nil}
+  end
+
   test "set_default_values/2 sets default values for dependent values" do
     content = %{"bar" => "1", "foo" => "6"}
 
@@ -828,7 +861,7 @@ defmodule TdDfLib.FormatTest do
   end
 
   describe "enrich_content_values/2" do
-    setup [:create_domain, :create_system]
+    setup [:create_domain, :create_system, :create_hierarchy]
 
     test "enrich_content_values/2 gets cached values for system and domain fields", %{
       domain: %{id: domain_id} = domain,
@@ -857,6 +890,60 @@ defmodule TdDfLib.FormatTest do
       assert %{"domain" => %{id: ^domain_id}} =
                Format.enrich_content_values(content, %{content: fields}, [:domain])
     end
+
+    test "enrich_content_values/2 gets cached values for hierarchy fields" do
+      content = %{"hierarchy_field" => 51}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => 1,
+              "name" => "hierarchy_field",
+              "type" => "hierarchy",
+              "values" => %{"hierarchy" => 1927}
+            }
+          ]
+        }
+      ]
+
+      assert ^content = Format.enrich_content_values(content, %{content: fields}, [:hierarchy])
+    end
+
+    test "enrich_content_values/2 return nil when node id is not in hierarchy" do
+      content = %{"hierarchy_field" => 500}
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => 1,
+              "name" => "hierarchy_field",
+              "type" => "hierarchy",
+              "values" => %{"hierarchy" => 1927}
+            }
+          ]
+        }
+      ]
+
+      assert %{"hierarchy_field" => nil} =
+               Format.enrich_content_values(content, %{content: fields}, [:hierarchy])
+    end
+  end
+
+  defp create_hierarchy(_) do
+    [
+      hierarchy:
+        CacheHelpers.insert_hierarchy(
+          id: 1927,
+          nodes: [
+            build(:node, %{node_id: 50, parent_id: nil, hierarchy_id: 1927}),
+            build(:node, %{node_id: 51, parent_id: nil, hierarchy_id: 1927})
+          ]
+        )
+    ]
   end
 
   defp create_system(_) do
