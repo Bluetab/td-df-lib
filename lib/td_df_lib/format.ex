@@ -2,6 +2,7 @@ defmodule TdDfLib.Format do
   @moduledoc """
   Manages content formatting
   """
+  alias TdCache.HierarchyCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
@@ -123,6 +124,7 @@ defmodule TdDfLib.Format do
       Enum.filter(fields, fn
         %{"type" => "system", "name" => name} -> name in keys and :system in types
         %{"type" => "domain", "name" => name} -> name in keys and :domain in types
+        %{"type" => "hierarchy", "name" => name} -> name in keys and :hierachy in types
         _ -> false
       end)
 
@@ -331,6 +333,10 @@ defmodule TdDfLib.Format do
     Map.put(acc, name, format_domain(Map.get(acc, name), cardinality))
   end
 
+  defp set_cached_value(%{"name" => name, "type" => "hierarchy", "cardinality" => cardinality}, acc) do
+    Map.put(acc, name, format_hierarchy(Map.get(acc, name), cardinality))
+  end
+
   defp set_cached_value(_field, acc), do: acc
 
   defp format_system(%{} = system, _cardinality) do
@@ -366,6 +372,21 @@ defmodule TdDfLib.Format do
   end
 
   defp format_domain(domain_id, _cardinality), do: domain_id
+
+  defp format_hierarchy(hierarchy_id, _cardinality) when is_integer(hierarchy_id) do
+    IO.inspect(hierarchy_id, label: "format hierachy")
+    # case HierarchyCache.get(hierarchy_id) do
+    #   {:ok, hierarchy} -> apply_cardinality(hierarchy, cardinality)
+    #   _ -> nil
+    # end
+
+  end
+
+  defp format_hierarchy([_ | _] = hierarchies, cardinality) do
+    Enum.map(hierarchies, &format_hierarchy(&1, cardinality))
+  end
+
+  defp format_hierarchy(hierarchy, _cardinality), do: hierarchy
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
