@@ -27,7 +27,6 @@ defmodule TdDfLib.Validation do
 
     {content, changeset_fields}
     |> Changeset.cast(content, Map.keys(changeset_fields))
-    # |> maybe_add_hierarchy_id()
     |> add_content_validation(content_schema, opts)
   end
 

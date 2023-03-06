@@ -458,22 +458,6 @@ defmodule TdDfLib.FormatTest do
     assert Format.apply_template(content, fields) == %{"hierarchy_field" => 51}
   end
 
-  test "apply_template/2 return nil when template not exist" do
-    create_hierarchy(nil)
-    content = %{"hierarchy_field" => 51}
-
-    fields = [
-      %{
-        "cardinality" => 1,
-        "name" => "hierarchy_field",
-        "type" => "hierarchy",
-        "values" => %{"hierarchy" => 1}
-      }
-    ]
-
-    assert Format.apply_template(content, fields) == %{"hierarchy_field" => nil}
-  end
-
   test "set_default_values/2 sets default values for dependent values" do
     content = %{"bar" => "1", "foo" => "6"}
 

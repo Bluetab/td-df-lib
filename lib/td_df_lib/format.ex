@@ -117,7 +117,7 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields, types \\ [:system, :hierarchy]) do
+  defp cached_values(content, fields, types \\ [:system]) do
     keys = Map.keys(content)
 
     fields =
@@ -385,10 +385,15 @@ defmodule TdDfLib.Format do
        when is_integer(node_id) do
     case HierarchyCache.get(hierarchy_id) do
       {:ok, %{nodes: nodes}} ->
-        if Enum.find(nodes, &(Map.get(&1, "node_id") === node_id)) do
-          apply_cardinality(node_id, cardinality)
-        else
-          nil
+        case Enum.find(nodes, &(Map.get(&1, "node_id") === node_id)) do
+          nil ->
+            nil
+
+          %{"node_id" => node_id, "name" => name} = _node ->
+            %{
+              "id" => apply_cardinality(node_id, cardinality),
+              "name" => apply_cardinality(name, cardinality)
+            }
         end
 
       _ ->
