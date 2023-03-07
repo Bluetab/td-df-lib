@@ -389,7 +389,7 @@ defmodule TdDfLib.Format do
           nil ->
             nil
 
-          %{"node_id" => node_id, "name" => name} = _node ->
+          %{"node_id" => node_id, "name" => name} ->
             %{
               "id" => apply_cardinality(node_id, cardinality),
               "name" => apply_cardinality(name, cardinality)
