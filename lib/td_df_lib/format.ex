@@ -17,7 +17,7 @@ defmodule TdDfLib.Format do
   def apply_template(%{} = content, fields, opts) do
     content
     |> default_values(fields, opts)
-    |> cached_values(fields)
+    |> cached_values(fields, Keyword.get(opts, :types, [:system]))
     |> take_template_fields(fields)
   end
 
@@ -117,7 +117,7 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields, types \\ [:system]) do
+  defp cached_values(content, fields, types) do
     keys = Map.keys(content)
 
     fields =
