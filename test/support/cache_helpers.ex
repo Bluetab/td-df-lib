@@ -6,6 +6,7 @@ defmodule CacheHelpers do
   import TdDfLib.Factory
   import ExUnit.Callbacks, only: [on_exit: 1]
 
+  alias TdCache.HierarchyCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
@@ -29,5 +30,13 @@ defmodule CacheHelpers do
     SystemCache.put(system)
     on_exit(fn -> SystemCache.delete(system.id) end)
     system
+  end
+
+  def insert_hierarchy(params) do
+    %{id: hierarchy_id} = hierarchy = build(:hierarchy, params)
+
+    {:ok, _} = HierarchyCache.put(hierarchy, publish: false)
+    on_exit(fn -> HierarchyCache.delete(hierarchy_id) end)
+    hierarchy
   end
 end
