@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] 2023-03-09
+## [5.3.0] 2023-03-09
 
 - [TD-3806] Hierarchy formater
 
