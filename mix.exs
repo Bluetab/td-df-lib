@@ -19,8 +19,6 @@ defmodule TdDfLib.MixProject do
     ]
   end
 
-  # defp extra_applications(_), do: [:td_cache]
-
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
