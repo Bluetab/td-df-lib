@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased] 2023-03-09
+
+- [TD-3806] Hierarchy formater
+
 ## [4.54.0] 2022-10-26
 
 ### Changed
