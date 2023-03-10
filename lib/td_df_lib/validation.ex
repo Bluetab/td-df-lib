@@ -19,7 +19,7 @@ defmodule TdDfLib.Validation do
     "system" => :map,
     "copy" => :string,
     "domain" => :integer,
-    "hierarchy" => :integer
+    "hierarchy" => :string
   }
 
   def build_changeset(content, content_schema, opts \\ []) do
