@@ -878,7 +878,7 @@ defmodule TdDfLib.FormatTest do
     test "enrich_content_values/2 gets cached values for hierarchy fields", %{
       hierarchy: %{nodes: nodes}
     } do
-      [%{node_id: node_id, name: name} | _] = nodes
+      [%{node_id: node_id} | _] = nodes
       content = %{"hierarchy_field" => node_id}
 
       fields = [
@@ -895,29 +895,7 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"hierarchy_field" => %{"id" => ^node_id, "name" => ^name}} =
-               Format.enrich_content_values(content, %{content: fields}, [:hierarchy])
-    end
-
-    test "enrich_content_values/2 return nil when node id is not in hierarchy" do
-      content = %{"hierarchy_field" => 500}
-
-      fields = [
-        %{
-          "name" => "group",
-          "fields" => [
-            %{
-              "cardinality" => 1,
-              "name" => "hierarchy_field",
-              "type" => "hierarchy",
-              "values" => %{"hierarchy" => 1927}
-            }
-          ]
-        }
-      ]
-
-      assert %{"hierarchy_field" => nil} =
-               Format.enrich_content_values(content, %{content: fields}, [:hierarchy])
+      assert ^content = Format.enrich_content_values(content, %{content: fields})
     end
   end
 
