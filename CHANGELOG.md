@@ -1,5 +1,9 @@
 # Changelog
 
+## [5.3.1] 2023-03-09
+
+- [TD-3806] Update lib dependencies
+
 ## [5.3.0] 2023-03-09
 
 - [TD-3806] Hierarchy formater
