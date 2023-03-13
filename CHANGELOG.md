@@ -1,5 +1,11 @@
 # Changelog
 
+[5.3.2] 2023-03-13
+
+### Changed
+
+- [TD-3806] Refactor Hierarchy get cache data with key hierarchy_id and node_id
+
 ## [5.3.1] 2023-03-09
 
 ### Fixed
