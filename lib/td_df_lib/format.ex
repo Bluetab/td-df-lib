@@ -17,7 +17,7 @@ defmodule TdDfLib.Format do
   def apply_template(%{} = content, fields, opts) do
     content
     |> default_values(fields, opts)
-    |> cached_values(fields, Keyword.get(opts, :types, [:system]))
+    |> cached_values(fields)
     |> take_template_fields(fields)
   end
 
@@ -117,7 +117,7 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  defp cached_values(content, fields, types) do
+  defp cached_values(content, fields, types \\ [:system]) do
     keys = Map.keys(content)
 
     fields =
@@ -334,15 +334,10 @@ defmodule TdDfLib.Format do
   end
 
   defp set_cached_value(
-         %{
-           "name" => name,
-           "values" => values,
-           "type" => "hierarchy",
-           "cardinality" => cardinality
-         },
+         %{"name" => name, "type" => "hierarchy", "cardinality" => cardinality},
          acc
        ) do
-    Map.put(acc, name, format_hierarchy(Map.get(acc, name), values, cardinality))
+    Map.put(acc, name, format_hierarchy(Map.get(acc, name), cardinality))
   end
 
   defp set_cached_value(_field, acc), do: acc
@@ -381,17 +376,18 @@ defmodule TdDfLib.Format do
 
   defp format_domain(domain_id, _cardinality), do: domain_id
 
-  defp format_hierarchy(node_id, %{"hierarchy" => hierarchy_id}, cardinality)
-       when is_integer(node_id) do
+  defp format_hierarchy(key, cardinality) when is_binary(key) do
+    [hierarchy_id, node_id] = String.split(key, "_")
+
     case HierarchyCache.get(hierarchy_id) do
       {:ok, %{nodes: nodes}} ->
-        case Enum.find(nodes, &(Map.get(&1, "node_id") === node_id)) do
+        case Enum.find(nodes, &(Map.get(&1, "node_id") === String.to_integer(node_id))) do
           nil ->
             nil
 
-          %{"node_id" => node_id, "name" => name} ->
+          %{"name" => name} ->
             %{
-              "id" => apply_cardinality(node_id, cardinality),
+              "id" => apply_cardinality(key, cardinality),
               "name" => apply_cardinality(name, cardinality)
             }
         end
@@ -401,11 +397,11 @@ defmodule TdDfLib.Format do
     end
   end
 
-  defp format_hierarchy([_ | _] = nodes_id, hierarchy, cardinality) do
-    Enum.map(nodes_id, &format_hierarchy(&1, hierarchy, cardinality))
+  defp format_hierarchy([_ | _] = nodes_id, cardinality) do
+    Enum.map(nodes_id, &format_hierarchy(&1, cardinality))
   end
 
-  defp format_hierarchy(hierarchy, _, _cardinality), do: hierarchy
+  defp format_hierarchy(hierarchy, _cardinality), do: hierarchy
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 
