@@ -29,7 +29,6 @@ defmodule TdDfLib.Parser do
     # credo:disable-for-next-line
     |> Enum.filter(fn %{"name" => name} ->
       field_content = Map.get(content, name)
-      # and field_content != ""
       not is_nil(field_content) and is_binary(field_content)
     end)
     |> Enum.into(content, &format_field(&1, content))
@@ -46,50 +45,6 @@ defmodule TdDfLib.Parser do
        "values" => Map.get(schema, "values")
      })}
   end
-
-  # def value_from_string(_value, nil), do: {:error, :no_field}
-
-  # def value_from_string("", %{"type" => "domain"}), do: {:ok, nil}
-
-  # def value_from_string(value, %{"type" => "domain"}) do
-  #   case DomainCache.external_id_to_id(value) do
-  #     :error -> {:error, "Domain with external id #{value} doesn't exist"}
-  #     domain_id -> domain_id
-  #   end
-  # end
-
-  # def value_from_string("", %{"type" => "enriched_text"}), do: {:ok, %{}}
-
-  # def value_from_string(value, %{"type" => "enriched_text"}) do
-  #   {:ok,
-  #    %{
-  #      "object" => "value",
-  #      "document" => %{
-  #        "data" => %{},
-  #        "nodes" => [
-  #          %{
-  #            "data" => %{},
-  #            "type" => "paragraph",
-  #            "object" => "block",
-  #            "nodes" => [
-  #              %{
-  #                "text" => value,
-  #                "marks" => [],
-  #                "object" => "text"
-  #              }
-  #            ]
-  #          }
-  #        ],
-  #        "object" => "document"
-  #      }
-  #    }}
-  # end
-
-  # def value_from_string(value, %{"cardinality" => cardinality})
-  #     when is_binary(value) and cardinality in ["*", "+"],
-  #     do: {:ok, String.split(value, "|")}
-
-  # def value_from_string(value, _field), do: {:ok, value}
 
   defp context_for_fields(fields) do
     Enum.reduce(fields, %{}, fn
