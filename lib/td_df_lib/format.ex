@@ -2,6 +2,7 @@ defmodule TdDfLib.Format do
   @moduledoc """
   Manages content formatting
   """
+  alias TdCache.DomainCache
   alias TdCache.HierarchyCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
@@ -311,12 +312,23 @@ defmodule TdDfLib.Format do
     [content]
   end
 
+  def format_field(%{"content" => "", "type" => "integer"}), do: nil
+
   def format_field(%{"content" => content, "type" => "integer"}) when is_binary(content) do
     String.to_integer(content)
   end
 
+  def format_field(%{"content" => "", "type" => "float"}), do: nil
+
   def format_field(%{"content" => content, "type" => "float"}) when is_binary(content) do
     String.to_float(content)
+  end
+
+  def format_field(%{"content" => content, "type" => "domain"}) do
+    case DomainCache.external_id_to_id(content) do
+      {:ok, domain_id} -> domain_id
+      _ -> nil
+    end
   end
 
   def format_field(%{"content" => content}), do: content
