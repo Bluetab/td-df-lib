@@ -31,7 +31,8 @@ defmodule TdDfLib.MixProject do
       {:ecto, "~> 3.0"},
       {:ex_machina, "~> 2.3", only: :test},
       # {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "5.3.1"}
-      {:td_cache, path: "../td-cache"}
+      {:td_cache,
+       git: "https://github.com/Bluetab/td-cache.git", branch: "feature/td-4870", override: true}
     ]
   end
 end
