@@ -93,11 +93,15 @@ defmodule TdDfLib.Format do
     fields = flatten_content_fields(fields)
 
     content
+    |> Enum.into(%{}, fn {key, value} -> {key_to_string(key), value} end)
     |> cached_values(fields, types)
     |> take_template_fields(fields)
   end
 
   def enrich_content_values(content, _, _), do: content
+
+  defp key_to_string(key) when is_atom(key), do: Atom.to_string(key)
+  defp key_to_string(key), do: key
 
   def search_values(content, fields, opts \\ [])
 

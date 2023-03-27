@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5685] Stringfy keys before enriching cache content
+
 ## [5.4.0]
 
 ### Added
