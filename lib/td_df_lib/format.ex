@@ -93,6 +93,7 @@ defmodule TdDfLib.Format do
     fields = flatten_content_fields(fields)
 
     content
+    |> Enum.into(%{}, fn {key, value} -> {Atom.to_string(key), value} end)
     |> cached_values(fields, types)
     |> take_template_fields(fields)
   end
