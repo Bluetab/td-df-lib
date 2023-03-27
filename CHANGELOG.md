@@ -1,12 +1,12 @@
 # Changelog
 
-## [5.4.1]
+## [5.4.1] 2023-03-27
 
 ### Added
 
 - [TD-5685] Stringfy keys before enriching cache content
 
-## [5.4.0]
+## [5.4.0] 2023-03-23
 
 ### Added
 
