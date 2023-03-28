@@ -42,7 +42,7 @@ defmodule TdDfLib.ParserTest do
 
       content = %{@atom_field_name => ["1927_50", "1927_51"]}
 
-      assert Parser.append_parsed_fields([], fields, content) == ["#{node1_name}|#{node2_name}"]
+      assert Parser.append_parsed_fields([], fields, content) == ["/#{node1_name}|/#{node2_name}"]
     end
 
     test "formats type system" do

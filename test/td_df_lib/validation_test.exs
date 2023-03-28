@@ -237,6 +237,82 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "invalid hierarchy with more than one node paths", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "hierarchy_name",
+              "type" => "hierarchy",
+              "cardinality" => "1",
+              "values" => %{"hierarchy" => 1}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "hierarchy_name" =>
+              {:error,
+               [
+                 %{"key" => "50_41", "name" => "foo"},
+                 %{"key" => "50_51", "name" => "foo"}
+               ]}
+          },
+          schema
+        )
+
+      refute changeset.valid?
+    end
+
+    test "invalid hierarchy with more than one node paths and cardinality +", %{
+      template: template
+    } do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "cardinality" => "1",
+              "name" => "hierarchy_name",
+              "type" => "hierarchy",
+              "values" => %{"hierarchy" => 1}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "hierarchy_name" => [
+              {:error,
+               [
+                 %{"key" => "50_41", "name" => "foo"},
+                 %{"key" => "50_51", "name" => "foo"}
+               ]},
+              {:error,
+               [
+                 %{"key" => "50_42", "name" => "bar"},
+                 %{"key" => "50_52", "name" => "bar"}
+               ]}
+            ]
+          },
+          schema
+        )
+
+      refute changeset.valid?
+    end
+
     test "content with hidden required field returns valid changeset", %{template: template} do
       template =
         template
