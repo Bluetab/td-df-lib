@@ -734,6 +734,22 @@ defmodule TdDfLib.FormatTest do
                })
     end
 
+    test "format_field with hierarchy multiple node, first correct second with more than one node",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{path: path, key: key} = Enum.at(nodes, 2)
+      %{name: node_name_3} = Enum.at(nodes, 3)
+
+      assert [^key, %{:error => [_ | _]}] =
+               Format.format_field(%{
+                 "content" => "#{path}|#{node_name_3}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
     test "format_field with hierarchy multiple node, finding one node with absolute path",
          %{
            hierarchy: %{id: id, nodes: nodes}

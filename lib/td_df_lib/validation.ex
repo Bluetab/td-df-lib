@@ -81,8 +81,20 @@ defmodule TdDfLib.Validation do
          "name" => hierarchy_name
        }) do
     case Map.get(data, hierarchy_name) do
-      [%{:error => [%{"name" => node_name} | _]} | _] ->
-        add_hierarchy_error(changeset, node_name, hierarchy_name)
+      [_ | _] = list ->
+        error =
+          Enum.find(list, fn
+            %{error: _} -> true
+            _ -> false
+          end)
+
+        case error do
+          nil ->
+            changeset
+
+          %{:error => [%{"name" => node_name} | _]} ->
+            add_hierarchy_error(changeset, node_name, hierarchy_name)
+        end
 
       %{:error => [%{"name" => node_name} | _]} ->
         add_hierarchy_error(changeset, node_name, hierarchy_name)
