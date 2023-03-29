@@ -652,7 +652,7 @@ defmodule TdDfLib.FormatTest do
 
       assert [^key] =
                Format.format_field(%{
-                 "content" => node_name,
+                 "content" => "/#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "+",
                  "values" => %{"hierarchy" => id}
@@ -666,7 +666,7 @@ defmodule TdDfLib.FormatTest do
 
       assert ^key =
                Format.format_field(%{
-                 "content" => "#{node_name}",
+                 "content" => "/#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "1",
                  "values" => %{"hierarchy" => id}
@@ -697,7 +697,7 @@ defmodule TdDfLib.FormatTest do
 
       assert [^key_1, ^key_2] =
                Format.format_field(%{
-                 "content" => "#{node_name_1}|#{node_name_2}",
+                 "content" => "/#{node_name_1}|#{node_name_2}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
                  "values" => %{"hierarchy" => id}
@@ -707,11 +707,11 @@ defmodule TdDfLib.FormatTest do
     test "format_field with hierarchy finding more thane one nodes with cardinality 1", %{
       hierarchy: %{id: id, nodes: nodes}
     } do
-      [_, _, %{name: node_name_3}, _] = nodes
+      %{name: node_name_2} = Enum.at(nodes, 2)
 
       assert %{:error => [_ | _]} =
                Format.format_field(%{
-                 "content" => node_name_3,
+                 "content" => node_name_2,
                  "type" => "hierarchy",
                  "cardinality" => "1",
                  "values" => %{"hierarchy" => id}
@@ -722,16 +722,42 @@ defmodule TdDfLib.FormatTest do
          %{
            hierarchy: %{id: id, nodes: nodes}
          } do
-      [
-        _,
-        _,
-        %{name: node_name_3},
-        %{name: node_name_4}
-      ] = nodes
+      %{name: node_name_2} = Enum.at(nodes, 2)
+      %{name: node_name_3} = Enum.at(nodes, 3)
 
       assert [%{:error => [_ | _]}, %{:error => [_ | _]}] =
                Format.format_field(%{
-                 "content" => "#{node_name_3}|#{node_name_4}",
+                 "content" => "#{node_name_2}|#{node_name_3}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy multiple node, finding one node with absolute path",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{key: key, name: node_name} = Enum.at(nodes, 3)
+
+      assert [^key] =
+               Format.format_field(%{
+                 "content" => "/#{node_name}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy multiple node, finding one node with relative path multiple childs",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{name: node_name} = Enum.at(nodes, 3)
+
+      assert [%{error: [_, _, _]}] =
+               Format.format_field(%{
+                 "content" => "#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
                  "values" => %{"hierarchy" => id}
@@ -1025,6 +1051,8 @@ defmodule TdDfLib.FormatTest do
   end
 
   defp create_hierarchy(_) do
+    hierarchy_id = 1927
+
     [
       hierarchy:
         CacheHelpers.insert_hierarchy(
@@ -1034,29 +1062,43 @@ defmodule TdDfLib.FormatTest do
               node_id: 50,
               name: "father",
               parent_id: nil,
-              hierarchy_id: 1927,
+              hierarchy_id: hierarchy_id,
               path: "/father"
             }),
             build(:node, %{
               node_id: 51,
               name: "children_1",
-              parent_id: 1,
-              hierarchy_id: 1927,
+              parent_id: 50,
+              hierarchy_id: hierarchy_id,
               path: "/father/children_1"
             }),
             build(:node, %{
               node_id: 52,
               name: "children_2",
-              parent_id: 1,
-              hierarchy_id: 1927,
+              parent_id: 50,
+              hierarchy_id: hierarchy_id,
               path: "/father/children_2"
             }),
             build(:node, %{
               node_id: 53,
               parent_id: nil,
               name: "children_2",
-              hierarchy_id: 1927,
+              hierarchy_id: hierarchy_id,
               path: "/children_2"
+            }),
+            build(:node, %{
+              node_id: 54,
+              parent_id: 53,
+              name: "father",
+              hierarchy_id: 1927,
+              path: "/children_2/father"
+            }),
+            build(:node, %{
+              node_id: 55,
+              parent_id: 54,
+              name: "children_2",
+              hierarchy_id: hierarchy_id,
+              path: "/children_2/father/children_2"
             })
           ]
         )

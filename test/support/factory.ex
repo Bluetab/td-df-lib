@@ -29,8 +29,8 @@ defmodule TdDfLib.Factory do
 
   def node_factory(attrs) do
     name = sequence("node_")
-    hierarchy_id = System.unique_integer([:positive])
-    node_id = System.unique_integer([:positive])
+    hierarchy_id = Map.get(attrs, :hierarchy_id, System.unique_integer([:positive]))
+    node_id = Map.get(attrs, :node_id, System.unique_integer([:positive]))
 
     %{
       node_id: node_id,
