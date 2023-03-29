@@ -295,11 +295,16 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
-  def format_field(%{"content" => content, "type" => type, "cardinality" => cardinality})
+  def format_field(%{
+        "content" => content,
+        "type" => type,
+        "cardinality" => cardinality,
+        "values" => values
+      })
       when cardinality in ["+", "*"] and is_binary(content) and type !== "user" do
     content
     |> String.split("|", trim: true)
-    |> Enum.map(fn c -> format_field(%{"content" => c, "type" => type}) end)
+    |> Enum.map(fn c -> format_field(%{"content" => c, "type" => type, "values" => values}) end)
     |> List.flatten()
   end
 
@@ -335,7 +340,42 @@ defmodule TdDfLib.Format do
     end
   end
 
+  def format_field(%{
+        "content" => content,
+        "type" => "hierarchy",
+        "values" => %{"hierarchy" => hierarchy_id}
+      })
+      when content !== "" do
+    case HierarchyCache.get(hierarchy_id) do
+      {:ok, %{nodes: nodes}} ->
+        nodes_found =
+          nodes
+          |> Enum.filter(&get_node_path(&1, content))
+          |> Enum.map(&Map.take(&1, ["key", "name"]))
+
+        case nodes_found do
+          [] ->
+            nil
+
+          [%{"key" => key}] ->
+            key
+
+          _ ->
+            %{:error => nodes_found}
+        end
+
+      _ ->
+        nil
+    end
+  end
+
   def format_field(%{"content" => content}), do: content
+
+  defp get_node_path(node, content) do
+    if String.starts_with?(content, "/"),
+      do: node["path"] === content,
+      else: String.ends_with?(node["path"], content)
+  end
 
   defp set_cached_values(content, fields) do
     Enum.reduce(fields, content, &set_cached_value(&1, &2))

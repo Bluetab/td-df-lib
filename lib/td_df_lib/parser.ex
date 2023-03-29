@@ -23,7 +23,7 @@ defmodule TdDfLib.Parser do
 
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
-      schema_type in ["url", "enriched_text", "integer", "float", "domain"] or
+      schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy"] or
         (schema_type in ["string", "user"] and cardinality in ["*", "+"])
     end)
     # credo:disable-for-next-line
@@ -102,7 +102,7 @@ defmodule TdDfLib.Parser do
       node_id === String.to_integer(content_node_id)
     end)
     |> then(fn
-      %{"name" => name} -> name
+      %{"path" => path} -> path
       _ -> nil
     end)
   end

@@ -523,103 +523,267 @@ defmodule TdDfLib.FormatTest do
     assert Format.apply_template(nil, fields) == %{}
   end
 
-  test "format_field returns url wrapped" do
-    formatted_value = Format.format_field(%{"content" => "https://google.es", "type" => "url"})
+  describe "format_field/2" do
+    setup :create_hierarchy
 
-    assert formatted_value == [
-             %{
-               "url_name" => "https://google.es",
-               "url_value" => "https://google.es"
-             }
-           ]
-  end
+    test "format_field returns url wrapped" do
+      formatted_value = Format.format_field(%{"content" => "https://google.es", "type" => "url"})
 
-  test "format_field of string with fixed tuple values returns value if text is provided " do
-    fixed_tuples = [%{"value" => "value1", "text" => "description1"}]
+      assert formatted_value == [
+               %{
+                 "url_name" => "https://google.es",
+                 "url_value" => "https://google.es"
+               }
+             ]
+    end
 
-    formatted_value =
-      Format.format_field(%{
-        "content" => "description1",
-        "type" => "string",
-        "values" => %{"fixed_tuple" => fixed_tuples}
-      })
+    test "format_field of string with fixed tuple values returns value if text is provided " do
+      fixed_tuples = [%{"value" => "value1", "text" => "description1"}]
 
-    assert formatted_value == ["value1"]
-  end
+      formatted_value =
+        Format.format_field(%{
+          "content" => "description1",
+          "type" => "string",
+          "values" => %{"fixed_tuple" => fixed_tuples}
+        })
 
-  test "format_field of enriched_text returns wrapped enriched text" do
-    formatted_value =
-      Format.format_field(%{
-        "content" => "some enriched text",
-        "type" => "enriched_text"
-      })
+      assert formatted_value == ["value1"]
+    end
 
-    assert formatted_value == RichText.to_rich_text("some enriched text")
-  end
+    test "format_field of enriched_text returns wrapped enriched text" do
+      formatted_value =
+        Format.format_field(%{
+          "content" => "some enriched text",
+          "type" => "enriched_text"
+        })
 
-  test "format_field of user type field" do
-    assert ["foo"] ==
-             Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
+      assert formatted_value == RichText.to_rich_text("some enriched text")
+    end
 
-    assert ["bar"] ==
-             Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
+    test "format_field of user type field" do
+      assert ["foo"] ==
+               Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
 
-    assert "bar" ==
-             Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
-  end
+      assert ["bar"] ==
+               Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
 
-  test "format_field with multiple fields" do
-    assert ["foo"] ==
-             Format.format_field(%{"content" => "foo", "type" => "string", "cardinality" => "+"})
+      assert "bar" ==
+               Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
+    end
 
-    assert ["foo"] ==
-             Format.format_field(%{"content" => "foo", "type" => "string", "cardinality" => "*"})
+    test "format_field with multiple fields" do
+      assert ["foo"] ==
+               Format.format_field(%{
+                 "content" => "foo",
+                 "type" => "string",
+                 "cardinality" => "+",
+                 "values" => %{}
+               })
 
-    assert ["foo", "bar"] ==
-             Format.format_field(%{
-               "content" => "foo|bar",
-               "type" => "string",
-               "cardinality" => "+"
-             })
+      assert ["foo"] ==
+               Format.format_field(%{
+                 "content" => "foo",
+                 "type" => "string",
+                 "cardinality" => "*",
+                 "values" => %{}
+               })
 
-    assert ["foo", "bar"] ==
-             Format.format_field(%{
-               "content" => "foo|bar",
-               "type" => "string",
-               "cardinality" => "*"
-             })
+      assert ["foo", "bar"] ==
+               Format.format_field(%{
+                 "content" => "foo|bar",
+                 "type" => "string",
+                 "cardinality" => "+",
+                 "values" => %{}
+               })
 
-    assert ["bar"] ==
-             Format.format_field(%{"content" => "bar", "type" => "string", "cardinality" => "+"})
+      assert ["foo", "bar"] ==
+               Format.format_field(%{
+                 "content" => "foo|bar",
+                 "type" => "string",
+                 "cardinality" => "*",
+                 "values" => %{}
+               })
 
-    assert [] ==
-             Format.format_field(%{"content" => "", "type" => "string", "cardinality" => "+"})
+      assert ["bar"] ==
+               Format.format_field(%{
+                 "content" => "bar",
+                 "type" => "string",
+                 "cardinality" => "+",
+                 "values" => %{}
+               })
 
-    assert ["bar|foo"] ==
-             Format.format_field(%{
-               "content" => "bar|foo",
-               "type" => "string",
-               "cardinality" => "1"
-             })
+      assert [] ==
+               Format.format_field(%{
+                 "content" => "",
+                 "type" => "string",
+                 "cardinality" => "+",
+                 "values" => %{}
+               })
 
-    assert [1, 23, 45] ==
-             Format.format_field(%{
-               "content" => "1|23|45|",
-               "type" => "integer",
-               "cardinality" => "*"
-             })
+      assert ["bar|foo"] ==
+               Format.format_field(%{
+                 "content" => "bar|foo",
+                 "type" => "string",
+                 "cardinality" => "1",
+                 "values" => %{}
+               })
 
-    assert [1, 2.3, 4.5] ==
-             Format.format_field(%{
-               "content" => "1.0|2.3|4.5|",
-               "type" => "float",
-               "cardinality" => "*"
-             })
-  end
+      assert [1, 23, 45] ==
+               Format.format_field(%{
+                 "content" => "1|23|45|",
+                 "type" => "integer",
+                 "cardinality" => "*",
+                 "values" => %{}
+               })
 
-  test "format_field of integer and float types" do
-    assert 1 == Format.format_field(%{"content" => "1", "type" => "integer"})
-    assert 1.5 == Format.format_field(%{"content" => "1.5", "type" => "float"})
+      assert [1, 2.3, 4.5] ==
+               Format.format_field(%{
+                 "content" => "1.0|2.3|4.5|",
+                 "type" => "float",
+                 "cardinality" => "*",
+                 "values" => %{}
+               })
+    end
+
+    test "format_field with content hierarchy single node with cardinality +", %{
+      hierarchy: %{id: id, nodes: nodes}
+    } do
+      [%{name: node_name, key: key} | _] = nodes
+
+      assert [^key] =
+               Format.format_field(%{
+                 "content" => "/#{node_name}",
+                 "type" => "hierarchy",
+                 "cardinality" => "+",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with content hierarchy single node with cardinality 1", %{
+      hierarchy: %{id: id, nodes: nodes}
+    } do
+      [%{name: node_name, key: key} | _] = nodes
+
+      assert ^key =
+               Format.format_field(%{
+                 "content" => "/#{node_name}",
+                 "type" => "hierarchy",
+                 "cardinality" => "1",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with invalid content hierarchy  cardinality 1", %{
+      hierarchy: %{id: id}
+    } do
+      result =
+        Format.format_field(%{
+          "content" => "invalid",
+          "type" => "hierarchy",
+          "cardinality" => "1",
+          "values" => %{"hierarchy" => id}
+        })
+
+      assert is_nil(result)
+    end
+
+    test "format_field with content hierarchy multiple node with cardinality *", %{
+      hierarchy: %{id: id, nodes: nodes}
+    } do
+      [
+        %{name: node_name_1, key: key_1},
+        %{name: node_name_2, key: key_2} | _
+      ] = nodes
+
+      assert [^key_1, ^key_2] =
+               Format.format_field(%{
+                 "content" => "/#{node_name_1}|#{node_name_2}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy finding more thane one nodes with cardinality 1", %{
+      hierarchy: %{id: id, nodes: nodes}
+    } do
+      %{name: node_name_2} = Enum.at(nodes, 2)
+
+      assert %{:error => [_ | _]} =
+               Format.format_field(%{
+                 "content" => node_name_2,
+                 "type" => "hierarchy",
+                 "cardinality" => "1",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy multiple node, finding more thane one nodes with cardinality *",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{name: node_name_2} = Enum.at(nodes, 2)
+      %{name: node_name_3} = Enum.at(nodes, 3)
+
+      assert [%{:error => [_ | _]}, %{:error => [_ | _]}] =
+               Format.format_field(%{
+                 "content" => "#{node_name_2}|#{node_name_3}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy multiple node, first correct second with more than one node",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{path: path, key: key} = Enum.at(nodes, 2)
+      %{name: node_name_3} = Enum.at(nodes, 3)
+
+      assert [^key, %{:error => [_ | _]}] =
+               Format.format_field(%{
+                 "content" => "#{path}|#{node_name_3}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy multiple node, finding one node with absolute path",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{key: key, name: node_name} = Enum.at(nodes, 3)
+
+      assert [^key] =
+               Format.format_field(%{
+                 "content" => "/#{node_name}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field with hierarchy multiple node, finding one node with relative path multiple childs",
+         %{
+           hierarchy: %{id: id, nodes: nodes}
+         } do
+      %{name: node_name} = Enum.at(nodes, 3)
+
+      assert [%{error: [_, _, _]}] =
+               Format.format_field(%{
+                 "content" => "#{node_name}",
+                 "type" => "hierarchy",
+                 "cardinality" => "*",
+                 "values" => %{"hierarchy" => id}
+               })
+    end
+
+    test "format_field of integer and float types" do
+      assert 1 == Format.format_field(%{"content" => "1", "type" => "integer"})
+      assert 1.5 == Format.format_field(%{"content" => "1.5", "type" => "float"})
+    end
   end
 
   test "flatten_content_fields will list all fields of content" do
@@ -903,13 +1067,55 @@ defmodule TdDfLib.FormatTest do
   end
 
   defp create_hierarchy(_) do
+    hierarchy_id = 1927
+
     [
       hierarchy:
         CacheHelpers.insert_hierarchy(
           id: 1927,
           nodes: [
-            build(:node, %{node_id: 50, parent_id: nil, hierarchy_id: 1927}),
-            build(:node, %{node_id: 51, parent_id: nil, hierarchy_id: 1927})
+            build(:node, %{
+              node_id: 50,
+              name: "father",
+              parent_id: nil,
+              hierarchy_id: hierarchy_id,
+              path: "/father"
+            }),
+            build(:node, %{
+              node_id: 51,
+              name: "children_1",
+              parent_id: 50,
+              hierarchy_id: hierarchy_id,
+              path: "/father/children_1"
+            }),
+            build(:node, %{
+              node_id: 52,
+              name: "children_2",
+              parent_id: 50,
+              hierarchy_id: hierarchy_id,
+              path: "/father/children_2"
+            }),
+            build(:node, %{
+              node_id: 53,
+              parent_id: nil,
+              name: "children_2",
+              hierarchy_id: hierarchy_id,
+              path: "/children_2"
+            }),
+            build(:node, %{
+              node_id: 54,
+              parent_id: 53,
+              name: "father",
+              hierarchy_id: 1927,
+              path: "/children_2/father"
+            }),
+            build(:node, %{
+              node_id: 55,
+              parent_id: 54,
+              name: "children_2",
+              hierarchy_id: hierarchy_id,
+              path: "/children_2/father/children_2"
+            })
           ]
         )
     ]
