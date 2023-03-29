@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.5.0] 2023-03-29
+
+## Added
+
+- [TD-5650] Format and validations for hierarchies
+
 ## [5.4.1] 2023-03-27
 
 ### Added
