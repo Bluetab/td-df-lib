@@ -6,6 +6,7 @@ defmodule TdDfLib.Validation do
   alias Ecto.Changeset
   alias TdDfLib.Format
   alias TdDfLib.Templates
+  alias TdCache.HierarchyCache
 
   @types %{
     "string" => :string,
@@ -59,13 +60,17 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_content_validation(changeset, %{} = field_spec, opts) do
+    IO.inspect(changeset, label: "pues mira, sí que parece que entra")
+    IO.inspect(field_spec, label: "qué es field_spec?")
+
     changeset
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec, opts)
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
-    |> validate_hierarchy_nodes(field_spec)
+    |> add_hierarchy_errors(field_spec)
+    |> validate_hierarchy_depth(field_spec)
   end
 
   defp add_content_validation(changeset, [], _opts), do: changeset
@@ -76,7 +81,39 @@ defmodule TdDfLib.Validation do
     |> add_content_validation(tail, opts)
   end
 
-  defp validate_hierarchy_nodes(%{valid?: false, errors: _errors, data: data} = changeset, %{
+  defp validate_hierarchy_depth(changeset, %{"type" => "hierarchy"} = field_spec) do
+    IO.inspect(changeset, label: "pues mira, sí que parece que entra")
+    IO.inspect(field_spec, label: "qué es field_spec?")
+
+    %{"values" => %{
+        "hierarchy" => %{
+          "hierarchy_id" => hierarchy_id,
+          "depth" => depth
+        }
+      },
+      "name" => field_name
+    } = field_spec
+
+    key = changeset |> Map.get(:data) |> Map.get(field_name) |> Map.get("id")
+    {:ok, %{nodes: nodes}} = HierarchyCache.get(hierarchy_id)
+
+    nodes
+    |> Enum.find(fn
+      %{"key" => ^key} = node ->
+        node_depth = max((Map.get(node, "path") |> String.split("/") |> Enum.count()) - 2, 0)
+        IO.inspect(node_depth, label: "node_depth")
+        node_depth <= depth
+      _ ->
+
+      false
+    end)
+
+    changeset
+  end
+
+  defp validate_hierarchy_depth(changeset, _), do: changeset
+
+  defp add_hierarchy_errors(%{valid?: false, errors: _errors, data: data} = changeset, %{
          "type" => "hierarchy",
          "name" => hierarchy_name
        }) do
@@ -91,7 +128,6 @@ defmodule TdDfLib.Validation do
         case error do
           nil ->
             changeset
-
           %{:error => [%{"name" => node_name} | _]} ->
             add_hierarchy_error(changeset, node_name, hierarchy_name)
         end
@@ -104,7 +140,7 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp validate_hierarchy_nodes(changeset, _), do: changeset
+  defp add_hierarchy_errors(changeset, _), do: changeset
 
   defp add_hierarchy_error(changeset, node_name, name) when is_binary(name),
     do: add_hierarchy_error(changeset, node_name, String.to_atom(name))
