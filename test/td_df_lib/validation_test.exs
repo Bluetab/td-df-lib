@@ -11,10 +11,11 @@ defmodule TdDfLib.ValidationTest do
   describe "validations" do
     setup do
       %{id: template_id} = template = build(:template)
+      hierarchy = create_hierarchy(234)
 
       on_exit(fn -> TemplateCache.delete(template_id) end)
 
-      [template: template]
+      [template: template, hierarchy: hierarchy]
     end
 
     test "empty content on empty template return valid changeset", %{template: template} do
@@ -237,6 +238,62 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "depth validation on hierarchy node selection", %{
+      template: template,
+      hierarchy: %{id: hierarchy_id}
+    } do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "hierarchy_name",
+              "type" => "hierarchy",
+              "cardinality" => "1",
+              "values" => %{"hierarchy" => %{"hierarchy_id" => hierarchy_id, "depth" => 2}}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{"hierarchy_name" => "234_52"},
+          schema
+        )
+      assert changeset.valid?
+
+      changeset =
+        Validation.build_changeset(
+          %{"hierarchy_name" => "234_50"},
+          schema
+        )
+
+      refute changeset.valid?
+    end
+
+    test "depth validation", %{hierarchy: %{nodes: nodes} = hierarchy} do
+      hierarchy = %{
+        hierarchy
+        | nodes:
+            Enum.map(nodes, fn reg ->
+              reg
+              |> Enum.map(fn {k, v} -> {Atom.to_string(k), v} end)
+              |> Enum.into(%{})
+            end)
+      }
+      assert Validation.validate_hierarchy_depth(hierarchy, "234_52", 0)
+      assert Validation.validate_hierarchy_depth(hierarchy, "234_52", 1)
+      assert Validation.validate_hierarchy_depth(hierarchy, "234_52", 2)
+      refute Validation.validate_hierarchy_depth(hierarchy, "234_52", 3)
+      assert Validation.validate_hierarchy_depth(hierarchy, "234_53", 3)
+      assert Validation.validate_hierarchy_depth(hierarchy, ["234_52", "234_53"], 1)
+      refute Validation.validate_hierarchy_depth(hierarchy, ["234_52", "234_53"], 3)
+    end
+
     test "invalid hierarchy with more than one node paths", %{template: template} do
       template =
         template
@@ -247,7 +304,7 @@ defmodule TdDfLib.ValidationTest do
               "name" => "hierarchy_name",
               "type" => "hierarchy",
               "cardinality" => "1",
-              "values" => %{"hierarchy" => 1}
+              "values" => %{"hierarchy" => %{"hierarchy_id" => 1, "depth" => 0}}
             }
           ]
         )
@@ -258,12 +315,12 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" =>
-              {:error,
-               [
-                 %{"key" => "50_41", "name" => "foo"},
-                 %{"key" => "50_51", "name" => "foo"}
-               ]}
+            "hierarchy_name" => %{
+              :error => [
+                %{"key" => "50_41", "name" => "foo"},
+                %{"key" => "50_51", "name" => "foo"}
+              ]
+            }
           },
           schema
         )
@@ -283,7 +340,7 @@ defmodule TdDfLib.ValidationTest do
               "cardinality" => "1",
               "name" => "hierarchy_name",
               "type" => "hierarchy",
-              "values" => %{"hierarchy" => 1}
+              "values" => %{"hierarchy" => %{"hierarchy_id" => 1, "depth" => 0}}
             }
           ]
         )
@@ -295,16 +352,18 @@ defmodule TdDfLib.ValidationTest do
         Validation.build_changeset(
           %{
             "hierarchy_name" => [
-              {:error,
-               [
-                 %{"key" => "50_41", "name" => "foo"},
-                 %{"key" => "50_51", "name" => "foo"}
-               ]},
-              {:error,
-               [
-                 %{"key" => "50_42", "name" => "bar"},
-                 %{"key" => "50_52", "name" => "bar"}
-               ]}
+              %{
+                :error => [
+                  %{"key" => "50_41", "name" => "foo"},
+                  %{"key" => "50_51", "name" => "foo"}
+                ]
+              },
+              %{
+                :error => [
+                  %{"key" => "50_42", "name" => "bar"},
+                  %{"key" => "50_52", "name" => "bar"}
+                ]
+              }
             ]
           },
           schema
@@ -646,5 +705,41 @@ defmodule TdDfLib.ValidationTest do
     content = %{"field" => field_value}
     {:ok, schema} = TemplateCache.get(template.id, :content)
     Validation.build_changeset(content, schema)
+  end
+
+  defp create_hierarchy(hierarchy_id) do
+    CacheHelpers.insert_hierarchy(
+      id: hierarchy_id,
+      nodes: [
+        build(:node, %{
+          node_id: 50,
+          name: "father",
+          parent_id: nil,
+          hierarchy_id: hierarchy_id,
+          path: "/father"
+        }),
+        build(:node, %{
+          node_id: 51,
+          name: "children_1",
+          parent_id: 50,
+          hierarchy_id: hierarchy_id,
+          path: "/father/children_1"
+        }),
+        build(:node, %{
+          node_id: 52,
+          name: "children_2",
+          parent_id: 51,
+          hierarchy_id: hierarchy_id,
+          path: "/father/children_1/children_2"
+        }),
+        build(:node, %{
+          node_id: 53,
+          name: "children_3",
+          parent_id: 52,
+          hierarchy_id: hierarchy_id,
+          path: "/father/children_1/children_2/children_3"
+        })
+      ]
+    )
   end
 end

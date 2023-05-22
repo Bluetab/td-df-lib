@@ -60,9 +60,6 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_content_validation(changeset, %{} = field_spec, opts) do
-    IO.inspect(changeset, label: "pues mira, sí que parece que entra")
-    IO.inspect(field_spec, label: "qué es field_spec?")
-
     changeset
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec, opts)
@@ -70,7 +67,7 @@ defmodule TdDfLib.Validation do
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
     |> add_hierarchy_errors(field_spec)
-    |> validate_hierarchy_depth(field_spec)
+    |> add_hierarchy_depth_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [], _opts), do: changeset
@@ -81,11 +78,9 @@ defmodule TdDfLib.Validation do
     |> add_content_validation(tail, opts)
   end
 
-  defp validate_hierarchy_depth(changeset, %{"type" => "hierarchy"} = field_spec) do
-    IO.inspect(changeset, label: "pues mira, sí que parece que entra")
-    IO.inspect(field_spec, label: "qué es field_spec?")
-
-    %{"values" => %{
+  defp add_hierarchy_depth_validation(changeset, %{"type" => "hierarchy"} = field_spec) do
+    %{
+      "values" => %{
         "hierarchy" => %{
           "hierarchy_id" => hierarchy_id,
           "depth" => depth
@@ -94,24 +89,37 @@ defmodule TdDfLib.Validation do
       "name" => field_name
     } = field_spec
 
-    key = changeset |> Map.get(:data) |> Map.get(field_name) |> Map.get("id")
-    {:ok, %{nodes: nodes}} = HierarchyCache.get(hierarchy_id)
+    value_or_values_or_error = changeset |> Map.get(:data) |> Map.get(field_name)
+    valid_depth? = case value_or_values_or_error do
+      %{:error => _} -> changeset
+      [%{:error => _} | _] -> changeset
+      value ->
+        {:ok, hierarchy} = HierarchyCache.get(hierarchy_id)
+        validate_hierarchy_depth(hierarchy, value, depth)
+    end
 
-    nodes
-    |> Enum.find(fn
-      %{"key" => ^key} = node ->
-        node_depth = max((Map.get(node, "path") |> String.split("/") |> Enum.count()) - 2, 0)
-        IO.inspect(node_depth, label: "node_depth")
-        node_depth <= depth
-      _ ->
 
-      false
-    end)
-
-    changeset
+    if valid_depth? do
+      changeset
+    else
+      Changeset.add_error(changeset, String.to_atom(field_name), "incorrect depth")
+    end
   end
 
-  defp validate_hierarchy_depth(changeset, _), do: changeset
+  defp add_hierarchy_depth_validation(changeset, _), do: changeset
+
+  def validate_hierarchy_depth(hierarchy, keys, depth) when is_list(keys) do
+    Enum.all?(keys, &validate_hierarchy_depth(hierarchy, &1, depth))
+  end
+
+  def validate_hierarchy_depth(%{nodes: nodes} = _hierarchy, key, depth) do
+    case Enum.find(nodes, &(Map.get(&1, "key") == key)) do
+      nil -> false
+      node ->
+        node_depth = max((Map.get(node, "path") |> String.split("/") |> Enum.count()) - 2, 0)
+        node_depth >= depth
+    end
+  end
 
   defp add_hierarchy_errors(%{valid?: false, errors: _errors, data: data} = changeset, %{
          "type" => "hierarchy",
