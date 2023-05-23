@@ -251,7 +251,7 @@ defmodule TdDfLib.ValidationTest do
               "name" => "hierarchy_name",
               "type" => "hierarchy",
               "cardinality" => "1",
-              "values" => %{"hierarchy" => %{"hierarchy_id" => hierarchy_id, "depth" => 2}}
+              "values" => %{"hierarchy" => hierarchy_id, "depth" => 2}
             }
           ]
         )
@@ -264,6 +264,7 @@ defmodule TdDfLib.ValidationTest do
           %{"hierarchy_name" => "234_52"},
           schema
         )
+
       assert changeset.valid?
 
       changeset =
@@ -285,6 +286,7 @@ defmodule TdDfLib.ValidationTest do
               |> Enum.into(%{})
             end)
       }
+
       assert Validation.validate_hierarchy_depth(hierarchy, "234_52", 0)
       assert Validation.validate_hierarchy_depth(hierarchy, "234_52", 1)
       assert Validation.validate_hierarchy_depth(hierarchy, "234_52", 2)
@@ -304,7 +306,7 @@ defmodule TdDfLib.ValidationTest do
               "name" => "hierarchy_name",
               "type" => "hierarchy",
               "cardinality" => "1",
-              "values" => %{"hierarchy" => %{"hierarchy_id" => 1, "depth" => 0}}
+              "values" => %{"hierarchy" => 1, "depth" => 0}
             }
           ]
         )
@@ -340,7 +342,7 @@ defmodule TdDfLib.ValidationTest do
               "cardinality" => "1",
               "name" => "hierarchy_name",
               "type" => "hierarchy",
-              "values" => %{"hierarchy" => %{"hierarchy_id" => 1, "depth" => 0}}
+              "values" => %{"hierarchy" => 1, "depth" => 0}
             }
           ]
         )

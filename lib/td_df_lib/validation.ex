@@ -4,9 +4,9 @@ defmodule TdDfLib.Validation do
   """
 
   alias Ecto.Changeset
+  alias TdCache.HierarchyCache
   alias TdDfLib.Format
   alias TdDfLib.Templates
-  alias TdCache.HierarchyCache
 
   @types %{
     "string" => :string,
@@ -78,26 +78,28 @@ defmodule TdDfLib.Validation do
     |> add_content_validation(tail, opts)
   end
 
-  defp add_hierarchy_depth_validation(changeset, %{"type" => "hierarchy"} = field_spec) do
-    %{
-      "values" => %{
-        "hierarchy" => %{
-          "hierarchy_id" => hierarchy_id,
-          "depth" => depth
-        }
-      },
-      "name" => field_name
-    } = field_spec
-
+  defp add_hierarchy_depth_validation(
+         changeset,
+         %{
+           "values" => %{"hierarchy" => hierarchy_id} = values,
+           "type" => "hierarchy",
+           "name" => field_name
+         }
+       ) do
     value_or_values_or_error = changeset |> Map.get(:data) |> Map.get(field_name)
-    valid_depth? = case value_or_values_or_error do
-      %{:error => _} -> changeset
-      [%{:error => _} | _] -> changeset
-      value ->
-        {:ok, hierarchy} = HierarchyCache.get(hierarchy_id)
-        validate_hierarchy_depth(hierarchy, value, depth)
-    end
 
+    valid_depth? =
+      case value_or_values_or_error do
+        %{:error => _} ->
+          changeset
+
+        [%{:error => _} | _] ->
+          changeset
+
+        value ->
+          {:ok, hierarchy} = HierarchyCache.get(hierarchy_id)
+          validate_hierarchy_depth(hierarchy, value, Map.get(values, "depth", 0))
+      end
 
     if valid_depth? do
       changeset
@@ -114,7 +116,9 @@ defmodule TdDfLib.Validation do
 
   def validate_hierarchy_depth(%{nodes: nodes} = _hierarchy, key, depth) do
     case Enum.find(nodes, &(Map.get(&1, "key") == key)) do
-      nil -> false
+      nil ->
+        false
+
       node ->
         node_depth = max((Map.get(node, "path") |> String.split("/") |> Enum.count()) - 2, 0)
         node_depth >= depth
@@ -136,6 +140,7 @@ defmodule TdDfLib.Validation do
         case error do
           nil ->
             changeset
+
           %{:error => [%{"name" => node_name} | _]} ->
             add_hierarchy_error(changeset, node_name, hierarchy_name)
         end
