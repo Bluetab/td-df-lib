@@ -294,6 +294,11 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_hierarchy_depth(hierarchy, "234_53", 3)
       assert Validation.validate_hierarchy_depth(hierarchy, ["234_52", "234_53"], 1)
       refute Validation.validate_hierarchy_depth(hierarchy, ["234_52", "234_53"], 3)
+
+      assert Validation.validate_hierarchy_depth(hierarchy, "", 3)
+      assert Validation.validate_hierarchy_depth(hierarchy, [], 3)
+      assert Validation.validate_hierarchy_depth(hierarchy, [""], 3)
+      assert Validation.validate_hierarchy_depth(hierarchy, nil, 89)
     end
 
     test "invalid hierarchy with more than one node paths", %{template: template} do

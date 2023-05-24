@@ -91,10 +91,10 @@ defmodule TdDfLib.Validation do
     valid_depth? =
       case value_or_values_or_error do
         %{:error => _} ->
-          changeset
+          true
 
         [%{:error => _} | _] ->
-          changeset
+          true
 
         value ->
           {:ok, hierarchy} = HierarchyCache.get(hierarchy_id)
@@ -113,6 +113,9 @@ defmodule TdDfLib.Validation do
   def validate_hierarchy_depth(hierarchy, keys, depth) when is_list(keys) do
     Enum.all?(keys, &validate_hierarchy_depth(hierarchy, &1, depth))
   end
+
+  def validate_hierarchy_depth(_, nil, _), do: true
+  def validate_hierarchy_depth(_, "", _), do: true
 
   def validate_hierarchy_depth(%{nodes: nodes} = _hierarchy, key, depth) do
     case Enum.find(nodes, &(Map.get(&1, "key") == key)) do
