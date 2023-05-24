@@ -451,7 +451,7 @@ defmodule TdDfLib.FormatTest do
         "cardinality" => 1,
         "name" => "hierarchy_field",
         "type" => "hierarchy",
-        "values" => %{"hierarchy" => 1927}
+        "values" => %{"hierarchy" => %{"id" => 1927}}
       }
     ]
 
@@ -655,7 +655,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "/#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "+",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -669,7 +669,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "/#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "1",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -681,7 +681,7 @@ defmodule TdDfLib.FormatTest do
           "content" => "invalid",
           "type" => "hierarchy",
           "cardinality" => "1",
-          "values" => %{"hierarchy" => id}
+          "values" => %{"hierarchy" => %{"id" => id}}
         })
 
       assert is_nil(result)
@@ -700,7 +700,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "/#{node_name_1}|#{node_name_2}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -714,7 +714,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => node_name_2,
                  "type" => "hierarchy",
                  "cardinality" => "1",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -730,7 +730,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "#{node_name_2}|#{node_name_3}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -746,7 +746,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "#{path}|#{node_name_3}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -761,7 +761,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "/#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -776,7 +776,7 @@ defmodule TdDfLib.FormatTest do
                  "content" => "#{node_name}",
                  "type" => "hierarchy",
                  "cardinality" => "*",
-                 "values" => %{"hierarchy" => id}
+                 "values" => %{"hierarchy" => %{"id" => id}}
                })
     end
 
@@ -1055,7 +1055,7 @@ defmodule TdDfLib.FormatTest do
               "cardinality" => 1,
               "name" => "hierarchy_field",
               "type" => "hierarchy",
-              "values" => %{"hierarchy" => 1927}
+              "values" => %{"hierarchy" => %{"id" => 1927}}
             }
           ]
         }

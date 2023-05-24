@@ -251,7 +251,7 @@ defmodule TdDfLib.ValidationTest do
               "name" => "hierarchy_name",
               "type" => "hierarchy",
               "cardinality" => "1",
-              "values" => %{"hierarchy" => hierarchy_id, "depth" => 2}
+              "values" => %{"hierarchy" => %{"id" => hierarchy_id, "min_depth" => 2}}
             }
           ]
         )

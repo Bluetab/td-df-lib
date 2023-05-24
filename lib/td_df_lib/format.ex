@@ -343,7 +343,7 @@ defmodule TdDfLib.Format do
   def format_field(%{
         "content" => content,
         "type" => "hierarchy",
-        "values" => %{"hierarchy" => hierarchy_id}
+        "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
       })
       when content !== "" do
     case HierarchyCache.get(hierarchy_id) do

@@ -57,7 +57,7 @@ defmodule TdDfLib.Parser do
 
       %{
         "type" => "hierarchy",
-        "values" => %{"hierarchy" => hierarchy_id}
+        "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
       },
       ctx ->
         {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
@@ -91,9 +91,13 @@ defmodule TdDfLib.Parser do
   defp parse_field(%{"type" => "table"}, _value, _ctx), do: ""
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
-  defp parse_field(%{"type" => "hierarchy", "values" => %{"hierarchy" => hierarchy_id}}, value, %{
-         hierarchy: hierarchy
-       })
+  defp parse_field(
+         %{"type" => "hierarchy", "values" => %{"hierarchy" => %{"id" => hierarchy_id}}},
+         value,
+         %{
+           hierarchy: hierarchy
+         }
+       )
        when is_binary(value) do
     hierarchy
     |> Map.get(hierarchy_id)

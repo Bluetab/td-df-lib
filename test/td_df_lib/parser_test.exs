@@ -37,7 +37,11 @@ defmodule TdDfLib.ParserTest do
         )
 
       fields = [
-        %{"type" => "hierarchy", "name" => @field_name, "values" => %{"hierarchy" => 1927}}
+        %{
+          "type" => "hierarchy",
+          "name" => @field_name,
+          "values" => %{"hierarchy" => %{"id" => 1927}}
+        }
       ]
 
       content = %{@atom_field_name => ["1927_50", "1927_51"]}

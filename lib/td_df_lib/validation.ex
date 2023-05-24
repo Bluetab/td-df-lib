@@ -81,7 +81,7 @@ defmodule TdDfLib.Validation do
   defp add_hierarchy_depth_validation(
          changeset,
          %{
-           "values" => %{"hierarchy" => hierarchy_id} = values,
+           "values" => %{"hierarchy" => hierarchy},
            "type" => "hierarchy",
            "name" => field_name
          }
@@ -97,8 +97,10 @@ defmodule TdDfLib.Validation do
           true
 
         value ->
+          hierarchy_id = Map.get(hierarchy, "id")
+          min_depth = Map.get(hierarchy, "min_depth", 0)
           {:ok, hierarchy} = HierarchyCache.get(hierarchy_id)
-          validate_hierarchy_depth(hierarchy, value, Map.get(values, "depth", 0))
+          validate_hierarchy_depth(hierarchy, value, min_depth)
       end
 
     if valid_depth? do
