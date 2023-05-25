@@ -4,6 +4,7 @@ defmodule TdDfLib.Validation do
   """
 
   alias Ecto.Changeset
+  alias TdCache.HierarchyCache
   alias TdDfLib.Format
   alias TdDfLib.Templates
 
@@ -65,7 +66,8 @@ defmodule TdDfLib.Validation do
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
-    |> validate_hierarchy_nodes(field_spec)
+    |> add_hierarchy_errors(field_spec)
+    |> add_hierarchy_depth_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [], _opts), do: changeset
@@ -76,7 +78,69 @@ defmodule TdDfLib.Validation do
     |> add_content_validation(tail, opts)
   end
 
-  defp validate_hierarchy_nodes(%{valid?: false, errors: _errors, data: data} = changeset, %{
+  defp add_hierarchy_depth_validation(
+         changeset,
+         %{
+           "values" => %{"hierarchy" => hierarchy},
+           "type" => "hierarchy",
+           "name" => field_name
+         }
+       ) do
+    value_or_values_or_error = changeset |> Map.get(:data) |> Map.get(field_name)
+
+    valid_depth? =
+      case value_or_values_or_error do
+        %{:error => _} ->
+          true
+
+        [%{:error => _} | _] ->
+          true
+
+        value ->
+          hierarchy_id = Map.get(hierarchy, "id")
+          min_depth = Map.get(hierarchy, "min_depth", 0)
+          {:ok, hierarchy} = HierarchyCache.get(hierarchy_id)
+          validate_hierarchy_depth(hierarchy, value, min_depth)
+      end
+
+    if valid_depth? do
+      changeset
+    else
+      Changeset.add_error(changeset, String.to_atom(field_name), "incorrect depth")
+    end
+  end
+
+  defp add_hierarchy_depth_validation(changeset, _), do: changeset
+
+  def validate_hierarchy_depth(hierarchy, keys, depth \\ 0)
+
+  def validate_hierarchy_depth(hierarchy, keys, depth) when is_binary(depth) do
+    case {depth, Integer.parse(depth)} do
+      {"", _} -> validate_hierarchy_depth(hierarchy, keys)
+      {_, {int_depth, _}} -> validate_hierarchy_depth(hierarchy, keys, int_depth)
+      _ -> false
+    end
+  end
+
+  def validate_hierarchy_depth(hierarchy, keys, depth) when is_list(keys) do
+    Enum.all?(keys, &validate_hierarchy_depth(hierarchy, &1, depth))
+  end
+
+  def validate_hierarchy_depth(_, nil, _), do: true
+  def validate_hierarchy_depth(_, "", _), do: true
+
+  def validate_hierarchy_depth(%{nodes: nodes} = _hierarchy, key, depth) do
+    case Enum.find(nodes, &(Map.get(&1, "key") == key)) do
+      nil ->
+        false
+
+      node ->
+        node_depth = max((Map.get(node, "path") |> String.split("/") |> Enum.count()) - 2, 0)
+        node_depth >= depth
+    end
+  end
+
+  defp add_hierarchy_errors(%{valid?: false, errors: _errors, data: data} = changeset, %{
          "type" => "hierarchy",
          "name" => hierarchy_name
        }) do
@@ -104,7 +168,7 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp validate_hierarchy_nodes(changeset, _), do: changeset
+  defp add_hierarchy_errors(changeset, _), do: changeset
 
   defp add_hierarchy_error(changeset, node_name, name) when is_binary(name),
     do: add_hierarchy_error(changeset, node_name, String.to_atom(name))

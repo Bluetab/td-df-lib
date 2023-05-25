@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.8.0] 2023-05-25
+
+## Added
+
+- [TD-3916] Hierarchy depth validation
+
 ## [5.5.0] 2023-03-29
 
 ## Added
@@ -149,8 +155,9 @@
 
 ### Changed
 
-- [TD-3502] image type validation
-- [TD-3502] update cache version
+- [TD-3502] 
+    - Image type validation
+    - Update cache version
 
 ## [4.15.0] 2021-03-05
 
