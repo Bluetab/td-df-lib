@@ -112,6 +112,14 @@ defmodule TdDfLib.Validation do
 
   defp add_hierarchy_depth_validation(changeset, _), do: changeset
 
+  def validate_hierarchy_depth(hierarchy, keys, depth \\ 0)
+  def validate_hierarchy_depth(hierarchy, keys, depth) when is_binary(depth) do
+    case {depth, Integer.parse(depth)} do
+      {"", _} -> validate_hierarchy_depth(hierarchy, keys)
+      {_, {int_depth, _}} -> validate_hierarchy_depth(hierarchy, keys, int_depth)
+      _ -> false
+    end
+  end
   def validate_hierarchy_depth(hierarchy, keys, depth) when is_list(keys) do
     Enum.all?(keys, &validate_hierarchy_depth(hierarchy, &1, depth))
   end

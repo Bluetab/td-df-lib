@@ -248,7 +248,7 @@ defmodule TdDfLib.ValidationTest do
           :content,
           [
             %{
-              "name" => "hierarchy_name",
+              "name" => "hierarchy_field",
               "type" => "hierarchy",
               "cardinality" => "1",
               "values" => %{"hierarchy" => %{"id" => hierarchy_id, "min_depth" => 2}}
@@ -261,7 +261,7 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"hierarchy_name" => "234_52"},
+          %{"hierarchy_field" => "234_52"},
           schema
         )
 
@@ -269,7 +269,7 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"hierarchy_name" => "234_50"},
+          %{"hierarchy_field" => "234_50"},
           schema
         )
 
@@ -294,6 +294,11 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_hierarchy_depth(hierarchy, "234_53", 3)
       assert Validation.validate_hierarchy_depth(hierarchy, ["234_52", "234_53"], 1)
       refute Validation.validate_hierarchy_depth(hierarchy, ["234_52", "234_53"], 3)
+
+      refute Validation.validate_hierarchy_depth(hierarchy, "234_52", "3")
+      assert Validation.validate_hierarchy_depth(hierarchy, "234_53", "3")
+      assert Validation.validate_hierarchy_depth(hierarchy, "234_53", "")
+      refute Validation.validate_hierarchy_depth(hierarchy, "234_53", "abc")
 
       assert Validation.validate_hierarchy_depth(hierarchy, "", 3)
       assert Validation.validate_hierarchy_depth(hierarchy, [], 3)
