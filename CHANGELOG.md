@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Changed
+
+- [TD-5697] Use `HierarchyCache.get_node/1`
+
 ## [5.8.0] 2023-05-25
 
 ## Added
