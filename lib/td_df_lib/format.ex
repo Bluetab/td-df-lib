@@ -350,7 +350,7 @@ defmodule TdDfLib.Format do
       {:ok, %{nodes: nodes}} ->
         nodes_found =
           nodes
-          |> Enum.filter(&get_node_path(&1, content))
+          |> Enum.filter(&match_node_path(&1, content))
           |> Enum.map(&Map.take(&1, ["key", "name"]))
 
         case nodes_found do
@@ -371,7 +371,7 @@ defmodule TdDfLib.Format do
 
   def format_field(%{"content" => content}), do: content
 
-  defp get_node_path(node, content) do
+  defp match_node_path(node, content) do
     if String.starts_with?(content, "/"),
       do: node["path"] === content,
       else: String.ends_with?(node["path"], content)
@@ -433,22 +433,14 @@ defmodule TdDfLib.Format do
   defp format_domain(domain_id, _cardinality), do: domain_id
 
   defp format_hierarchy(key, cardinality) when is_binary(key) do
-    [hierarchy_id, node_id] = String.split(key, "_")
+    case HierarchyCache.get_node!(key) do
+      %{"name" => name} ->
+        %{
+          "id" => apply_cardinality(key, cardinality),
+          "name" => apply_cardinality(name, cardinality)
+        }
 
-    case HierarchyCache.get(hierarchy_id) do
-      {:ok, %{nodes: nodes}} ->
-        case Enum.find(nodes, &(Map.get(&1, "node_id") === String.to_integer(node_id))) do
-          nil ->
-            nil
-
-          %{"name" => name} ->
-            %{
-              "id" => apply_cardinality(key, cardinality),
-              "name" => apply_cardinality(name, cardinality)
-            }
-        end
-
-      _ ->
+      nil ->
         nil
     end
   end
