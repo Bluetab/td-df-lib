@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.9.1] 2023-06-30
+
+## Changed
+
+- [TD-5840] Update td-cache reference
+
 ## [5.8.1] 2023-06-05
 
 ## Changed
