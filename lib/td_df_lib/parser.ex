@@ -69,7 +69,7 @@ defmodule TdDfLib.Parser do
     end)
   end
 
-  defp domain_content(nil), do: DomainCache.id_to_name_map()
+  defp domain_content(nil), do: DomainCache.id_to_external_id_map()
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
   defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
