@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.9.1] 2023-07-07
+
+## Changed
+
+- [TD-5844] Change in parser for get from domain widget name or external id
+
 ## [5.8.1] 2023-06-05
 
 ## Changed
