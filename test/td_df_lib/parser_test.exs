@@ -16,14 +16,35 @@ defmodule TdDfLib.ParserTest do
       assert Parser.append_parsed_fields([], fields, content) == [url_value]
     end
 
-    test "formats type domain" do
-      %{id: domain_id_1} = CacheHelpers.put_domain(external_id: "domain1")
-      %{id: domain_id_2} = CacheHelpers.put_domain(external_id: "domain2")
+    test "formats type domain using external id by default and if specified" do
+      %{id: domain_id_1} = CacheHelpers.put_domain(external_id: "domain_1_external_id")
+      %{id: domain_id_2} = CacheHelpers.put_domain(external_id: "domain_2_external_id")
 
       fields = [%{"type" => "domain", "name" => @field_name}]
       content = %{@atom_field_name => [domain_id_1, domain_id_2]}
 
-      assert Parser.append_parsed_fields([], fields, content) == ["domain1|domain2"]
+      assert Parser.append_parsed_fields([], fields, content) == [
+               "domain_1_external_id|domain_2_external_id"
+             ]
+
+      assert Parser.append_parsed_fields([], fields, content, :with_domain_external_id) == [
+               "domain_1_external_id|domain_2_external_id"
+             ]
+    end
+
+    test "formats type domain using name when specified" do
+      %{id: domain_id_1} =
+        CacheHelpers.put_domain(external_id: "domain_1_external_id", name: "domain_1_name")
+
+      %{id: domain_id_2} =
+        CacheHelpers.put_domain(external_id: "domain_2_external_id", name: "domain_2_name")
+
+      fields = [%{"type" => "domain", "name" => @field_name}]
+      content = %{@atom_field_name => [domain_id_1, domain_id_2]}
+
+      assert Parser.append_parsed_fields([], fields, content, :with_domain_name) == [
+               "domain_1_name|domain_2_name"
+             ]
     end
 
     test "formats type hierarchy" do

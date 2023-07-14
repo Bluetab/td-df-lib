@@ -7,8 +7,8 @@ defmodule TdDfLib.Parser do
   alias TdCache.HierarchyCache
   alias TdDfLib.Format
 
-  def append_parsed_fields(acc, fields, content) do
-    ctx = context_for_fields(fields)
+  def append_parsed_fields(acc, fields, content, domain_type \\ :with_domain_external_id) do
+    ctx = context_for_fields(fields, domain_type)
 
     Enum.reduce(
       fields,
@@ -46,13 +46,14 @@ defmodule TdDfLib.Parser do
      })}
   end
 
-  defp context_for_fields(fields) do
+  defp context_for_fields(fields, domain_type) do
     Enum.reduce(fields, %{}, fn
       %{"type" => "domain"}, %{domains: %{}} = ctx ->
         ctx
 
       %{"type" => "domain"}, ctx ->
-        {:ok, domains} = DomainCache.id_to_external_id_map()
+        {:ok, domains} = domain_content(domain_type)
+
         Map.put(ctx, :domains, domains)
 
       %{
@@ -67,6 +68,9 @@ defmodule TdDfLib.Parser do
         ctx
     end)
   end
+
+  defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
+  defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
   defp field_to_string(_field, nil, _ctx), do: ""
 
