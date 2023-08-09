@@ -821,6 +821,43 @@ defmodule TdDfLib.FormatTest do
     assert flat_content == expected_flat_content
   end
 
+  test "flatten_content_fields with i18n will list all fields of content" do
+    content = [
+      %{
+        "name" => "group1",
+        "fields" => [
+          %{"name" => "field11", "label" => "label11", "widget" => "default"},
+          %{"name" => "field12", "label" => "label12", "values" => %{"fixed" => ["a", "b", "c"]}}
+        ]
+      }
+    ]
+
+    lang = "es"
+
+    CacheHelpers.put_i18n_message(lang, %{message_id: "fields.label11", definition: "es_field"})
+
+    flat_content = Format.flatten_content_fields(content, lang)
+
+    expected_flat_content = [
+      %{
+        "group" => "group1",
+        "name" => "field11",
+        "label" => "label11",
+        "widget" => "default",
+        "definition" => "es_field"
+      },
+      %{
+        "group" => "group1",
+        "name" => "field12",
+        "label" => "label12",
+        "values" => %{"fixed" => ["a", "b", "c"]},
+        "definition" => "fields.label12"
+      }
+    ]
+
+    assert flat_content == expected_flat_content
+  end
+
   describe "search_values/2" do
     setup :create_system
 

@@ -7,6 +7,7 @@ defmodule CacheHelpers do
   import ExUnit.Callbacks, only: [on_exit: 1]
 
   alias TdCache.HierarchyCache
+  alias TdCache.I18nCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
   alias TdCache.TemplateCache
@@ -38,5 +39,11 @@ defmodule CacheHelpers do
     {:ok, _} = HierarchyCache.put(hierarchy, publish: false)
     on_exit(fn -> HierarchyCache.delete(hierarchy_id) end)
     hierarchy
+  end
+
+  def put_i18n_message(lang, params) do
+    I18nCache.put(lang, params)
+
+    on_exit(fn -> I18nCache.delete(lang) end)
   end
 end
