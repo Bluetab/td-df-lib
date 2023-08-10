@@ -851,7 +851,7 @@ defmodule TdDfLib.FormatTest do
         "name" => "field12",
         "label" => "label12",
         "values" => %{"fixed" => ["a", "b", "c"]},
-        "definition" => "fields.label12"
+        "definition" => "label12"
       }
     ]
 

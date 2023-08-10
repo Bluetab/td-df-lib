@@ -126,7 +126,7 @@ defmodule TdDfLib.Format do
   def flatten_content_fields(content, lang) do
     Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
       Enum.map(fields, fn %{"label" => label} = field ->
-        definition = I18nCache.get_definition(lang, "fields." <> label)
+        definition = I18nCache.get_definition(lang, "fields." <> label, default_value: label)
 
         field
         |> Map.put("group", group)
