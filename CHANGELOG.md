@@ -1,11 +1,14 @@
 # Changelog
 
+## [5.12.1] 2023-08-14
+
+- [TD-5891] Update td-cache-lib
+
 ## [5.12.0] 2023-08-14
 
 ### Added
 
 - [TD-5891] Add i18n cache messages
-
 
 ## [5.11.0] 2023-07-14
 
