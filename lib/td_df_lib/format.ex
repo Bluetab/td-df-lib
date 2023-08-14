@@ -4,6 +4,7 @@ defmodule TdDfLib.Format do
   """
   alias TdCache.DomainCache
   alias TdCache.HierarchyCache
+  alias TdCache.I18nCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
@@ -119,6 +120,18 @@ defmodule TdDfLib.Format do
   def flatten_content_fields(content) do
     Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
       Enum.map(fields, &Map.put(&1, "group", group))
+    end)
+  end
+
+  def flatten_content_fields(content, lang) do
+    Enum.flat_map(content, fn %{"name" => group, "fields" => fields} ->
+      Enum.map(fields, fn %{"label" => label} = field ->
+        definition = I18nCache.get_definition(lang, "fields." <> label, default_value: label)
+
+        field
+        |> Map.put("group", group)
+        |> Map.put("definition", definition)
+      end)
     end)
   end
 

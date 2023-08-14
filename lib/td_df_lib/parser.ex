@@ -5,10 +5,13 @@ defmodule TdDfLib.Parser do
 
   alias TdCache.DomainCache
   alias TdCache.HierarchyCache
+  alias TdCache.I18nCache
   alias TdDfLib.Format
 
-  def append_parsed_fields(acc, fields, content, domain_type \\ :with_domain_external_id) do
-    ctx = context_for_fields(fields, domain_type)
+  def append_parsed_fields(acc, fields, content, opts \\ []) do
+    ctx =
+      context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
+      |> Map.put("lang", Keyword.get(opts, :lang))
 
     Enum.reduce(
       fields,
@@ -116,17 +119,28 @@ defmodule TdDfLib.Parser do
   end
 
   defp parse_field(
-         %{"type" => "string", "values" => %{"fixed_tuple" => fixed_tuple}},
+         %{"label" => label, "type" => "string", "values" => %{"fixed_tuple" => fixed_tuple}},
          value,
-         _ctx
+         %{"lang" => lang}
        ),
        do:
          fixed_tuple
          |> Enum.find(fn %{"value" => map_value} -> value == map_value end)
          |> then(fn
-           %{"text" => text} -> text
-           _ -> nil
+           %{"text" => text} ->
+             I18nCache.get_definition(lang, "fields." <> label <> "." <> text, default_value: text)
+
+           _ ->
+             nil
          end)
+
+  defp parse_field(
+         %{"label" => label, "type" => "string", "values" => %{"fixed" => _}},
+         value,
+         %{"lang" => lang}
+       ) do
+    I18nCache.get_definition(lang, "fields." <> label <> "." <> value, default_value: value)
+  end
 
   defp parse_field(_, value, _), do: value
 

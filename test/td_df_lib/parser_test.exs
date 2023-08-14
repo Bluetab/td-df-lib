@@ -27,7 +27,9 @@ defmodule TdDfLib.ParserTest do
                "domain_1_external_id|domain_2_external_id"
              ]
 
-      assert Parser.append_parsed_fields([], fields, content, :with_domain_external_id) == [
+      assert Parser.append_parsed_fields([], fields, content,
+               domain_type: :with_domain_external_id
+             ) == [
                "domain_1_external_id|domain_2_external_id"
              ]
     end
@@ -42,7 +44,7 @@ defmodule TdDfLib.ParserTest do
       fields = [%{"type" => "domain", "name" => @field_name}]
       content = %{@atom_field_name => [domain_id_1, domain_id_2]}
 
-      assert Parser.append_parsed_fields([], fields, content, :with_domain_name) == [
+      assert Parser.append_parsed_fields([], fields, content, domain_type: :with_domain_name) == [
                "domain_1_name|domain_2_name"
              ]
     end
@@ -84,12 +86,62 @@ defmodule TdDfLib.ParserTest do
       ]
 
       fields = [
-        %{"type" => "string", "name" => @field_name, "values" => %{"fixed_tuple" => values}}
+        %{
+          "label" => "bar",
+          "type" => "string",
+          "name" => @field_name,
+          "values" => %{"fixed_tuple" => values}
+        }
       ]
 
       content = %{@atom_field_name => ["v1", "v2"]}
 
       assert Parser.append_parsed_fields([], fields, content) == ["t1|t2"]
+    end
+
+    test "formats fixed tuple with i18n" do
+      values = [
+        %{"value" => "v1", "text" => "t1"},
+        %{"value" => "v2", "text" => "t2"}
+      ]
+
+      fields = [
+        %{
+          "label" => "bar",
+          "type" => "string",
+          "name" => @field_name,
+          "values" => %{"fixed_tuple" => values}
+        }
+      ]
+
+      content = %{@atom_field_name => ["v1", "v2"]}
+
+      lang = "en"
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.bar.t1", definition: "english_t1"})
+
+      assert Parser.append_parsed_fields([], fields, content, lang: lang) == ["english_t1|t2"]
+    end
+
+    test "formats fixed with i18n" do
+      fields = [
+        %{
+          "label" => "bar",
+          "type" => "string",
+          "name" => @field_name,
+          "values" => %{"fixed" => ["v1", "v2", "v3"]}
+        }
+      ]
+
+      content = %{@atom_field_name => ["v1", "v2"]}
+
+      lang = "en"
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.bar.v1", definition: "english_v1"})
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.bar.v3", definition: "english_v3"})
+
+      assert Parser.append_parsed_fields([], fields, content, lang: lang) == ["english_v1|v2"]
     end
 
     test "type table is formated as empty string" do
