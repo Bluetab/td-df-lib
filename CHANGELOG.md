@@ -1,8 +1,16 @@
 # Changelog
 
+## [5.12.2] 2023-08-16
+
+### Fixed
+
+- [TD-5913] Test depends_on validation for multiple cardinality
+
 ## [5.12.1] 2023-08-14
 
-- [TD-5891] Update td-cache-lib
+### Changed
+
+- [TD-5891] Update td-cache version
 
 ## [5.12.0] 2023-08-14
 
