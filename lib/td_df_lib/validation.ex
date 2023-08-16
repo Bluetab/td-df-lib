@@ -44,6 +44,15 @@ defmodule TdDfLib.Validation do
   defp get_field_type(type, "+"), do: {:array, type}
   defp get_field_type(type, _), do: type
 
+  defp dependent?(to_be, [_ | _] = dependent_value) do
+    MapSet.new(to_be)
+    |> MapSet.intersection(MapSet.new(dependent_value))
+    |> MapSet.to_list()
+    |> then(&(not Enum.empty?(&1)))
+  end
+
+  defp dependent?(to_be, dependent_value), do: Enum.member?(to_be, dependent_value)
+
   # Filters schema for non applicable dependant field
   defp add_content_validation(
          changeset,
@@ -52,7 +61,7 @@ defmodule TdDfLib.Validation do
        ) do
     dependent_value = Changeset.get_field(changeset, on)
 
-    if Enum.member?(to_be, dependent_value) do
+    if dependent?(to_be, dependent_value) do
       add_content_validation(changeset, Map.drop(field_spec, ["depends"]), opts)
     else
       changeset

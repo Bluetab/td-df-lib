@@ -439,6 +439,34 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "content with required dependant field is validated", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "radio_list",
+              "type" => "string",
+              "cardinality" => "*",
+              "values" => %{"fixed" => ["Yes", "No"]}
+            },
+            %{
+              "name" => "dependant_text",
+              "type" => "string",
+              "cardinality" => "1",
+              "depends" => %{"on" => "radio_list", "to_be" => ["Yes"]}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(%{"radio_list" => ["Yes"]}, schema)
+      refute changeset.valid?
+    end
+
     test "content with depend required set field returns valid changeset", %{template: template} do
       template =
         template
