@@ -50,16 +50,29 @@ defmodule TdDfLib.Parser do
   def format_content(_params), do: nil
 
   defp format_field(schema, content, lang) do
-    {Map.get(schema, "name"),
-     Format.format_field(%{
-       "name" => Map.get(schema, "name"),
-       "content" => Map.get(content, Map.get(schema, "name")),
-       "type" => Map.get(schema, "type"),
-       "cardinality" => Map.get(schema, "cardinality"),
-       "values" => Map.get(schema, "values"),
-       "lang" => lang
-     })}
+
+    content = %{
+      "name" => Map.get(schema, "name"),
+      "content" => Map.get(content, Map.get(schema, "name")),
+      "type" => Map.get(schema, "type"),
+      "cardinality" => Map.get(schema, "cardinality"),
+      "values" => Map.get(schema, "values"),
+      "lang" => lang
+    }
+    |> Format.format_field()
+    |> format_content_errors()
+
+    {Map.get(schema, "name"), content}
   end
+
+  defp format_content_errors(content) when is_list(content) do
+    case Enum.find(content, fn cont -> match?({:error, _}, cont) end) do
+      {:error, _} = error -> error
+      _ -> content
+    end
+  end
+
+  defp format_content_errors(content_value), do: content_value
 
   defp context_for_fields(fields, domain_type) do
     Enum.reduce(fields, %{}, fn
