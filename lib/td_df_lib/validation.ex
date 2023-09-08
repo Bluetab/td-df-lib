@@ -75,7 +75,7 @@ defmodule TdDfLib.Validation do
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
-    |> add_hierarchy_errors(field_spec)
+    |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
   end
 
@@ -99,10 +99,10 @@ defmodule TdDfLib.Validation do
 
     valid_depth? =
       case value_or_values_or_error do
-        %{:error => _} ->
+        {:error, _} ->
           true
 
-        [%{:error => _} | _] ->
+        [{:error, _} | _] ->
           true
 
         value ->
@@ -149,45 +149,53 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp add_hierarchy_errors(%{valid?: false, errors: _errors, data: data} = changeset, %{
-         "type" => "hierarchy",
-         "name" => hierarchy_name
-       }) do
-    case Map.get(data, hierarchy_name) do
+  defp add_content_errors(
+         %{valid?: false, errors: _errors, data: data} = changeset,
+         %{"name" => name} = field_spec
+       ) do
+    case Map.get(data, name) do
       [_ | _] = list ->
-        error =
-          Enum.find(list, fn
-            %{error: _} -> true
-            _ -> false
-          end)
+        error = Enum.find(list, &match?({:error, _}, &1))
 
         case error do
           nil ->
             changeset
 
-          %{:error => [%{"name" => node_name} | _]} ->
-            add_hierarchy_error(changeset, node_name, hierarchy_name)
+          {:error, error} ->
+            add_content_error(changeset, field_spec, error)
         end
 
-      %{:error => [%{"name" => node_name} | _]} ->
-        add_hierarchy_error(changeset, node_name, hierarchy_name)
+      {:error, error} ->
+        add_content_error(changeset, field_spec, error)
 
       _ ->
         changeset
     end
   end
 
-  defp add_hierarchy_errors(changeset, _), do: changeset
+  defp add_content_errors(changeset, _), do: changeset
 
-  defp add_hierarchy_error(changeset, node_name, name) when is_binary(name),
-    do: add_hierarchy_error(changeset, node_name, String.to_atom(name))
+  defp add_content_error(
+         changeset,
+         %{"type" => "hierarchy", "name" => name},
+         [%{"name" => node_name} | _]
+       ) do
+    error = "has more than one node #{node_name}"
+    insert_error_in_changeset(changeset, error, name)
+  end
 
-  defp add_hierarchy_error(changeset, node_name, name) when is_atom(name) do
+  defp add_content_error(changeset, %{"name" => name}, error),
+    do: insert_error_in_changeset(changeset, error, name)
+
+  defp insert_error_in_changeset(changeset, error, name) when is_binary(name),
+    do: insert_error_in_changeset(changeset, error, String.to_atom(name))
+
+  defp insert_error_in_changeset(changeset, error, name) when is_atom(name) do
     update_in(
       changeset.errors,
       &Enum.map(&1, fn
         {^name, {"is invalid", _error_type}} ->
-          {name, {"has more than one node #{node_name}"}}
+          {name, {error}}
 
         {_key, _error} = tuple ->
           tuple

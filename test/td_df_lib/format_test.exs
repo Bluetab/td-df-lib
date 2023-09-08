@@ -550,6 +550,65 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == ["value1"]
     end
 
+    test "format_field of string with fixed values and lang returns translated value" do
+      fixed = ["one", "two", "three"]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
+
+      formatted_value =
+        Format.format_field(%{
+          "name" => "i18n",
+          "content" => "uno",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == "one"
+    end
+
+    test "format_field of string with fixed values and lang and cardinality one or more returns translated value" do
+      fixed = ["one", "two", "three"]
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.i18n.one", definition: "uno"},
+        %{message_id: "fields.i18n.three", definition: "tres"}
+      ])
+
+      CacheHelpers.put_i18n_messages("en", [
+        %{message_id: "fields.i18n.one", definition: "one"},
+        %{message_id: "fields.i18n.three", definition: "three"}
+      ])
+
+      formatted_value =
+        Format.format_field(%{
+          "cardinality" => "+",
+          "name" => "i18n",
+          "content" => "uno|tres",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == ["one", "three"]
+    end
+
+    test "format_field of string with fixed values and lang without translation return error" do
+      fixed = ["uno", "dos", "tres"]
+
+      formatted_value =
+        Format.format_field(%{
+          "name" => "i18n",
+          "content" => "uno",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == {:error, :no_translation_found}
+    end
+
     test "format_field of enriched_text returns wrapped enriched text" do
       formatted_value =
         Format.format_field(%{
@@ -709,7 +768,7 @@ defmodule TdDfLib.FormatTest do
     } do
       %{name: node_name_2} = Enum.at(nodes, 2)
 
-      assert %{:error => [_ | _]} =
+      assert {:error, [_ | _]} =
                Format.format_field(%{
                  "content" => node_name_2,
                  "type" => "hierarchy",
@@ -725,7 +784,7 @@ defmodule TdDfLib.FormatTest do
       %{name: node_name_2} = Enum.at(nodes, 2)
       %{name: node_name_3} = Enum.at(nodes, 3)
 
-      assert [%{:error => [_ | _]}, %{:error => [_ | _]}] =
+      assert [{:error, [_ | _]}, {:error, [_ | _]}] =
                Format.format_field(%{
                  "content" => "#{node_name_2}|#{node_name_3}",
                  "type" => "hierarchy",
@@ -741,7 +800,7 @@ defmodule TdDfLib.FormatTest do
       %{path: path, key: key} = Enum.at(nodes, 2)
       %{name: node_name_3} = Enum.at(nodes, 3)
 
-      assert [^key, %{:error => [_ | _]}] =
+      assert [^key, {:error, [_ | _]}] =
                Format.format_field(%{
                  "content" => "#{path}|#{node_name_3}",
                  "type" => "hierarchy",
@@ -771,7 +830,7 @@ defmodule TdDfLib.FormatTest do
          } do
       %{name: node_name} = Enum.at(nodes, 3)
 
-      assert [%{error: [_, _, _]}] =
+      assert [{:error, [_, _, _]}] =
                Format.format_field(%{
                  "content" => "#{node_name}",
                  "type" => "hierarchy",

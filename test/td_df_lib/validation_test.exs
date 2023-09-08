@@ -306,6 +306,76 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_hierarchy_depth(hierarchy, nil, 89)
     end
 
+    test "fields with error return not valid changeset", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "string",
+              "type" => "string",
+              "cardinality" => "?",
+              "values" => %{"fixed" => ["one", "two", "three"]}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      error_mgs = "error in content"
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "string" => {:error, error_mgs}
+          },
+          schema
+        )
+
+      refute changeset.valid?
+
+      assert %{
+        errors: [string: error_mgs]
+      }
+    end
+
+    test "fields multiple with error return not valid changeset", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "list",
+              "type" => "string",
+              "cardinality" => "*",
+              "values" => %{"fixed" => ["one", "two", "three"]}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      error_mgs = "error in content"
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "list" => [{:error, error_mgs}, "two"]
+          },
+          schema
+        )
+
+      refute changeset.valid?
+
+      assert %{
+        errors: [string: error_mgs]
+      }
+    end
+
     test "invalid hierarchy with more than one node paths", %{template: template} do
       template =
         template
@@ -327,8 +397,9 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" => %{
-              :error => [
+            "hierarchy_name" => {
+              :error,
+              [
                 %{"key" => "50_41", "name" => "foo"},
                 %{"key" => "50_51", "name" => "foo"}
               ]
@@ -364,14 +435,16 @@ defmodule TdDfLib.ValidationTest do
         Validation.build_changeset(
           %{
             "hierarchy_name" => [
-              %{
-                :error => [
+              {
+                :error,
+                [
                   %{"key" => "50_41", "name" => "foo"},
                   %{"key" => "50_51", "name" => "foo"}
                 ]
               },
-              %{
-                :error => [
+              {
+                :error,
+                [
                   %{"key" => "50_42", "name" => "bar"},
                   %{"key" => "50_52", "name" => "bar"}
                 ]
