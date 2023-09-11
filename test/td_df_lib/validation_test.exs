@@ -751,7 +751,7 @@ defmodule TdDfLib.ValidationTest do
     end
   end
 
-  describe "validator/1" do
+  describe "validator/2" do
     setup do
       %{id: template_id} = template = build(:template)
       TemplateCache.put(template, publish: false)
@@ -779,11 +779,27 @@ defmodule TdDfLib.ValidationTest do
       validator = Validation.validator(template_name)
       assert is_function(validator, 2)
 
-      assert [{:content, {"invalid content", _errors}}] =
+      assert [{:content, {"list: is invalid - string: can't be blank", _errors}}] =
                validator.(:content, %{"list" => "four"})
 
       assert [{:content, "invalid content"}] =
                validator.(:content, %{"list" => "one", "string" => @unsafe})
+    end
+
+    test "returns a validator that join all errors", %{template: %{name: template_name}} do
+      validator = Validation.validator(template_name)
+      assert is_function(validator, 2)
+
+      assert [{:content, {"string: can't be blank - list: is invalid", _}}] =
+               validator.(:content, %{"list" => ["four"]})
+    end
+
+    test "returns a validator that validates translation errors", %{template: %{name: template_name}} do
+      validator = Validation.validator(template_name)
+      assert is_function(validator, 2)
+
+      assert [{:content, {"list: translation not found", [list: :no_translation_found]}}] =
+               validator.(:content, %{"string" => "one", "list" => {:error, :no_translation_found}})
     end
   end
 

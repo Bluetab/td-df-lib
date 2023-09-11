@@ -180,7 +180,7 @@ defmodule TdDfLib.Validation do
          %{"type" => "hierarchy", "name" => name},
          [%{"name" => node_name} | _]
        ) do
-    error = "has more than one node #{node_name}"
+    error = {"has more than one node #{node_name}"}
     insert_error_in_changeset(changeset, error, name)
   end
 
@@ -195,7 +195,7 @@ defmodule TdDfLib.Validation do
       changeset.errors,
       &Enum.map(&1, fn
         {^name, {"is invalid", _error_type}} ->
-          {name, {error}}
+          {name, error}
 
         {_key, _error} = tuple ->
           tuple
@@ -382,8 +382,11 @@ defmodule TdDfLib.Validation do
   def validator(schema, opts) when is_list(schema) do
     fn field, value ->
       case build_changeset(value, schema, opts) do
-        %{valid?: false, errors: errors} -> [{field, {"invalid content", errors}}]
-        _ -> validate_safe(field, value)
+        %{valid?: false, errors: errors} ->
+          [{field, {format_validator_errors(errors), errors}}]
+
+        _ ->
+          validate_safe(field, value)
       end
     end
   end
@@ -395,4 +398,17 @@ defmodule TdDfLib.Validation do
   def validate_safe(field, value) do
     validate_safe(field, Jason.encode!(value))
   end
+
+  defp format_validator_errors(errors) when is_list(errors),
+    do:
+      errors
+      |> Enum.map(&format_validator_errors(&1))
+      |> Enum.join(" - ")
+
+  defp format_validator_errors({field, :no_translation_found}),
+    do: "#{field}: translation not found"
+
+  defp format_validator_errors({field, {msg, _}}) when is_binary(msg), do: "#{field}: #{msg}"
+
+  defp format_validator_errors(_), do: "invalid content"
 end
