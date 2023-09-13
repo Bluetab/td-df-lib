@@ -395,6 +395,20 @@ defmodule TdDfLib.Validation do
     if String.contains?(value, "javascript:"), do: [{field, "invalid content"}], else: []
   end
 
+  def validate_safe(field, value) when is_map(value) do
+    formated_value =
+      value
+      |> Enum.map(fn
+          {f, {:error, v}} ->
+            {f, %{error: v}}
+          v ->
+            v
+          end)
+      |> Map.new()
+
+    validate_safe(field, Jason.encode!(formated_value))
+  end
+
   def validate_safe(field, value) do
     validate_safe(field, Jason.encode!(value))
   end

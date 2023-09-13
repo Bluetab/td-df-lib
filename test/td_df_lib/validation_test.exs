@@ -809,6 +809,7 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_safe(:foo, [%{id: 1}, %{foo: "bar"}]) == []
       assert Validation.validate_safe(:foo, "a safe sting") == []
       assert Validation.validate_safe(:foo, nil) == []
+      assert Validation.validate_safe(:foo, %{"bar" => {:error, "Error test"}}) == []
     end
 
     test "returns error keyword list if content in unsafe" do
@@ -817,6 +818,8 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_safe(:foo, @unsafe) == expected
       assert Validation.validate_safe(:foo, [@unsafe, "hello"]) == expected
       assert Validation.validate_safe(:foo, %{"doc" => %{"href" => @unsafe}}) == expected
+      assert Validation.validate_safe(:foo, %{"bar" => {:error, @unsafe}}) == expected
+
     end
   end
 
