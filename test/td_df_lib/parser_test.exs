@@ -27,12 +27,12 @@ defmodule TdDfLib.ParserTest do
       CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
 
       assert %{"i18n" => "one"} =
-        Parser.format_content(%{
-          content: content,
-          content_schema: schema,
-          domain_ids: [],
-          lang: "es"
-        })
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
     end
 
     test "format_content format fixed values with single cardinality and translation error" do
@@ -51,12 +51,12 @@ defmodule TdDfLib.ParserTest do
       ]
 
       assert %{"i18n" => {:error, :no_translation_found}} =
-        Parser.format_content(%{
-          content: content,
-          content_schema: schema,
-          domain_ids: [],
-          lang: "es"
-        })
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
     end
 
     test "format_content format fixed values with multiple cardinality and translation" do
@@ -80,12 +80,12 @@ defmodule TdDfLib.ParserTest do
       CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.two", definition: "two"})
 
       assert %{"i18n" => ["one", "two"]} =
-        Parser.format_content(%{
-          content: content,
-          content_schema: schema,
-          domain_ids: [],
-          lang: "es"
-        })
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
     end
 
     test "format_content format fixed values with multiple cardinality and translation error" do
@@ -104,12 +104,12 @@ defmodule TdDfLib.ParserTest do
       ]
 
       assert %{"i18n" => {:error, :no_translation_found}} =
-        Parser.format_content(%{
-          content: content,
-          content_schema: schema,
-          domain_ids: [],
-          lang: "es"
-        })
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
     end
   end
 

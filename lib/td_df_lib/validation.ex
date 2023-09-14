@@ -399,11 +399,12 @@ defmodule TdDfLib.Validation do
     formated_value =
       value
       |> Enum.map(fn
-          {f, {:error, v}} ->
-            {f, %{error: v}}
-          v ->
-            v
-          end)
+        {f, {:error, v}} ->
+          {f, %{error: v}}
+
+        v ->
+          v
+      end)
       |> Map.new()
 
     validate_safe(field, Jason.encode!(formated_value))
@@ -414,10 +415,7 @@ defmodule TdDfLib.Validation do
   end
 
   defp format_validator_errors(errors) when is_list(errors),
-    do:
-      errors
-      |> Enum.map(&format_validator_errors(&1))
-      |> Enum.join(" - ")
+    do: Enum.map_join(errors, " - ", &format_validator_errors(&1))
 
   defp format_validator_errors({field, :no_translation_found}),
     do: "#{field}: translation not found"

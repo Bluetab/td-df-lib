@@ -794,12 +794,17 @@ defmodule TdDfLib.ValidationTest do
                validator.(:content, %{"list" => ["four"]})
     end
 
-    test "returns a validator that validates translation errors", %{template: %{name: template_name}} do
+    test "returns a validator that validates translation errors", %{
+      template: %{name: template_name}
+    } do
       validator = Validation.validator(template_name)
       assert is_function(validator, 2)
 
       assert [{:content, {"list: translation not found", [list: :no_translation_found]}}] =
-               validator.(:content, %{"string" => "one", "list" => {:error, :no_translation_found}})
+               validator.(:content, %{
+                 "string" => "one",
+                 "list" => {:error, :no_translation_found}
+               })
     end
   end
 
@@ -819,7 +824,6 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_safe(:foo, [@unsafe, "hello"]) == expected
       assert Validation.validate_safe(:foo, %{"doc" => %{"href" => @unsafe}}) == expected
       assert Validation.validate_safe(:foo, %{"bar" => {:error, @unsafe}}) == expected
-
     end
   end
 

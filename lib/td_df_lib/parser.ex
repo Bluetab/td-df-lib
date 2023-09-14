@@ -50,17 +50,17 @@ defmodule TdDfLib.Parser do
   def format_content(_params), do: nil
 
   defp format_field(schema, content, lang) do
-
-    content = %{
-      "name" => Map.get(schema, "name"),
-      "content" => Map.get(content, Map.get(schema, "name")),
-      "type" => Map.get(schema, "type"),
-      "cardinality" => Map.get(schema, "cardinality"),
-      "values" => Map.get(schema, "values"),
-      "lang" => lang
-    }
-    |> Format.format_field()
-    |> format_content_errors()
+    content =
+      %{
+        "name" => Map.get(schema, "name"),
+        "content" => Map.get(content, Map.get(schema, "name")),
+        "type" => Map.get(schema, "type"),
+        "cardinality" => Map.get(schema, "cardinality"),
+        "values" => Map.get(schema, "values"),
+        "lang" => lang
+      }
+      |> Format.format_field()
+      |> format_content_errors()
 
     {Map.get(schema, "name"), content}
   end
