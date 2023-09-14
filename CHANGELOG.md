@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5929] Translate fixed values if lang is different of default lang
+  - Detailed errors by fields
+
 ## [5.12.2] 2023-08-16
 
 ### Fixed
@@ -185,7 +192,7 @@
 
 ### Changed
 
-- [TD-3502] 
+- [TD-3502]
     - Image type validation
     - Update cache version
 
