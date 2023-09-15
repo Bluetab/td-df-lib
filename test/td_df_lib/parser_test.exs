@@ -111,6 +111,35 @@ defmodule TdDfLib.ParserTest do
                  lang: "es"
                })
     end
+
+    test "format_content format fixed values with multiple cardinality and some missing translations" do
+      content = %{"i18n" => "uno|tres"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.two", definition: "two"})
+
+      assert %{"i18n" => {:error, :no_translation_found}} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
   end
 
   describe "append_parsed_fields/3" do

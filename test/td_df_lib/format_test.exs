@@ -619,6 +619,32 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == RichText.to_rich_text("some enriched text")
     end
 
+    test "format_field of string with fixed values and some missing translations return error" do
+      fixed = ["one", "two", "three"]
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.i18n.one", definition: "uno"},
+        %{message_id: "fields.i18n.two", definition: "dos"}
+      ])
+
+      CacheHelpers.put_i18n_messages("en", [
+        %{message_id: "fields.i18n.one", definition: "one"},
+        %{message_id: "fields.i18n.two", definition: "two"}
+      ])
+
+      formatted_value =
+        Format.format_field(%{
+          "cardinality" => "+",
+          "name" => "i18n",
+          "content" => "uno|tres",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == {:error, :no_translation_found}
+    end
+
     test "format_field of user type field" do
       assert ["foo"] ==
                Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
