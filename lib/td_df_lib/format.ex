@@ -10,6 +10,8 @@ defmodule TdDfLib.Format do
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
+  @default_lang Application.compile_env(:td_df_lib, :lang, "en")
+
   def apply_template(content, fields, opts \\ [])
 
   def apply_template(nil, _, _opts), do: %{}
@@ -308,17 +310,49 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
-  def format_field(%{
-        "content" => content,
-        "type" => type,
-        "cardinality" => cardinality,
-        "values" => values
-      })
+  def format_field(
+        %{
+          "type" => type,
+          "content" => content,
+          "cardinality" => cardinality
+        } = schema
+      )
       when cardinality in ["+", "*"] and is_binary(content) and type !== "user" do
     content
     |> String.split("|", trim: true)
-    |> Enum.map(fn c -> format_field(%{"content" => c, "type" => type, "values" => values}) end)
+    |> Enum.map(fn c ->
+      card = if cardinality == "+", do: "1", else: "?"
+
+      schema
+      |> Map.merge(%{"content" => c, "cardinality" => card})
+      |> format_field()
+    end)
     |> List.flatten()
+  end
+
+  def format_field(%{
+        "name" => name,
+        "type" => "string",
+        "content" => content,
+        "values" => %{"fixed" => _},
+        "lang" => lang
+      }) do
+    case I18nCache.get_definitions_by_value(content, lang, prefix: "fields.#{name}") do
+      [%{definition: _, message_id: key}] ->
+        key
+        |> String.replace_prefix("fields.#{name}.", "")
+        |> String.split(".")
+        |> List.last()
+
+      [%{definition: _, message_id: key} | _] ->
+        key
+        |> String.replace_prefix("fields.#{name}.", "")
+        |> String.split(".")
+        |> List.last()
+
+      [] ->
+        content
+    end
   end
 
   def format_field(%{"content" => content, "type" => "string"}) do
@@ -374,7 +408,7 @@ defmodule TdDfLib.Format do
             key
 
           _ ->
-            %{:error => nodes_found}
+            {:error, nodes_found}
         end
 
       _ ->

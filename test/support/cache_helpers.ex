@@ -41,9 +41,10 @@ defmodule CacheHelpers do
     hierarchy
   end
 
-  def put_i18n_message(lang, params) do
-    I18nCache.put(lang, params)
-
+  def put_i18n_messages(lang, messages) when is_list(messages) do
+    Enum.each(messages, &I18nCache.put(lang, &1))
     on_exit(fn -> I18nCache.delete(lang) end)
   end
+
+  def put_i18n_message(lang, message), do: put_i18n_messages(lang, [message])
 end

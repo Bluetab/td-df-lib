@@ -7,6 +7,136 @@ defmodule TdDfLib.ParserTest do
   @field_name "field_name"
   @atom_field_name String.to_atom(@field_name)
 
+  describe "format_content" do
+    test "format_content format fixed values with single cardinality and lang" do
+      content = %{"i18n" => "uno"}
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "dropdown"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+
+      assert %{"i18n" => "one"} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with single cardinality and lang but not 18n key" do
+      content = %{"i18n" => "uno"}
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "dropdown"
+        }
+      ]
+
+      assert %{"i18n" => "uno"} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with multiple cardinality and lang" do
+      content = %{"i18n" => "uno|dos"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+
+      assert %{"i18n" => ["one", "two"]} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with multiple cardinality and lang but not i18n key" do
+      content = %{"i18n" => "uno|dos"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      assert %{"i18n" => ["uno", "dos"]} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with multiple cardinality and some missing 18n key" do
+      content = %{"i18n" => "uno|tres"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+
+      assert %{"i18n" => ["one", "tres"]} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+  end
+
   describe "append_parsed_fields/3" do
     test "formats type url" do
       url_value = "url_value"

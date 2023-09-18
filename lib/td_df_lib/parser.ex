@@ -8,6 +8,8 @@ defmodule TdDfLib.Parser do
   alias TdCache.I18nCache
   alias TdDfLib.Format
 
+  @default_lang Application.compile_env(:td_df_lib, :lang, "en")
+
   def append_parsed_fields(acc, fields, content, opts \\ []) do
     ctx =
       context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
@@ -20,34 +22,57 @@ defmodule TdDfLib.Parser do
     )
   end
 
-  def format_content(%{content: content, content_schema: content_schema, domain_ids: domain_ids})
+  def format_content(
+        %{
+          content: content,
+          content_schema: content_schema,
+          domain_ids: domain_ids
+        } = params
+      )
       when not is_nil(content) do
+    lang = Map.get(params, :lang, @default_lang)
     content = Format.apply_template(content, content_schema, domain_ids: domain_ids)
 
     content_schema
-    |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
+    |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
       schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy"] or
-        (schema_type in ["string", "user"] and cardinality in ["*", "+"])
+        (schema_type in ["string", "user"] and cardinality in ["*", "+"]) or
+        match?(%{"fixed" => _}, Map.get(schema, "values"))
     end)
     # credo:disable-for-next-line
     |> Enum.filter(fn %{"name" => name} ->
       field_content = Map.get(content, name)
       not is_nil(field_content) and is_binary(field_content)
     end)
-    |> Enum.into(content, &format_field(&1, content))
+    |> Enum.into(content, &format_field(&1, content, lang))
   end
 
   def format_content(_params), do: nil
 
-  defp format_field(schema, content) do
-    {Map.get(schema, "name"),
-     Format.format_field(%{
-       "content" => Map.get(content, Map.get(schema, "name")),
-       "type" => Map.get(schema, "type"),
-       "cardinality" => Map.get(schema, "cardinality"),
-       "values" => Map.get(schema, "values")
-     })}
+  defp format_field(schema, content, lang) do
+    content =
+      %{
+        "name" => Map.get(schema, "name"),
+        "content" => Map.get(content, Map.get(schema, "name")),
+        "type" => Map.get(schema, "type"),
+        "cardinality" => Map.get(schema, "cardinality"),
+        "values" => Map.get(schema, "values"),
+        "lang" => lang
+      }
+      |> Format.format_field()
+      |> format_content_errors()
+
+    {Map.get(schema, "name"), content}
   end
+
+  defp format_content_errors(content) when is_list(content) do
+    case Enum.find(content, fn cont -> match?({:error, _}, cont) end) do
+      {:error, _} = error -> error
+      _ -> content
+    end
+  end
+
+  defp format_content_errors(content_value), do: content_value
 
   defp context_for_fields(fields, domain_type) do
     Enum.reduce(fields, %{}, fn

@@ -306,6 +306,76 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_hierarchy_depth(hierarchy, nil, 89)
     end
 
+    test "fields with error return not valid changeset", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "string",
+              "type" => "string",
+              "cardinality" => "?",
+              "values" => %{"fixed" => ["one", "two", "three"]}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      error_mgs = "error in content"
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "string" => {:error, error_mgs}
+          },
+          schema
+        )
+
+      refute changeset.valid?
+
+      assert %{
+        errors: [string: error_mgs]
+      }
+    end
+
+    test "fields multiple with error return not valid changeset", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "name" => "list",
+              "type" => "string",
+              "cardinality" => "*",
+              "values" => %{"fixed" => ["one", "two", "three"]}
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      error_mgs = "error in content"
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "list" => [{:error, error_mgs}, "two"]
+          },
+          schema
+        )
+
+      refute changeset.valid?
+
+      assert %{
+        errors: [string: error_mgs]
+      }
+    end
+
     test "invalid hierarchy with more than one node paths", %{template: template} do
       template =
         template
@@ -327,8 +397,9 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" => %{
-              :error => [
+            "hierarchy_name" => {
+              :error,
+              [
                 %{"key" => "50_41", "name" => "foo"},
                 %{"key" => "50_51", "name" => "foo"}
               ]
@@ -364,14 +435,16 @@ defmodule TdDfLib.ValidationTest do
         Validation.build_changeset(
           %{
             "hierarchy_name" => [
-              %{
-                :error => [
+              {
+                :error,
+                [
                   %{"key" => "50_41", "name" => "foo"},
                   %{"key" => "50_51", "name" => "foo"}
                 ]
               },
-              %{
-                :error => [
+              {
+                :error,
+                [
                   %{"key" => "50_42", "name" => "bar"},
                   %{"key" => "50_52", "name" => "bar"}
                 ]
@@ -678,7 +751,7 @@ defmodule TdDfLib.ValidationTest do
     end
   end
 
-  describe "validator/1" do
+  describe "validator/2" do
     setup do
       %{id: template_id} = template = build(:template)
       TemplateCache.put(template, publish: false)
@@ -706,11 +779,32 @@ defmodule TdDfLib.ValidationTest do
       validator = Validation.validator(template_name)
       assert is_function(validator, 2)
 
-      assert [{:content, {"invalid content", _errors}}] =
+      assert [{:content, {"list: is invalid - string: can't be blank", _errors}}] =
                validator.(:content, %{"list" => "four"})
 
       assert [{:content, "invalid content"}] =
                validator.(:content, %{"list" => "one", "string" => @unsafe})
+    end
+
+    test "returns a validator that join all errors", %{template: %{name: template_name}} do
+      validator = Validation.validator(template_name)
+      assert is_function(validator, 2)
+
+      assert [{:content, {"string: can't be blank - list: is invalid", _}}] =
+               validator.(:content, %{"list" => ["four"]})
+    end
+
+    test "returns a validator that validates translation errors", %{
+      template: %{name: template_name}
+    } do
+      validator = Validation.validator(template_name)
+      assert is_function(validator, 2)
+
+      assert [{:content, {"list: translation not found", [list: :no_translation_found]}}] =
+               validator.(:content, %{
+                 "string" => "one",
+                 "list" => {:error, :no_translation_found}
+               })
     end
   end
 
@@ -720,6 +814,7 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_safe(:foo, [%{id: 1}, %{foo: "bar"}]) == []
       assert Validation.validate_safe(:foo, "a safe sting") == []
       assert Validation.validate_safe(:foo, nil) == []
+      assert Validation.validate_safe(:foo, %{"bar" => {:error, "Error test"}}) == []
     end
 
     test "returns error keyword list if content in unsafe" do
@@ -728,6 +823,7 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_safe(:foo, @unsafe) == expected
       assert Validation.validate_safe(:foo, [@unsafe, "hello"]) == expected
       assert Validation.validate_safe(:foo, %{"doc" => %{"href" => @unsafe}}) == expected
+      assert Validation.validate_safe(:foo, %{"bar" => {:error, @unsafe}}) == expected
     end
   end
 
