@@ -4,7 +4,7 @@
 
 ### Added
 
-- [TD-5929] Translate fixed values if lang is different of default lang
+- [TD-5929] Translate fixed values if is possible using i18n key
   - Detailed errors by fields
 
 ## [5.12.2] 2023-08-16
