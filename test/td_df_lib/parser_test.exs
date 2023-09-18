@@ -8,7 +8,7 @@ defmodule TdDfLib.ParserTest do
   @atom_field_name String.to_atom(@field_name)
 
   describe "format_content" do
-    test "format_content format fixed values with single cardinality and translation" do
+    test "format_content format fixed values with single cardinality and lang" do
       content = %{"i18n" => "uno"}
 
       schema = [
@@ -24,7 +24,6 @@ defmodule TdDfLib.ParserTest do
       ]
 
       CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
 
       assert %{"i18n" => "one"} =
                Parser.format_content(%{
@@ -35,7 +34,7 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
-    test "format_content format fixed values with single cardinality and translation error" do
+    test "format_content format fixed values with single cardinality and lang but not 18n key" do
       content = %{"i18n" => "uno"}
 
       schema = [
@@ -50,7 +49,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      assert %{"i18n" => {:error, :no_translation_found}} =
+      assert %{"i18n" => "uno"} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
@@ -59,7 +58,7 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
-    test "format_content format fixed values with multiple cardinality and translation" do
+    test "format_content format fixed values with multiple cardinality and lang" do
       content = %{"i18n" => "uno|dos"}
 
       schema = [
@@ -75,9 +74,7 @@ defmodule TdDfLib.ParserTest do
       ]
 
       CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
       CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.two", definition: "two"})
 
       assert %{"i18n" => ["one", "two"]} =
                Parser.format_content(%{
@@ -88,7 +85,7 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
-    test "format_content format fixed values with multiple cardinality and translation error" do
+    test "format_content format fixed values with multiple cardinality and lang but not i18n key" do
       content = %{"i18n" => "uno|dos"}
 
       schema = [
@@ -103,7 +100,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      assert %{"i18n" => {:error, :no_translation_found}} =
+      assert %{"i18n" => ["uno", "dos"]} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
@@ -112,7 +109,7 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
-    test "format_content format fixed values with multiple cardinality and some missing translations" do
+    test "format_content format fixed values with multiple cardinality and some missing 18n key" do
       content = %{"i18n" => "uno|tres"}
 
       schema = [
@@ -128,11 +125,9 @@ defmodule TdDfLib.ParserTest do
       ]
 
       CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
       CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.two", definition: "two"})
 
-      assert %{"i18n" => {:error, :no_translation_found}} =
+      assert %{"i18n" => ["one", "tres"]} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,

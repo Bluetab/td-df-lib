@@ -550,11 +550,10 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == ["value1"]
     end
 
-    test "format_field of string with fixed values and lang returns translated value" do
+    test "format_field of string with fixed values and lang returns key value" do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
-      CacheHelpers.put_i18n_message("en", %{message_id: "fields.i18n.one", definition: "one"})
 
       formatted_value =
         Format.format_field(%{
@@ -568,17 +567,12 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == "one"
     end
 
-    test "format_field of string with fixed values and lang and cardinality one or more returns translated value" do
+    test "format_field of string with fixed values and lang and cardinality one or more returns key value" do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_messages("es", [
         %{message_id: "fields.i18n.one", definition: "uno"},
         %{message_id: "fields.i18n.three", definition: "tres"}
-      ])
-
-      CacheHelpers.put_i18n_messages("en", [
-        %{message_id: "fields.i18n.one", definition: "one"},
-        %{message_id: "fields.i18n.three", definition: "three"}
       ])
 
       formatted_value =
@@ -594,7 +588,7 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == ["one", "three"]
     end
 
-    test "format_field of string with fixed values and lang without translation return error" do
+    test "format_field of string with fixed values without i18n key return content" do
       fixed = ["uno", "dos", "tres"]
 
       formatted_value =
@@ -606,17 +600,7 @@ defmodule TdDfLib.FormatTest do
           "lang" => "es"
         })
 
-      assert formatted_value == {:error, :no_translation_found}
-    end
-
-    test "format_field of enriched_text returns wrapped enriched text" do
-      formatted_value =
-        Format.format_field(%{
-          "content" => "some enriched text",
-          "type" => "enriched_text"
-        })
-
-      assert formatted_value == RichText.to_rich_text("some enriched text")
+      assert formatted_value == "uno"
     end
 
     test "format_field of string with fixed values and some missing translations return error" do
@@ -625,11 +609,6 @@ defmodule TdDfLib.FormatTest do
       CacheHelpers.put_i18n_messages("es", [
         %{message_id: "fields.i18n.one", definition: "uno"},
         %{message_id: "fields.i18n.two", definition: "dos"}
-      ])
-
-      CacheHelpers.put_i18n_messages("en", [
-        %{message_id: "fields.i18n.one", definition: "one"},
-        %{message_id: "fields.i18n.two", definition: "two"}
       ])
 
       formatted_value =
@@ -642,7 +621,17 @@ defmodule TdDfLib.FormatTest do
           "lang" => "es"
         })
 
-      assert formatted_value == {:error, :no_translation_found}
+      assert formatted_value == ["one", "tres"]
+    end
+
+    test "format_field of enriched_text returns wrapped enriched text" do
+      formatted_value =
+        Format.format_field(%{
+          "content" => "some enriched text",
+          "type" => "enriched_text"
+        })
+
+      assert formatted_value == RichText.to_rich_text("some enriched text")
     end
 
     test "format_field of user type field" do

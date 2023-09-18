@@ -336,24 +336,24 @@ defmodule TdDfLib.Format do
         "content" => content,
         "values" => %{"fixed" => _},
         "lang" => lang
-      })
-      when lang !== @default_lang do
-    case I18nCache.translate_definitions_by_value(content, lang, @default_lang,
-           prefix: "fields.#{name}"
-         ) do
-      [%{definition_to: content_translated}] ->
-        content_translated
+      }) do
+    case I18nCache.get_definitions_by_value(content, lang, prefix: "fields.#{name}") do
+      [%{definition: _, message_id: key}] ->
+        key
+        |> String.replace_prefix("fields.#{name}.", "")
+        |> String.split(".")
+        |> List.last()
 
-      [%{definition_to: content_translated} | _] ->
-        content_translated
+      [%{definition: _, message_id: key} | _] ->
+        key
+        |> String.replace_prefix("fields.#{name}.", "")
+        |> String.split(".")
+        |> List.last()
 
       [] ->
-        {:error, :no_translation_found}
+        content
     end
   end
-
-  def format_field(%{"type" => "string", "content" => content, "values" => %{"fixed" => _}}),
-    do: content
 
   def format_field(%{"content" => content, "type" => "string"}) do
     [content]
