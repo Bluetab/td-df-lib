@@ -44,6 +44,15 @@ defmodule TdDfLib.Validation do
   defp get_field_type(type, "+"), do: {:array, type}
   defp get_field_type(type, _), do: type
 
+  defp dependent?(to_be, [_ | _] = dependent_value) do
+    MapSet.new(to_be)
+    |> MapSet.intersection(MapSet.new(dependent_value))
+    |> MapSet.to_list()
+    |> then(&(not Enum.empty?(&1)))
+  end
+
+  defp dependent?(to_be, dependent_value), do: Enum.member?(to_be, dependent_value)
+
   # Filters schema for non applicable dependant field
   defp add_content_validation(
          changeset,
@@ -52,7 +61,7 @@ defmodule TdDfLib.Validation do
        ) do
     dependent_value = Changeset.get_field(changeset, on)
 
-    if Enum.member?(to_be, dependent_value) do
+    if dependent?(to_be, dependent_value) do
       add_content_validation(changeset, Map.drop(field_spec, ["depends"]), opts)
     else
       changeset
@@ -66,7 +75,7 @@ defmodule TdDfLib.Validation do
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
-    |> add_hierarchy_errors(field_spec)
+    |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
   end
 
@@ -90,10 +99,10 @@ defmodule TdDfLib.Validation do
 
     valid_depth? =
       case value_or_values_or_error do
-        %{:error => _} ->
+        {:error, _} ->
           true
 
-        [%{:error => _} | _] ->
+        [{:error, _} | _] ->
           true
 
         value ->
@@ -140,45 +149,53 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp add_hierarchy_errors(%{valid?: false, errors: _errors, data: data} = changeset, %{
-         "type" => "hierarchy",
-         "name" => hierarchy_name
-       }) do
-    case Map.get(data, hierarchy_name) do
+  defp add_content_errors(
+         %{valid?: false, errors: _errors, data: data} = changeset,
+         %{"name" => name} = field_spec
+       ) do
+    case Map.get(data, name) do
       [_ | _] = list ->
-        error =
-          Enum.find(list, fn
-            %{error: _} -> true
-            _ -> false
-          end)
+        error = Enum.find(list, &match?({:error, _}, &1))
 
         case error do
           nil ->
             changeset
 
-          %{:error => [%{"name" => node_name} | _]} ->
-            add_hierarchy_error(changeset, node_name, hierarchy_name)
+          {:error, error} ->
+            add_content_error(changeset, field_spec, error)
         end
 
-      %{:error => [%{"name" => node_name} | _]} ->
-        add_hierarchy_error(changeset, node_name, hierarchy_name)
+      {:error, error} ->
+        add_content_error(changeset, field_spec, error)
 
       _ ->
         changeset
     end
   end
 
-  defp add_hierarchy_errors(changeset, _), do: changeset
+  defp add_content_errors(changeset, _), do: changeset
 
-  defp add_hierarchy_error(changeset, node_name, name) when is_binary(name),
-    do: add_hierarchy_error(changeset, node_name, String.to_atom(name))
+  defp add_content_error(
+         changeset,
+         %{"type" => "hierarchy", "name" => name},
+         [%{"name" => node_name} | _]
+       ) do
+    error = {"has more than one node #{node_name}"}
+    insert_error_in_changeset(changeset, error, name)
+  end
 
-  defp add_hierarchy_error(changeset, node_name, name) when is_atom(name) do
+  defp add_content_error(changeset, %{"name" => name}, error),
+    do: insert_error_in_changeset(changeset, error, name)
+
+  defp insert_error_in_changeset(changeset, error, name) when is_binary(name),
+    do: insert_error_in_changeset(changeset, error, String.to_atom(name))
+
+  defp insert_error_in_changeset(changeset, error, name) when is_atom(name) do
     update_in(
       changeset.errors,
       &Enum.map(&1, fn
         {^name, {"is invalid", _error_type}} ->
-          {name, {"has more than one node #{node_name}"}}
+          {name, error}
 
         {_key, _error} = tuple ->
           tuple
@@ -365,8 +382,11 @@ defmodule TdDfLib.Validation do
   def validator(schema, opts) when is_list(schema) do
     fn field, value ->
       case build_changeset(value, schema, opts) do
-        %{valid?: false, errors: errors} -> [{field, {"invalid content", errors}}]
-        _ -> validate_safe(field, value)
+        %{valid?: false, errors: errors} ->
+          [{field, {format_validator_errors(errors), errors}}]
+
+        _ ->
+          validate_safe(field, value)
       end
     end
   end
@@ -375,7 +395,32 @@ defmodule TdDfLib.Validation do
     if String.contains?(value, "javascript:"), do: [{field, "invalid content"}], else: []
   end
 
+  def validate_safe(field, value) when is_map(value) do
+    formated_value =
+      value
+      |> Enum.map(fn
+        {f, {:error, v}} ->
+          {f, %{error: v}}
+
+        v ->
+          v
+      end)
+      |> Map.new()
+
+    validate_safe(field, Jason.encode!(formated_value))
+  end
+
   def validate_safe(field, value) do
     validate_safe(field, Jason.encode!(value))
   end
+
+  defp format_validator_errors(errors) when is_list(errors),
+    do: Enum.map_join(errors, " - ", &format_validator_errors(&1))
+
+  defp format_validator_errors({field, :no_translation_found}),
+    do: "#{field}: translation not found"
+
+  defp format_validator_errors({field, {msg, _}}) when is_binary(msg), do: "#{field}: #{msg}"
+
+  defp format_validator_errors(_), do: "invalid content"
 end

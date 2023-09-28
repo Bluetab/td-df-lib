@@ -5,10 +5,15 @@ defmodule TdDfLib.Parser do
 
   alias TdCache.DomainCache
   alias TdCache.HierarchyCache
+  alias TdCache.I18nCache
   alias TdDfLib.Format
 
-  def append_parsed_fields(acc, fields, content) do
-    ctx = context_for_fields(fields)
+  @default_lang Application.compile_env(:td_df_lib, :lang, "en")
+
+  def append_parsed_fields(acc, fields, content, opts \\ []) do
+    ctx =
+      context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
+      |> Map.put("lang", Keyword.get(opts, :lang))
 
     Enum.reduce(
       fields,
@@ -17,42 +22,66 @@ defmodule TdDfLib.Parser do
     )
   end
 
-  def format_content(%{content: content, content_schema: content_schema, domain_ids: domain_ids})
+  def format_content(
+        %{
+          content: content,
+          content_schema: content_schema,
+          domain_ids: domain_ids
+        } = params
+      )
       when not is_nil(content) do
+    lang = Map.get(params, :lang, @default_lang)
     content = Format.apply_template(content, content_schema, domain_ids: domain_ids)
 
     content_schema
-    |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} ->
+    |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
       schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy"] or
-        (schema_type in ["string", "user"] and cardinality in ["*", "+"])
+        (schema_type in ["string", "user"] and cardinality in ["*", "+"]) or
+        match?(%{"fixed" => _}, Map.get(schema, "values"))
     end)
     # credo:disable-for-next-line
     |> Enum.filter(fn %{"name" => name} ->
       field_content = Map.get(content, name)
       not is_nil(field_content) and is_binary(field_content)
     end)
-    |> Enum.into(content, &format_field(&1, content))
+    |> Enum.into(content, &format_field(&1, content, lang))
   end
 
   def format_content(_params), do: nil
 
-  defp format_field(schema, content) do
-    {Map.get(schema, "name"),
-     Format.format_field(%{
-       "content" => Map.get(content, Map.get(schema, "name")),
-       "type" => Map.get(schema, "type"),
-       "cardinality" => Map.get(schema, "cardinality"),
-       "values" => Map.get(schema, "values")
-     })}
+  defp format_field(schema, content, lang) do
+    content =
+      %{
+        "name" => Map.get(schema, "name"),
+        "content" => Map.get(content, Map.get(schema, "name")),
+        "type" => Map.get(schema, "type"),
+        "cardinality" => Map.get(schema, "cardinality"),
+        "values" => Map.get(schema, "values"),
+        "lang" => lang
+      }
+      |> Format.format_field()
+      |> format_content_errors()
+
+    {Map.get(schema, "name"), content}
   end
 
-  defp context_for_fields(fields) do
+  defp format_content_errors(content) when is_list(content) do
+    case Enum.find(content, fn cont -> match?({:error, _}, cont) end) do
+      {:error, _} = error -> error
+      _ -> content
+    end
+  end
+
+  defp format_content_errors(content_value), do: content_value
+
+  defp context_for_fields(fields, domain_type) do
     Enum.reduce(fields, %{}, fn
       %{"type" => "domain"}, %{domains: %{}} = ctx ->
         ctx
 
       %{"type" => "domain"}, ctx ->
-        {:ok, domains} = DomainCache.id_to_external_id_map()
+        {:ok, domains} = domain_content(domain_type)
+
         Map.put(ctx, :domains, domains)
 
       %{
@@ -67,6 +96,9 @@ defmodule TdDfLib.Parser do
         ctx
     end)
   end
+
+  defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
+  defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
   defp field_to_string(_field, nil, _ctx), do: ""
 
@@ -112,17 +144,28 @@ defmodule TdDfLib.Parser do
   end
 
   defp parse_field(
-         %{"type" => "string", "values" => %{"fixed_tuple" => fixed_tuple}},
+         %{"label" => label, "type" => "string", "values" => %{"fixed_tuple" => fixed_tuple}},
          value,
-         _ctx
+         %{"lang" => lang}
        ),
        do:
          fixed_tuple
          |> Enum.find(fn %{"value" => map_value} -> value == map_value end)
          |> then(fn
-           %{"text" => text} -> text
-           _ -> nil
+           %{"text" => text} ->
+             I18nCache.get_definition(lang, "fields." <> label <> "." <> text, default_value: text)
+
+           _ ->
+             nil
          end)
+
+  defp parse_field(
+         %{"label" => label, "type" => "string", "values" => %{"fixed" => _}},
+         value,
+         %{"lang" => lang}
+       ) do
+    I18nCache.get_definition(lang, "fields." <> label <> "." <> value, default_value: value)
+  end
 
   defp parse_field(_, value, _), do: value
 

@@ -550,6 +550,80 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == ["value1"]
     end
 
+    test "format_field of string with fixed values and lang returns key value" do
+      fixed = ["one", "two", "three"]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+
+      formatted_value =
+        Format.format_field(%{
+          "name" => "i18n",
+          "content" => "uno",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == "one"
+    end
+
+    test "format_field of string with fixed values and lang and cardinality one or more returns key value" do
+      fixed = ["one", "two", "three"]
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.i18n.one", definition: "uno"},
+        %{message_id: "fields.i18n.three", definition: "tres"}
+      ])
+
+      formatted_value =
+        Format.format_field(%{
+          "cardinality" => "+",
+          "name" => "i18n",
+          "content" => "uno|tres",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == ["one", "three"]
+    end
+
+    test "format_field of string with fixed values without i18n key return content" do
+      fixed = ["uno", "dos", "tres"]
+
+      formatted_value =
+        Format.format_field(%{
+          "name" => "i18n",
+          "content" => "uno",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == "uno"
+    end
+
+    test "format_field of string with fixed values and some missing translations return error" do
+      fixed = ["one", "two", "three"]
+
+      CacheHelpers.put_i18n_messages("es", [
+        %{message_id: "fields.i18n.one", definition: "uno"},
+        %{message_id: "fields.i18n.two", definition: "dos"}
+      ])
+
+      formatted_value =
+        Format.format_field(%{
+          "cardinality" => "+",
+          "name" => "i18n",
+          "content" => "uno|tres",
+          "type" => "string",
+          "values" => %{"fixed" => fixed},
+          "lang" => "es"
+        })
+
+      assert formatted_value == ["one", "tres"]
+    end
+
     test "format_field of enriched_text returns wrapped enriched text" do
       formatted_value =
         Format.format_field(%{
@@ -709,7 +783,7 @@ defmodule TdDfLib.FormatTest do
     } do
       %{name: node_name_2} = Enum.at(nodes, 2)
 
-      assert %{:error => [_ | _]} =
+      assert {:error, [_ | _]} =
                Format.format_field(%{
                  "content" => node_name_2,
                  "type" => "hierarchy",
@@ -725,7 +799,7 @@ defmodule TdDfLib.FormatTest do
       %{name: node_name_2} = Enum.at(nodes, 2)
       %{name: node_name_3} = Enum.at(nodes, 3)
 
-      assert [%{:error => [_ | _]}, %{:error => [_ | _]}] =
+      assert [{:error, [_ | _]}, {:error, [_ | _]}] =
                Format.format_field(%{
                  "content" => "#{node_name_2}|#{node_name_3}",
                  "type" => "hierarchy",
@@ -741,7 +815,7 @@ defmodule TdDfLib.FormatTest do
       %{path: path, key: key} = Enum.at(nodes, 2)
       %{name: node_name_3} = Enum.at(nodes, 3)
 
-      assert [^key, %{:error => [_ | _]}] =
+      assert [^key, {:error, [_ | _]}] =
                Format.format_field(%{
                  "content" => "#{path}|#{node_name_3}",
                  "type" => "hierarchy",
@@ -771,7 +845,7 @@ defmodule TdDfLib.FormatTest do
          } do
       %{name: node_name} = Enum.at(nodes, 3)
 
-      assert [%{error: [_, _, _]}] =
+      assert [{:error, [_, _, _]}] =
                Format.format_field(%{
                  "content" => "#{node_name}",
                  "type" => "hierarchy",
@@ -815,6 +889,43 @@ defmodule TdDfLib.FormatTest do
         "name" => "field22",
         "label" => "label22",
         "values" => %{"fixed" => ["a", "b", "c"]}
+      }
+    ]
+
+    assert flat_content == expected_flat_content
+  end
+
+  test "flatten_content_fields with i18n will list all fields of content" do
+    content = [
+      %{
+        "name" => "group1",
+        "fields" => [
+          %{"name" => "field11", "label" => "label11", "widget" => "default"},
+          %{"name" => "field12", "label" => "label12", "values" => %{"fixed" => ["a", "b", "c"]}}
+        ]
+      }
+    ]
+
+    lang = "es"
+
+    CacheHelpers.put_i18n_message(lang, %{message_id: "fields.label11", definition: "es_field"})
+
+    flat_content = Format.flatten_content_fields(content, lang)
+
+    expected_flat_content = [
+      %{
+        "group" => "group1",
+        "name" => "field11",
+        "label" => "label11",
+        "widget" => "default",
+        "definition" => "es_field"
+      },
+      %{
+        "group" => "group1",
+        "name" => "field12",
+        "label" => "label12",
+        "values" => %{"fixed" => ["a", "b", "c"]},
+        "definition" => "label12"
       }
     ]
 

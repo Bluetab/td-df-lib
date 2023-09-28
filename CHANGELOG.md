@@ -1,5 +1,36 @@
 # Changelog
 
+## [5.14.0]
+
+### Added
+
+- [TD-5929] Translate fixed values if is possible using i18n key
+  - Detailed errors by fields
+
+## [5.12.2] 2023-08-16
+
+### Fixed
+
+- [TD-5913] Test depends_on validation for multiple cardinality
+
+## [5.12.1] 2023-08-14
+
+### Changed
+
+- [TD-5891] Update td-cache version
+
+## [5.12.0] 2023-08-14
+
+### Added
+
+- [TD-5891] Add i18n cache messages
+
+## [5.11.0] 2023-07-14
+
+## Changed
+
+- [TD-5844] Change in parser for get from domain widget name or external id
+
 ## [5.8.1] 2023-06-05
 
 ## Changed
@@ -161,7 +192,7 @@
 
 ### Changed
 
-- [TD-3502] 
+- [TD-3502]
     - Image type validation
     - Update cache version
 

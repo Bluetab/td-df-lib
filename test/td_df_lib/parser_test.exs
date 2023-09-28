@@ -7,6 +7,136 @@ defmodule TdDfLib.ParserTest do
   @field_name "field_name"
   @atom_field_name String.to_atom(@field_name)
 
+  describe "format_content" do
+    test "format_content format fixed values with single cardinality and lang" do
+      content = %{"i18n" => "uno"}
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "dropdown"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+
+      assert %{"i18n" => "one"} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with single cardinality and lang but not 18n key" do
+      content = %{"i18n" => "uno"}
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "dropdown"
+        }
+      ]
+
+      assert %{"i18n" => "uno"} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with multiple cardinality and lang" do
+      content = %{"i18n" => "uno|dos"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+
+      assert %{"i18n" => ["one", "two"]} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with multiple cardinality and lang but not i18n key" do
+      content = %{"i18n" => "uno|dos"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      assert %{"i18n" => ["uno", "dos"]} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+
+    test "format_content format fixed values with multiple cardinality and some missing 18n key" do
+      content = %{"i18n" => "uno|tres"}
+
+      schema = [
+        %{
+          "cardinality" => "+",
+          "group" => "group",
+          "label" => "i18n",
+          "name" => "i18n",
+          "type" => "string",
+          "values" => %{"fixed" => ["one", "two", "three"]},
+          "widget" => "checkbox"
+        }
+      ]
+
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.two", definition: "dos"})
+
+      assert %{"i18n" => ["one", "tres"]} =
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: [],
+                 lang: "es"
+               })
+    end
+  end
+
   describe "append_parsed_fields/3" do
     test "formats type url" do
       url_value = "url_value"
@@ -16,14 +146,37 @@ defmodule TdDfLib.ParserTest do
       assert Parser.append_parsed_fields([], fields, content) == [url_value]
     end
 
-    test "formats type domain" do
-      %{id: domain_id_1} = CacheHelpers.put_domain(external_id: "domain1")
-      %{id: domain_id_2} = CacheHelpers.put_domain(external_id: "domain2")
+    test "formats type domain using external id by default and if specified" do
+      %{id: domain_id_1} = CacheHelpers.put_domain(external_id: "domain_1_external_id")
+      %{id: domain_id_2} = CacheHelpers.put_domain(external_id: "domain_2_external_id")
 
       fields = [%{"type" => "domain", "name" => @field_name}]
       content = %{@atom_field_name => [domain_id_1, domain_id_2]}
 
-      assert Parser.append_parsed_fields([], fields, content) == ["domain1|domain2"]
+      assert Parser.append_parsed_fields([], fields, content) == [
+               "domain_1_external_id|domain_2_external_id"
+             ]
+
+      assert Parser.append_parsed_fields([], fields, content,
+               domain_type: :with_domain_external_id
+             ) == [
+               "domain_1_external_id|domain_2_external_id"
+             ]
+    end
+
+    test "formats type domain using name when specified" do
+      %{id: domain_id_1} =
+        CacheHelpers.put_domain(external_id: "domain_1_external_id", name: "domain_1_name")
+
+      %{id: domain_id_2} =
+        CacheHelpers.put_domain(external_id: "domain_2_external_id", name: "domain_2_name")
+
+      fields = [%{"type" => "domain", "name" => @field_name}]
+      content = %{@atom_field_name => [domain_id_1, domain_id_2]}
+
+      assert Parser.append_parsed_fields([], fields, content, domain_type: :with_domain_name) == [
+               "domain_1_name|domain_2_name"
+             ]
     end
 
     test "formats type hierarchy" do
@@ -63,12 +216,62 @@ defmodule TdDfLib.ParserTest do
       ]
 
       fields = [
-        %{"type" => "string", "name" => @field_name, "values" => %{"fixed_tuple" => values}}
+        %{
+          "label" => "bar",
+          "type" => "string",
+          "name" => @field_name,
+          "values" => %{"fixed_tuple" => values}
+        }
       ]
 
       content = %{@atom_field_name => ["v1", "v2"]}
 
       assert Parser.append_parsed_fields([], fields, content) == ["t1|t2"]
+    end
+
+    test "formats fixed tuple with i18n" do
+      values = [
+        %{"value" => "v1", "text" => "t1"},
+        %{"value" => "v2", "text" => "t2"}
+      ]
+
+      fields = [
+        %{
+          "label" => "bar",
+          "type" => "string",
+          "name" => @field_name,
+          "values" => %{"fixed_tuple" => values}
+        }
+      ]
+
+      content = %{@atom_field_name => ["v1", "v2"]}
+
+      lang = "en"
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.bar.t1", definition: "english_t1"})
+
+      assert Parser.append_parsed_fields([], fields, content, lang: lang) == ["english_t1|t2"]
+    end
+
+    test "formats fixed with i18n" do
+      fields = [
+        %{
+          "label" => "bar",
+          "type" => "string",
+          "name" => @field_name,
+          "values" => %{"fixed" => ["v1", "v2", "v3"]}
+        }
+      ]
+
+      content = %{@atom_field_name => ["v1", "v2"]}
+
+      lang = "en"
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.bar.v1", definition: "english_v1"})
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.bar.v3", definition: "english_v3"})
+
+      assert Parser.append_parsed_fields([], fields, content, lang: lang) == ["english_v1|v2"]
     end
 
     test "type table is formated as empty string" do
