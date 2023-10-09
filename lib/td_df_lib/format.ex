@@ -331,22 +331,22 @@ defmodule TdDfLib.Format do
   end
 
   def format_field(%{
-        "name" => name,
+        "label" => label,
         "type" => "string",
         "content" => content,
         "values" => %{"fixed" => _},
         "lang" => lang
       }) do
-    case I18nCache.get_definitions_by_value(content, lang, prefix: "fields.#{name}") do
+    case I18nCache.get_definitions_by_value(content, lang, prefix: "fields.#{label}") do
       [%{definition: _, message_id: key}] ->
         key
-        |> String.replace_prefix("fields.#{name}.", "")
+        |> String.replace_prefix("fields.#{label}.", "")
         |> String.split(".")
         |> List.last()
 
       [%{definition: _, message_id: key} | _] ->
         key
-        |> String.replace_prefix("fields.#{name}.", "")
+        |> String.replace_prefix("fields.#{label}.", "")
         |> String.split(".")
         |> List.last()
 
