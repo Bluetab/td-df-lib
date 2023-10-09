@@ -553,11 +553,14 @@ defmodule TdDfLib.FormatTest do
     test "format_field of string with fixed values and lang returns key value" do
       fixed = ["one", "two", "three"]
 
-      CacheHelpers.put_i18n_message("es", %{message_id: "fields.i18n.one", definition: "uno"})
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.i18n label.one",
+        definition: "uno"
+      })
 
       formatted_value =
         Format.format_field(%{
-          "name" => "i18n",
+          "label" => "i18n label",
           "content" => "uno",
           "type" => "string",
           "values" => %{"fixed" => fixed},
@@ -571,14 +574,14 @@ defmodule TdDfLib.FormatTest do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_messages("es", [
-        %{message_id: "fields.i18n.one", definition: "uno"},
-        %{message_id: "fields.i18n.three", definition: "tres"}
+        %{message_id: "fields.i18n label.one", definition: "uno"},
+        %{message_id: "fields.i18n label.three", definition: "tres"}
       ])
 
       formatted_value =
         Format.format_field(%{
           "cardinality" => "+",
-          "name" => "i18n",
+          "label" => "i18n label",
           "content" => "uno|tres",
           "type" => "string",
           "values" => %{"fixed" => fixed},
@@ -593,7 +596,7 @@ defmodule TdDfLib.FormatTest do
 
       formatted_value =
         Format.format_field(%{
-          "name" => "i18n",
+          "label" => "i18n label",
           "content" => "uno",
           "type" => "string",
           "values" => %{"fixed" => fixed},
@@ -607,14 +610,14 @@ defmodule TdDfLib.FormatTest do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_messages("es", [
-        %{message_id: "fields.i18n.one", definition: "uno"},
-        %{message_id: "fields.i18n.two", definition: "dos"}
+        %{message_id: "fields.i18n label.one", definition: "uno"},
+        %{message_id: "fields.i18n label.two", definition: "dos"}
       ])
 
       formatted_value =
         Format.format_field(%{
           "cardinality" => "+",
-          "name" => "i18n",
+          "label" => "i18n label",
           "content" => "uno|tres",
           "type" => "string",
           "values" => %{"fixed" => fixed},
