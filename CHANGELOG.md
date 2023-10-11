@@ -1,5 +1,11 @@
 # Changelog
 
+##  [Unreleased]
+
+### Fixed
+
+- [TD-6082] Format fields use template fields name instead of labels
+
 ## [5.14.0]
 
 ### Added
