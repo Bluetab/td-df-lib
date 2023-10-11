@@ -15,7 +15,7 @@ defmodule TdDfLib.ParserTest do
         %{
           "cardinality" => "?",
           "group" => "group",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]},
@@ -24,7 +24,7 @@ defmodule TdDfLib.ParserTest do
       ]
 
       CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.i18n label.one",
+        message_id: "fields.label i18n.one",
         definition: "uno"
       })
 
@@ -44,7 +44,7 @@ defmodule TdDfLib.ParserTest do
         %{
           "cardinality" => "?",
           "group" => "group",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]},
@@ -68,7 +68,7 @@ defmodule TdDfLib.ParserTest do
         %{
           "cardinality" => "+",
           "group" => "group",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]},
@@ -77,12 +77,12 @@ defmodule TdDfLib.ParserTest do
       ]
 
       CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.i18n label.one",
+        message_id: "fields.label i18n.one",
         definition: "uno"
       })
 
       CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.i18n label.two",
+        message_id: "fields.label i18n.two",
         definition: "dos"
       })
 
@@ -102,7 +102,7 @@ defmodule TdDfLib.ParserTest do
         %{
           "cardinality" => "+",
           "group" => "group",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]},
@@ -126,7 +126,7 @@ defmodule TdDfLib.ParserTest do
         %{
           "cardinality" => "+",
           "group" => "group",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "name" => "i18n",
           "type" => "string",
           "values" => %{"fixed" => ["one", "two", "three"]},
@@ -135,12 +135,12 @@ defmodule TdDfLib.ParserTest do
       ]
 
       CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.i18n label.one",
+        message_id: "fields.label i18n.one",
         definition: "uno"
       })
 
       CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.i18n label.two",
+        message_id: "fields.label i18n.two",
         definition: "dos"
       })
 

@@ -554,13 +554,13 @@ defmodule TdDfLib.FormatTest do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_message("es", %{
-        message_id: "fields.i18n label.one",
+        message_id: "fields.label i18n.one",
         definition: "uno"
       })
 
       formatted_value =
         Format.format_field(%{
-          "label" => "i18n label",
+          "label" => "label i18n",
           "content" => "uno",
           "type" => "string",
           "values" => %{"fixed" => fixed},
@@ -574,14 +574,14 @@ defmodule TdDfLib.FormatTest do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_messages("es", [
-        %{message_id: "fields.i18n label.one", definition: "uno"},
-        %{message_id: "fields.i18n label.three", definition: "tres"}
+        %{message_id: "fields.label i18n.one", definition: "uno"},
+        %{message_id: "fields.label i18n.three", definition: "tres"}
       ])
 
       formatted_value =
         Format.format_field(%{
           "cardinality" => "+",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "content" => "uno|tres",
           "type" => "string",
           "values" => %{"fixed" => fixed},
@@ -596,7 +596,7 @@ defmodule TdDfLib.FormatTest do
 
       formatted_value =
         Format.format_field(%{
-          "label" => "i18n label",
+          "label" => "label i18n",
           "content" => "uno",
           "type" => "string",
           "values" => %{"fixed" => fixed},
@@ -610,14 +610,14 @@ defmodule TdDfLib.FormatTest do
       fixed = ["one", "two", "three"]
 
       CacheHelpers.put_i18n_messages("es", [
-        %{message_id: "fields.i18n label.one", definition: "uno"},
-        %{message_id: "fields.i18n label.two", definition: "dos"}
+        %{message_id: "fields.label i18n.one", definition: "uno"},
+        %{message_id: "fields.label i18n.two", definition: "dos"}
       ])
 
       formatted_value =
         Format.format_field(%{
           "cardinality" => "+",
-          "label" => "i18n label",
+          "label" => "label i18n",
           "content" => "uno|tres",
           "type" => "string",
           "values" => %{"fixed" => fixed},
