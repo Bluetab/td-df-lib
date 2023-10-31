@@ -52,7 +52,7 @@ defmodule TdDfLib.Parser do
   defp format_field(schema, content, lang) do
     content =
       %{
-        "name" => Map.get(schema, "name"),
+        "label" => Map.get(schema, "label"),
         "content" => Map.get(content, Map.get(schema, "name")),
         "type" => Map.get(schema, "type"),
         "cardinality" => Map.get(schema, "cardinality"),
