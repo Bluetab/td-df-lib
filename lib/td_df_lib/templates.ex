@@ -5,7 +5,7 @@ defmodule TdDfLib.Templates do
 
   alias TdDfLib.Format
 
-  @templates Application.compile_env(:td_df_lib, :templates_module, TdCache.TemplatesCache)
+  @templates Application.compile_env(:td_df_lib, :templates_module, TdCache.TemplateCache)
 
   def completeness(%{} = content, %{} = template) do
     template_completeness(template, content)
