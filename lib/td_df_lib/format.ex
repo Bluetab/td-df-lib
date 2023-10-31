@@ -10,8 +10,6 @@ defmodule TdDfLib.Format do
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
-  @default_lang Application.compile_env(:td_df_lib, :lang, "en")
-
   def apply_template(content, fields, opts \\ [])
 
   def apply_template(nil, _, _opts), do: %{}
