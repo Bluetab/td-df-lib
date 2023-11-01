@@ -3,8 +3,9 @@ defmodule TdDfLib.Templates do
   Provides functions for working with templates.
   """
 
-  alias TdCache.TemplateCache
   alias TdDfLib.Format
+
+  @templates Application.compile_env(:td_df_lib, :templates_module, TdCache.TemplateCache)
 
   def completeness(%{} = content, %{} = template) do
     template_completeness(template, content)
@@ -12,13 +13,13 @@ defmodule TdDfLib.Templates do
 
   def completeness(%{} = content, template_name) when is_binary(template_name) do
     template_name
-    |> TemplateCache.get_by_name!()
+    |> @templates.get_by_name!()
     |> template_completeness(content)
   end
 
   def visible_fields(template_name, %{} = content) when is_binary(template_name) do
     template_name
-    |> TemplateCache.get_by_name!()
+    |> @templates.get_by_name!()
     |> visible_fields(content)
   end
 
@@ -33,7 +34,7 @@ defmodule TdDfLib.Templates do
 
   def subscribable_fields(template_name) when is_binary(template_name) do
     template_name
-    |> TemplateCache.get_by_name!()
+    |> @templates.get_by_name!()
     |> subscribable_fields()
   end
 
@@ -48,7 +49,7 @@ defmodule TdDfLib.Templates do
 
   def subscribable_fields_by_type(scope) do
     scope
-    |> TemplateCache.list_by_scope!()
+    |> @templates.list_by_scope!()
     |> Enum.map(fn t -> {t.name, subscribable_fields(t)} end)
     |> Enum.reject(fn {_, v} -> Enum.empty?(v) end)
     |> Map.new()
@@ -56,7 +57,7 @@ defmodule TdDfLib.Templates do
 
   def group_name(template_name, field_name) when is_binary(template_name) do
     template_name
-    |> TemplateCache.get_by_name!()
+    |> @templates.get_by_name!()
     |> group_name(field_name)
   end
 
@@ -65,7 +66,7 @@ defmodule TdDfLib.Templates do
   end
 
   def content_schema(template_name) do
-    case TemplateCache.get_by_name!(template_name) do
+    case @templates.get_by_name!(template_name) do
       nil ->
         {:error, :template_not_found}
 
@@ -77,7 +78,7 @@ defmodule TdDfLib.Templates do
   end
 
   def content_schema_by_id(template_id) do
-    case TemplateCache.get(template_id) do
+    case @templates.get(template_id) do
       {:ok, template} ->
         template
         |> Map.get(:content)

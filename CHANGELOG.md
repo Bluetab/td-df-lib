@@ -1,6 +1,12 @@
 # Changelog
 
-##  [5.15.0] 2023-10-17
+## [5.17.0] 2023-10-31
+
+### Added
+
+- [TD-6059] Support for validation functionality using td-cluster implementation
+
+## [5.15.0] 2023-10-17
 
 ### Fixed
 
@@ -199,8 +205,8 @@
 ### Changed
 
 - [TD-3502]
-    - Image type validation
-    - Update cache version
+  - Image type validation
+  - Update cache version
 
 ## [4.15.0] 2021-03-05
 
