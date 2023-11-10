@@ -859,7 +859,10 @@ defmodule TdDfLib.FormatTest do
 
     test "format_field of integer and float types" do
       assert 1 == Format.format_field(%{"content" => "1", "type" => "integer"})
+      assert -1 == Format.format_field(%{"content" => "-1", "type" => "integer"})
       assert 1.5 == Format.format_field(%{"content" => "1.5", "type" => "float"})
+      assert -1.5 == Format.format_field(%{"content" => "-1.5", "type" => "float"})
+      assert -1.0 == Format.format_field(%{"content" => "-1", "type" => "float"})
     end
   end
 
