@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6177] Fixes error when formatting negative values as integer or float
+
 ## [5.17.0] 2023-10-31
 
 ### Added
