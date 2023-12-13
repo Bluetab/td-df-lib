@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.20.0] 2023-12-13
+
+### Added
+
+- [TD-6215] bump version due to updated references
+
 ## [5.18.0] 2023-11-10
 
 ### Fixed
