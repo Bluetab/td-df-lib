@@ -89,6 +89,55 @@ defmodule TdDfLib.Templates do
     end
   end
 
+  def has_ai_suggestions(template_id) do
+    case @templates.get(template_id) do
+      {:ok, template} ->
+        template
+        |> Map.get(:content)
+        |> Format.flatten_content_fields()
+        |> Enum.any?(fn
+          %{"ai_suggestion" => ai_suggestion} -> ai_suggestion
+          _ -> false
+        end)
+
+      nil ->
+        {:error, :template_not_found}
+    end
+  end
+
+  def suggestion_fields_for_template(template_id) do
+    case @templates.get(template_id) do
+      {:ok, template} ->
+        template
+        |> Map.get(:content)
+        |> Format.flatten_content_fields()
+        |> Enum.filter(& &1["ai_suggestion"])
+        |> case do
+          [] -> {:error, :no_ai_suggestion_fields}
+          fields -> {:ok, Enum.map(fields, &map_suggestion_field/1)}
+        end
+
+      nil ->
+        {:error, :template_not_found}
+    end
+  end
+
+  defp map_suggestion_field(%{"values" => %{"fixed" => possible_values}} = field) do
+    field
+    |> Map.take(["name", "description"])
+    |> Map.put("possible_values", possible_values)
+  end
+
+  defp map_suggestion_field(%{"values" => %{"fixed_tuple" => tuples}} = field) do
+    possible_values = Enum.map(tuples, & &1["value"])
+
+    field
+    |> Map.take(["name", "description"])
+    |> Map.put("possible_values", possible_values)
+  end
+
+  defp map_suggestion_field(field), do: Map.take(field, ["name", "description"])
+
   def meets_dependency?([_ | _] = value, target) do
     not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
   end
