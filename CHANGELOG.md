@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.0.0] 2024-01-16
+
+### Added
+
+- [TD-6195] Functions for parsing AiSugestion fields
+
 ## [5.20.0] 2023-12-13
 
 ### Added
