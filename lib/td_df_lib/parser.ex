@@ -8,8 +8,6 @@ defmodule TdDfLib.Parser do
   alias TdCache.I18nCache
   alias TdDfLib.Format
 
-  @default_lang Application.compile_env(:td_df_lib, :lang, "en")
-
   def append_parsed_fields(acc, fields, content, opts \\ []) do
     ctx =
       context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
@@ -30,7 +28,7 @@ defmodule TdDfLib.Parser do
         } = params
       )
       when not is_nil(content) do
-    lang = Map.get(params, :lang, @default_lang)
+    lang = Map.get(params, :lang, get_default_lang())
     content = Format.apply_template(content, content_schema, domain_ids: domain_ids)
 
     content_schema
@@ -174,4 +172,9 @@ defmodule TdDfLib.Parser do
   defp value_to_list(""), do: []
   defp value_to_list(content) when is_list(content), do: content
   defp value_to_list(content), do: [content]
+
+  def get_default_lang do
+    {:ok, lang} = I18nCache.get_default_locale()
+    lang
+  end
 end

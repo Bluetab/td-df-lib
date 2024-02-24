@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.2.0] 2024-02-24
+
+### Added
+
+- [TD-6258] Get default lang by cache
+
 ## [6.0.0] 2024-01-16
 
 ### Added
