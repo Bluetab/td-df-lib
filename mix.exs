@@ -32,7 +32,6 @@ defmodule TdDfLib.MixProject do
       {:ex_machina, "~> 2.3", only: :test},
       {:td_cache,
        git: "https://github.com/Bluetab/td-cache.git", branch: "feature/td-4110", override: true},
-      {:td_cluster, git: "https://github.com/Bluetab/td-cluster.git", tag: "5.19.0"}
     ]
   end
 end
