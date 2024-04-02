@@ -1123,6 +1123,29 @@ defmodule TdDfLib.FormatTest do
                "foo" => "My Text"
              }
     end
+
+    test "search_values/2 omits url type when is empty string" do
+      content = %{
+        "url_field" => ""
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => "*",
+              "label" => "url_field",
+              "name" => "url_field",
+              "type" => "url",
+              "widget" => "pair_list"
+            }
+          ]
+        }
+      ]
+
+      assert Format.search_values(content, %{content: fields}) == %{}
+    end
   end
 
   describe "enrich_content_values/2" do
