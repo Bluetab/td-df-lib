@@ -1,10 +1,22 @@
 # Changelog
 
-## [6.1.0] 2024-04-03
+## [6.3.1] 2024-04-03
 
 ### Fixed
 
 - [TD-6507] Add url case to format search value
+
+## [6.3.0] 2024-03-13
+
+### Added
+
+- [TD-4110] Allow structure scoped permissions management
+
+## [6.2.0] 2024-02-24
+
+### Added
+
+- [TD-6258] Get default lang by cache
 
 ## [6.0.0] 2024-01-16
 
