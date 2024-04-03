@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- [TD-6507] add url case to format search value
+- [TD-6507] Add url case to format search value
 
 ## [6.0.0] 2024-01-16
 
