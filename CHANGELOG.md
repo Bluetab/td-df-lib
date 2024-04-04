@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.2.1] 2024-04-04
+
+### Fixed
+
+- [TD-6507] Add url case to format search value
+
 ## [6.2.0] 2024-02-24
 
 ### Added
