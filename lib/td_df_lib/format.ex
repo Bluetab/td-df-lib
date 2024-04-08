@@ -339,9 +339,10 @@ defmodule TdDfLib.Format do
         "label" => label,
         "type" => "string",
         "content" => content,
-        "values" => %{"fixed" => _},
+        "values" => map_values,
         "lang" => lang
-      }) do
+      })
+      when is_map_key(map_values, "fixed") or is_map_key(map_values, "switch") do
     case I18nCache.get_definitions_by_value(content, lang, prefix: "fields.#{label}") do
       [%{definition: _, message_id: key}] ->
         key

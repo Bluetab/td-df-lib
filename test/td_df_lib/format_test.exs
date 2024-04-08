@@ -570,6 +570,29 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == "one"
     end
 
+    test "format_field of string with switch on values and lang returns key value" do
+      CacheHelpers.put_i18n_message("es", %{
+        message_id: "fields.label i18n.one",
+        definition: "uno"
+      })
+
+      formatted_value =
+        Format.format_field(%{
+          "label" => "label i18n",
+          "content" => "uno",
+          "type" => "string",
+          "values" => %{
+            "switch" => %{
+              "on" => "Category",
+              "values" => %{"A" => ["one"], "B" => ["two"]}
+            }
+          },
+          "lang" => "es"
+        })
+
+      assert formatted_value == "one"
+    end
+
     test "format_field of string with fixed values and lang and cardinality one or more returns key value" do
       fixed = ["one", "two", "three"]
 

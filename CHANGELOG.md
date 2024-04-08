@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6424] Traslate fields of type switch on
+
 ## [6.4.0] 2024-04-03
 
 ### Fixed

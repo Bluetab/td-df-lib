@@ -291,6 +291,44 @@ defmodule TdDfLib.ParserTest do
       assert Parser.append_parsed_fields([], fields, content, lang: lang) == ["english_v1|v2"]
     end
 
+    test "formats switch on with i18n" do
+      fields = [
+        %{
+          "label" => "category",
+          "mandatory" => %{"on" => "Dependent"},
+          "name" => "Category",
+          "type" => "string",
+          "values" => %{"fixed" => ["a", "b", "c"]}
+        },
+        %{
+          "label" => "dependent",
+          "type" => "string",
+          "mandatory" => %{"on" => "", "to_be" => []},
+          "name" => "Dependent",
+          "values" => %{
+            "switch" => %{
+              "on" => "Category",
+              "values" => %{"A" => ["one"], "B" => ["two"]}
+            }
+          }
+        }
+      ]
+
+      content = %{"Category" => "A", "Dependent" => "one"}
+
+      lang = "es"
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.category.a", definition: "A"})
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.category.b", definition: "B"})
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.category.c", definition: "C"})
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.dependent.one", definition: "Uno"})
+
+      CacheHelpers.put_i18n_message(lang, %{message_id: "fields.dependent.two", definition: "Dos"})
+
+      assert Parser.append_parsed_fields([], fields, content, lang: lang) == ["A", "Uno"]
+    end
+
     test "type table is formated as empty string" do
       assert Parser.append_parsed_fields([], %{"type" => "table"}, nil) == [""]
     end
