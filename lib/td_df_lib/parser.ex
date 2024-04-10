@@ -35,7 +35,8 @@ defmodule TdDfLib.Parser do
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
       schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy"] or
         (schema_type in ["string", "user"] and cardinality in ["*", "+"]) or
-        match?(%{"fixed" => _}, Map.get(schema, "values"))
+        match?(%{"fixed" => _}, Map.get(schema, "values")) or
+        match?(%{"switch" => _}, Map.get(schema, "values"))
     end)
     # credo:disable-for-next-line
     |> Enum.filter(fn %{"name" => name} ->
@@ -158,10 +159,11 @@ defmodule TdDfLib.Parser do
          end)
 
   defp parse_field(
-         %{"label" => label, "type" => "string", "values" => %{"fixed" => _}},
+         %{"label" => label, "type" => "string", "values" => map_values},
          value,
          %{"lang" => lang}
-       ) do
+       )
+       when is_map_key(map_values, "fixed") or is_map_key(map_values, "switch") do
     I18nCache.get_definition(lang, "fields." <> label <> "." <> value, default_value: value)
   end
 
