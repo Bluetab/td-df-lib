@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-6492] Display full hierarchy path on hoover
+
 ## [6.5.0] 2024-04-03
 
 ### Fixed

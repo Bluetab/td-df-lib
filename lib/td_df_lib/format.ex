@@ -491,10 +491,11 @@ defmodule TdDfLib.Format do
 
   defp format_hierarchy(key, cardinality) when is_binary(key) do
     case HierarchyCache.get_node!(key) do
-      %{"name" => name} ->
+      %{"name" => name, "path" => path} ->
         %{
           "id" => apply_cardinality(key, cardinality),
-          "name" => apply_cardinality(name, cardinality)
+          "name" => apply_cardinality(name, cardinality),
+          "path" => path
         }
 
       nil ->
