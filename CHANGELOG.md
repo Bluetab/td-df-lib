@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+### Added
+
 - [TD-6499] Manage template contents with origins
 
 ## [6.5.0] 2024-04-03
