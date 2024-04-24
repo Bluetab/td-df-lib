@@ -9,7 +9,7 @@ defmodule TdDfLib.ParserTest do
 
   describe "format_content" do
     test "format_content format fixed values with single cardinality and lang" do
-      content = %{"i18n" => "uno"}
+      content = %{"i18n" => %{"value" => "uno", "origin" => "user"}}
 
       schema = [
         %{
@@ -28,7 +28,7 @@ defmodule TdDfLib.ParserTest do
         definition: "uno"
       })
 
-      assert %{"i18n" => "one"} =
+      assert %{"i18n" => %{"value" => "one", "origin" => "user"}} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
@@ -38,7 +38,7 @@ defmodule TdDfLib.ParserTest do
     end
 
     test "format_content format fixed values with single cardinality and lang but not 18n key" do
-      content = %{"i18n" => "uno"}
+      content = %{"i18n" => %{"value" => "uno", "origin" => "user"}}
 
       schema = [
         %{
@@ -52,7 +52,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      assert %{"i18n" => "uno"} =
+      assert %{"i18n" => %{"value" => "uno", "origin" => "user"}} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
@@ -62,7 +62,7 @@ defmodule TdDfLib.ParserTest do
     end
 
     test "format_content format fixed values with multiple cardinality and lang" do
-      content = %{"i18n" => "uno|dos"}
+      content = %{"i18n" => %{"value" => "uno|dos", "origin" => "user"}}
 
       schema = [
         %{
@@ -86,7 +86,7 @@ defmodule TdDfLib.ParserTest do
         definition: "dos"
       })
 
-      assert %{"i18n" => ["one", "two"]} =
+      assert %{"i18n" => %{"value" => ["one", "two"], "origin" => "user"}} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
@@ -96,7 +96,7 @@ defmodule TdDfLib.ParserTest do
     end
 
     test "format_content format fixed values with multiple cardinality and lang but not i18n key" do
-      content = %{"i18n" => "uno|dos"}
+      content = %{"i18n" => %{"value" => "uno|dos", "origin" => "user"}}
 
       schema = [
         %{
@@ -110,7 +110,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      assert %{"i18n" => ["uno", "dos"]} =
+      assert %{"i18n" => %{"value" => ["uno", "dos"], "origin" => "user"}} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
@@ -120,7 +120,7 @@ defmodule TdDfLib.ParserTest do
     end
 
     test "format_content format fixed values with multiple cardinality and some missing 18n key" do
-      content = %{"i18n" => "uno|tres"}
+      content = %{"i18n" => %{"value" => "uno|tres", "origin" => "user"}}
 
       schema = [
         %{
@@ -144,13 +144,96 @@ defmodule TdDfLib.ParserTest do
         definition: "dos"
       })
 
-      assert %{"i18n" => ["one", "tres"]} =
+      assert %{"i18n" => %{"value" => ["one", "tres"], "origin" => "user"}} =
                Parser.format_content(%{
                  content: content,
                  content_schema: schema,
                  domain_ids: [],
                  lang: "es"
                })
+    end
+  end
+
+  describe "get_from_content/2" do
+    test "return value from content for a given key" do
+      content = %{
+        "term1" => %{"value" => "value1", "origin" => "user"},
+        "term2" => %{"value" => "value2", "origin" => "ai"},
+        "term3" => %{"value" => "value3", "origin" => "default"}
+      }
+
+      assert %{
+               "term1" => "value1",
+               "term2" => "value2",
+               "term3" => "value3"
+             } = Parser.get_from_content(content, "value")
+
+      assert %{
+               "term1" => "user",
+               "term2" => "ai",
+               "term3" => "default"
+             } = Parser.get_from_content(content, "origin")
+    end
+
+    test "return nil if key not in value map" do
+      content = %{
+        "term1" => %{"value" => "value1", "origin" => "user"}
+      }
+
+      assert %{
+               "term1" => nil
+             } = Parser.get_from_content(content, "stop_inventing")
+    end
+
+    test "return value if value not a map but key is value" do
+      content = %{
+        "term1" => "value1"
+      }
+
+      assert %{
+               "term1" => "value1"
+             } = Parser.get_from_content(content, "value")
+    end
+
+    test "return nil if value not a map and key is not value" do
+      content = %{
+        "term1" => "value1"
+      }
+
+      assert %{
+               "term1" => nil
+             } = Parser.get_from_content(content, "stop_inventing")
+    end
+  end
+
+  describe "merge_with_content/2" do
+    test "return updated content merging content with new values" do
+      original_content = %{
+        "term1" => %{"value" => "value1", "origin" => "user"},
+        "term2" => %{"value" => "value2", "origin" => "ai"},
+        "term3" => %{"value" => "value3", "origin" => "default"}
+      }
+
+      new_content_values = %{
+        "term1" => "value4",
+        "term2" => "value5",
+        "term3" => "value6"
+      }
+
+      assert %{
+               "term1" => %{"value" => "value4", "origin" => "user"},
+               "term2" => %{"value" => "value5", "origin" => "ai"},
+               "term3" => %{"value" => "value6", "origin" => "default"}
+             } = Parser.merge_with_content(new_content_values, original_content)
+    end
+
+    test "return updated content with default origin if not present in original content" do
+      original_content = %{}
+
+      new_content_values = %{"term1" => "value1"}
+
+      assert %{"term1" => %{"value" => "value1", "origin" => "default"}} =
+               Parser.merge_with_content(new_content_values, original_content)
     end
   end
 

@@ -22,14 +22,15 @@ defmodule TdDfLib.Parser do
 
   def format_content(
         %{
-          content: content,
+          content: params_content,
           content_schema: content_schema,
           domain_ids: domain_ids
         } = params
       )
-      when not is_nil(content) do
+      when not is_nil(params_content) do
     lang = Map.get(params, :lang, get_default_lang())
-    content = Format.apply_template(content, content_schema, domain_ids: domain_ids)
+    content_values = get_from_content(params_content, "value")
+    content = Format.apply_template(content_values, content_schema, domain_ids: domain_ids)
 
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
@@ -44,6 +45,7 @@ defmodule TdDfLib.Parser do
       not is_nil(field_content) and is_binary(field_content)
     end)
     |> Enum.into(content, &format_field(&1, content, lang))
+    |> merge_with_content(params_content)
   end
 
   def format_content(_params), do: nil
@@ -94,6 +96,40 @@ defmodule TdDfLib.Parser do
       _, ctx ->
         ctx
     end)
+  end
+
+  def get_from_content(content, content_key) do
+    # TODO: Rise exception if is not a map or it does not have content_key
+    content
+    |> Enum.map(fn {key, value} ->
+      if is_map(value) do
+        if Map.has_key?(value, content_key) do
+          {key, Map.get(value, content_key, "")}
+        else
+          {key, nil}
+        end
+      else
+        if content_key == "value" do
+          {key, value}
+        else
+          {key, nil}
+        end
+      end
+    end)
+    |> Enum.into(%{})
+  end
+
+  def merge_with_content(content, original_content) do
+    content
+    |> Enum.map(fn {key, value} ->
+      original_content
+      |> Map.get(key)
+      |> case do
+        nil -> {key, %{"value" => value, "origin" => "default"}}
+        content_value -> {key, Map.put(content_value, "value", value)}
+      end
+    end)
+    |> Map.new()
   end
 
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
