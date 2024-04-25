@@ -3,13 +3,12 @@ defmodule TdDfLib.ValidationTest do
 
   import TdDfLib.Factory
 
-  alias Ecto.Changeset
   alias TdCache.TemplateCache
   alias TdDfLib.Validation
 
   @unsafe "javascript:alert(document)"
 
-  describe "validations" do
+  describe "build_changeset/2 & build_changeset/3" do
     setup do
       %{id: template_id} = template = build(:template)
       hierarchy = create_hierarchy(234)
@@ -237,7 +236,12 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"image_name" => <<"data:application/pdf;base64,JVBERi0xLjUNJeLj">>},
+          %{
+            "image_name" => %{
+              "value" => <<"data:application/pdf;base64,JVBERi0xLjUNJeLj">>,
+              "origin" => "user"
+            }
+          },
           schema
         )
 
@@ -335,7 +339,7 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "string" => {:error, error_mgs}
+            "string" => %{"value" => {:error, error_mgs}, "origin" => "user"}
           },
           schema
         )
@@ -370,7 +374,7 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "list" => [{:error, error_mgs}, "two"]
+            "list" => %{"value" => [{:error, error_mgs}, "two"], "origin" => "user"}
           },
           schema
         )
@@ -403,12 +407,15 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" => {
-              :error,
-              [
-                %{"key" => "50_41", "name" => "foo"},
-                %{"key" => "50_51", "name" => "foo"}
-              ]
+            "hierarchy_name" => %{
+              "value" => {
+                :error,
+                [
+                  %{"key" => "50_41", "name" => "foo"},
+                  %{"key" => "50_51", "name" => "foo"}
+                ]
+              },
+              "origin" => "user"
             }
           },
           schema
@@ -440,22 +447,25 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" => [
-              {
-                :error,
-                [
-                  %{"key" => "50_41", "name" => "foo"},
-                  %{"key" => "50_51", "name" => "foo"}
-                ]
-              },
-              {
-                :error,
-                [
-                  %{"key" => "50_42", "name" => "bar"},
-                  %{"key" => "50_52", "name" => "bar"}
-                ]
-              }
-            ]
+            "hierarchy_name" => %{
+              "value" => [
+                {
+                  :error,
+                  [
+                    %{"key" => "50_41", "name" => "foo"},
+                    %{"key" => "50_51", "name" => "foo"}
+                  ]
+                },
+                {
+                  :error,
+                  [
+                    %{"key" => "50_42", "name" => "bar"},
+                    %{"key" => "50_52", "name" => "bar"}
+                  ]
+                }
+              ],
+              "origin" => "user"
+            }
           },
           schema
         )
@@ -520,7 +530,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
-      changeset = Validation.build_changeset(%{"radio_list" => "Yes"}, schema)
+
+      changeset =
+        Validation.build_changeset(
+          %{"radio_list" => %{"value" => "Yes", "origin" => "user"}},
+          schema
+        )
+
       refute changeset.valid?
     end
 
@@ -548,7 +564,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
-      changeset = Validation.build_changeset(%{"radio_list" => ["Yes"]}, schema)
+
+      changeset =
+        Validation.build_changeset(
+          %{"radio_list" => %{"value" => "Yes", "origin" => "user"}},
+          schema
+        )
+
       refute changeset.valid?
     end
 
@@ -633,7 +655,7 @@ defmodule TdDfLib.ValidationTest do
 
       {:ok, _} = TemplateCache.put(template)
 
-      content = %{"dropdown_fixed_list" => "Other"}
+      content = %{"dropdown_fixed_list" => %{"value" => "Other", "origin" => "user"}}
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       refute changeset.valid?
@@ -657,7 +679,7 @@ defmodule TdDfLib.ValidationTest do
 
       {:ok, _} = TemplateCache.put(template)
 
-      content = %{"dropdown_fixed_tuple" => "Other"}
+      content = %{"dropdown_fixed_tuple" => %{"value" => "Other", "origin" => "user"}}
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       refute changeset.valid?
@@ -864,6 +886,59 @@ defmodule TdDfLib.ValidationTest do
                  "list" => %{"value" => {:error, :no_translation_found}, "origin" => "user"}
                })
     end
+
+    test "returns valid changeset for permitted origins" do
+      allowed_origins = Validation.allowed_origins()
+
+      content =
+        Enum.reduce(allowed_origins, %{}, fn origin, acc ->
+          Map.put(acc, origin, %{"value" => origin, "origin" => origin})
+        end)
+
+      schema =
+        Enum.map(allowed_origins, fn origin ->
+          %{
+            "cardinality" => "1",
+            "group" => "group_name48",
+            "label" => "#{origin} label",
+            "name" => origin,
+            "type" => "string",
+            "values" => nil
+          }
+        end)
+
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: true, errors: []} = changeset
+    end
+
+    test "returns invalid changeset for not permitted origins" do
+      not_allowed_domains = ["stop", "inventing"]
+
+      content =
+        Enum.reduce(not_allowed_domains, %{}, fn origin, acc ->
+          Map.put(acc, origin, %{"value" => origin, "origin" => origin})
+        end)
+
+      schema =
+        Enum.map(not_allowed_domains, fn origin ->
+          %{
+            "cardinality" => "1",
+            "group" => "group_name48",
+            "label" => "#{origin} label",
+            "name" => origin,
+            "type" => "string",
+            "values" => nil
+          }
+        end)
+
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+
+      assert {"invalid origin", [origin: "stop"]} = Access.get(errors, :stop)
+      assert {"invalid origin", [origin: "inventing"]} = Access.get(errors, :inventing)
+    end
   end
 
   describe "validate_safe/2" do
@@ -885,51 +960,11 @@ defmodule TdDfLib.ValidationTest do
     end
   end
 
-  describe "add_origin_validations/2" do
-    test "permited origins" do
-      permitted_origins = ["user", "ai", "default", "autogenerated"]
+  describe "allowed_origins/0" do
+    test "returns allowed origins list" do
+      allowed_origins = ["user", "ai", "default", "autogenerated"]
 
-      assert permitted_origins == Validation.permitted_origins()
-    end
-
-    test "returns valid changeset if origins are permitted" do
-      permitted_origins = Validation.permitted_origins()
-
-      content =
-        Enum.reduce(permitted_origins, %{}, fn origin, acc ->
-          Map.put(acc, origin, origin)
-        end)
-
-      types =
-        Enum.reduce(permitted_origins, %{}, fn origin, acc ->
-          Map.put(acc, String.to_atom(origin), :string)
-        end)
-
-      changeset = Changeset.cast({content, types}, content, Map.keys(types))
-
-      assert %{valid?: true} = Validation.add_origin_validations(changeset, content)
-    end
-
-    test "returns invalid changeset and errors if origins are not permitted" do
-      permitted_origins = ["invented", "origin"]
-
-      content =
-        Enum.reduce(permitted_origins, %{}, fn origin, acc ->
-          Map.put(acc, origin, origin)
-        end)
-
-      types =
-        Enum.reduce(permitted_origins, %{}, fn origin, acc ->
-          Map.put(acc, String.to_atom(origin), :string)
-        end)
-
-      changeset = Changeset.cast({content, types}, content, Map.keys(types))
-
-      assert %{valid?: false, errors: errors} =
-               Validation.add_origin_validations(changeset, content)
-
-      assert {"invalid origin", [origin: "invented"]} = Access.get(errors, :invented)
-      assert {"invalid origin", [origin: "origin"]} = Access.get(errors, :origin)
+      assert allowed_origins == Validation.allowed_origins()
     end
   end
 
