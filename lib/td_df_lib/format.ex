@@ -216,7 +216,10 @@ defmodule TdDfLib.Format do
   def set_default_value(content, field, opts \\ [])
 
   def set_default_value(content, %{"depends" => %{"on" => on, "to_be" => to_be}} = field, opts) do
-    dependent_value = Map.get(content, on)
+    dependent_value =
+      content
+      |> Map.get(on)
+      |> Map.get("value")
 
     if Enum.member?(to_be, dependent_value) do
       set_default_value(content, Map.delete(field, "depends"), opts)
@@ -231,8 +234,15 @@ defmodule TdDfLib.Format do
           field,
         opts
       ) do
-    dependent_value = Map.get(content, on)
-    default_value = Map.get(default, dependent_value)
+    dependent_value =
+      content
+      |> Map.get(on)
+      |> Map.get("value")
+
+    default_value =
+      default
+      |> Map.get("value")
+      |> Map.get(dependent_value)
 
     case default_value do
       nil ->
@@ -240,13 +250,13 @@ defmodule TdDfLib.Format do
         set_default_value(content, field, opts)
 
       default_value ->
-        Map.put_new(content, name, default_value)
+        Map.put_new(content, name, generate_default_return_map(default_value))
     end
   end
 
   def set_default_value(
         content,
-        %{"name" => name, "default" => default = %{}, "values" => values} = field,
+        %{"name" => name, "default" => %{"value" => default = %{}}, "values" => values} = field,
         opts
       )
       when is_map_key(values, "domain") do
@@ -258,7 +268,7 @@ defmodule TdDfLib.Format do
         set_default_value(content, field, opts)
 
       default_value ->
-        Map.put_new(content, name, default_value)
+        Map.put_new(content, name, generate_default_return_map(default_value))
     end
   end
 
@@ -272,7 +282,7 @@ defmodule TdDfLib.Format do
         _opts
       )
       when not is_nil(values) do
-    Map.put_new(content, name, [""])
+    Map.put_new(content, name, generate_default_return_map([""]))
   end
 
   def set_default_value(
@@ -281,15 +291,17 @@ defmodule TdDfLib.Format do
         _opts
       )
       when not is_nil(values) do
-    Map.put_new(content, name, [""])
+    Map.put_new(content, name, generate_default_return_map([""]))
   end
 
   def set_default_value(content, %{"name" => name, "values" => values}, _opts)
       when not is_nil(values) do
-    Map.put_new(content, name, "")
+    Map.put_new(content, name, generate_default_return_map(""))
   end
 
   def set_default_value(content, %{}, _opts), do: content
+
+  defp generate_default_return_map(value), do: %{"value" => value, "origin" => "default"}
 
   def format_field(%{"content" => content, "type" => "url"}) do
     [%{"url_name" => content, "url_value" => content}]
