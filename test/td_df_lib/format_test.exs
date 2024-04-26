@@ -387,31 +387,34 @@ defmodule TdDfLib.FormatTest do
 
   describe "apply_template/2" do
     test "apply_template/2 sets default values and removes redundant fields" do
-      content = %{"xyzzy" => "spqr"}
+      content = %{"xyzzy" => %{"value" => "spqr", "origin" => "user"}}
 
       fields = [
-        %{"name" => "foo", "default" => "foo"},
+        %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
         %{"name" => "bar", "cardinality" => "+", "values" => []},
         %{"name" => "baz", "cardinality" => "*", "values" => []}
       ]
 
       assert Format.apply_template(content, fields) == %{
-               "foo" => "foo",
-               "bar" => [""],
-               "baz" => [""]
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => [""], "origin" => "default"},
+               "baz" => %{"value" => [""], "origin" => "default"}
              }
     end
 
     test "apply_template/2 sets default values of switch like fields" do
-      content = %{"xyzzy" => "spqr", "bar" => "1"}
+      content = %{
+        "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+        "bar" => %{"value" => "1", "origin" => "user"}
+      }
 
       fields = [
-        %{"name" => "foo", "default" => "foo"},
+        %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
         %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
         %{
           "name" => "baz",
           "cardinality" => "+",
-          "default" => %{"1" => ["a"], "2" => ["c"]},
+          "default" => %{"value" => %{"1" => ["a"], "2" => ["c"]}, "origin" => "default"},
           "values" => %{
             "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
           }
@@ -419,62 +422,68 @@ defmodule TdDfLib.FormatTest do
         %{
           "name" => "xyz",
           "cardinality" => "?",
-          "default" => %{"1" => "b", "2" => "d"},
+          "default" => %{"value" => %{"1" => "b", "2" => "d"}, "origin" => "default"},
           "values" => %{
             "switch" => %{"on" => "bar", "values" => %{"1" => ["a", "b"], "2" => ["b", "c", "d"]}}
           }
         },
-        %{"name" => "xyzzy", "default" => "xyzzy"}
+        %{"name" => "xyzzy", "default" => %{"value" => "xyzzy", "origin" => "default"}}
       ]
 
       assert Format.apply_template(content, fields) == %{
-               "foo" => "foo",
-               "bar" => "1",
-               "baz" => ["a"],
-               "xyz" => "b",
-               "xyzzy" => "spqr"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => "1", "origin" => "user"},
+               "baz" => %{"value" => ["a"], "origin" => "default"},
+               "xyz" => %{"value" => "b", "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"}
              }
 
-      content = %{"xyzzy" => "spqr", "bar" => "2"}
+      content = %{
+        "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+        "bar" => %{"value" => "2", "origin" => "user"}
+      }
 
       assert Format.apply_template(content, fields) == %{
-               "foo" => "foo",
-               "bar" => "2",
-               "baz" => ["c"],
-               "xyz" => "d",
-               "xyzzy" => "spqr"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => "2", "origin" => "user"},
+               "baz" => %{"value" => ["c"], "origin" => "default"},
+               "xyz" => %{"value" => "d", "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"}
              }
 
-      content = %{"xyzzy" => "spqr", "bar" => "3"}
+      content = %{
+        "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+        "bar" => %{"value" => "3", "origin" => "user"}
+      }
 
       assert Format.apply_template(content, fields) == %{
-               "foo" => "foo",
-               "bar" => "3",
-               "baz" => [""],
-               "xyz" => "",
-               "xyzzy" => "spqr"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => "3", "origin" => "user"},
+               "baz" => %{"value" => [""], "origin" => "default"},
+               "xyz" => %{"value" => "", "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"}
              }
 
-      content = %{"xyzzy" => "spqr"}
+      content = %{"xyzzy" => %{"value" => "spqr", "origin" => "user"}}
 
       assert Format.apply_template(content, fields) == %{
-               "foo" => "foo",
-               "bar" => "",
-               "baz" => [""],
-               "xyz" => "",
-               "xyzzy" => "spqr"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => "", "origin" => "default"},
+               "baz" => %{"value" => [""], "origin" => "default"},
+               "xyz" => %{"value" => "", "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"}
              }
     end
 
     test "apply_template/2 sets default values of domain dependent field" do
-      content = %{"xyzzy" => "spqr"}
+      content = %{"xyzzy" => %{"value" => "spqr", "origin" => "user"}}
 
       fields = [
-        %{"name" => "foo", "default" => "foo"},
+        %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
         %{
           "name" => "bar",
           "cardinality" => "+",
-          "default" => %{"1" => ["a"], "2" => ["f"]},
+          "default" => %{"value" => %{"1" => ["a"], "2" => ["f"]}, "origin" => "default"},
           "values" => %{
             "domain" => %{"1" => ["a", "b", "c"], "2" => ["d", "e", "f"]}
           }
@@ -482,53 +491,53 @@ defmodule TdDfLib.FormatTest do
         %{
           "name" => "xyz",
           "cardinality" => "?",
-          "default" => %{"2" => "b", "5" => "d"},
+          "default" => %{"value" => %{"2" => "b", "5" => "d"}, "origin" => "default"},
           "values" => %{
             "domain" => %{"2" => ["i", "b"], "5" => ["d", "p"]}
           }
         },
-        %{"name" => "xyzzy", "default" => "xyzzy"}
+        %{"name" => "xyzzy", "default" => %{"value" => "xyzzy", "origin" => "default"}}
       ]
 
       assert Format.apply_template(content, fields) == %{
-               "foo" => "foo",
-               "bar" => [""],
-               "xyzzy" => "spqr",
-               "xyz" => ""
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => [""], "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+               "xyz" => %{"value" => "", "origin" => "default"}
              }
 
       assert Format.apply_template(content, fields, domain_id: 1) == %{
-               "foo" => "foo",
-               "bar" => ["a"],
-               "xyzzy" => "spqr",
-               "xyz" => ""
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => ["a"], "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+               "xyz" => %{"value" => "", "origin" => "default"}
              }
 
       assert Format.apply_template(content, fields, domain_id: 2) == %{
-               "foo" => "foo",
-               "bar" => ["f"],
-               "xyzzy" => "spqr",
-               "xyz" => "b"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => ["f"], "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+               "xyz" => %{"value" => "b", "origin" => "default"}
              }
 
       assert Format.apply_template(content, fields, domain_id: 5) == %{
-               "foo" => "foo",
-               "bar" => [""],
-               "xyzzy" => "spqr",
-               "xyz" => "d"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => [""], "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+               "xyz" => %{"value" => "d", "origin" => "default"}
              }
 
       assert Format.apply_template(content, fields, domain_ids: [1, 2, 5]) == %{
-               "foo" => "foo",
-               "bar" => ["a"],
-               "xyzzy" => "spqr",
-               "xyz" => "b"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => ["a"], "origin" => "default"},
+               "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+               "xyz" => %{"value" => "b", "origin" => "default"}
              }
     end
 
     test "apply_template/2 return node correctly when template and node exist" do
       create_hierarchy(nil)
-      content = %{"hierarchy_field" => 51}
+      content = %{"hierarchy_field" => %{"value" => 51, "origin" => "user"}}
 
       fields = [
         %{
@@ -539,17 +548,19 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert Format.apply_template(content, fields) == %{"hierarchy_field" => 51}
+      assert Format.apply_template(content, fields) == %{
+               "hierarchy_field" => %{"value" => 51, "origin" => "user"}
+             }
     end
 
     test "apply_template/2 returns nil when no template is provided" do
-      content = %{"xyzzy" => "spqr"}
+      content = %{"xyzzy" => %{"value" => "spqr", "origin" => "user"}}
       assert Format.apply_template(content, nil) == %{}
     end
 
     test "apply_template/2 returns nil when no content is provided" do
       fields = [
-        %{"name" => "foo", "default" => "foo"},
+        %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
         %{"name" => "bar", "cardinality" => "+", "values" => []},
         %{"name" => "baz", "cardinality" => "*", "values" => []}
       ]
