@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.5.1] 2024-04-30
+
+### Added
+
+- [TD-6492] Enriches hierarchy path
+
 ## [6.5.0] 2024-04-03
 
 ### Fixed
