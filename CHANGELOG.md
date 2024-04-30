@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [6.5.1] 2024-04-30
 
 ### Added
 
-- [TD-6492] Display full hierarchy path on hoover
+- [TD-6492] Enriches hierarchy path
 
 ## [6.5.0] 2024-04-03
 
