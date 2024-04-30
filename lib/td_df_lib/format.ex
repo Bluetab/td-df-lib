@@ -479,7 +479,16 @@ defmodule TdDfLib.Format do
   end
 
   defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
-    Map.put(acc, name, format_domain(Map.get(acc, name), cardinality))
+    %{"value" => field_content_value} = field_content = Map.get(acc, name)
+
+    new_field_content =
+      Map.put(
+        field_content,
+        "value",
+        format_domain(field_content_value, cardinality)
+      )
+
+    Map.put(acc, name, new_field_content)
   end
 
   defp set_cached_value(

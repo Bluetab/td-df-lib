@@ -1238,9 +1238,9 @@ defmodule TdDfLib.FormatTest do
       system: system
     } do
       content = %{
-        "system" => %{"id" => system.id},
-        "domain" => domain.id,
-        "foo" => "bar"
+        "system" => %{"value" => %{"id" => system.id}, "origin" => "user"},
+        "domain" => %{"value" => domain.id, "origin" => "user"},
+        "foo" => %{"value" => "bar", "origin" => "user"}
       }
 
       fields = [
@@ -1254,10 +1254,13 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => ^system, "domain" => ^domain_id, "foo" => "bar"} =
-               Format.enrich_content_values(content, %{content: fields})
+      assert %{
+               "system" => %{"value" => ^system, "origin" => "user"},
+               "domain" => %{"value" => ^domain_id, "origin" => "user"},
+               "foo" => %{"value" => "bar", "origin" => "user"}
+             } = Format.enrich_content_values(content, %{content: fields})
 
-      assert %{"domain" => %{id: ^domain_id}} =
+      assert %{"domain" => %{"value" => %{id: ^domain_id}, "origin" => "user"}} =
                Format.enrich_content_values(content, %{content: fields}, [:domain])
     end
 
