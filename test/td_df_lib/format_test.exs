@@ -1015,33 +1015,36 @@ defmodule TdDfLib.FormatTest do
 
     test "search_values/2 sets default values and removes redundant fields" do
       content = %{
-        "xyzzy" => "spqr",
+        "xyzzy" => %{"value" => "spqr", "origin" => "user"},
         "bay" => %{
-          "object" => "value",
-          "document" => %{
-            "data" => %{},
-            "nodes" => [
-              %{
-                "data" => %{},
-                "type" => "paragraph",
-                "nodes" => [
-                  %{
-                    "text" => "My Text",
-                    "marks" => [
-                      %{
-                        "data" => %{},
-                        "type" => "bold",
-                        "object" => "mark"
-                      }
-                    ],
-                    "object" => "text"
-                  }
-                ],
-                "object" => "block"
-              }
-            ],
-            "object" => "document"
-          }
+          "value" => %{
+            "object" => "value",
+            "document" => %{
+              "data" => %{},
+              "nodes" => [
+                %{
+                  "data" => %{},
+                  "type" => "paragraph",
+                  "nodes" => [
+                    %{
+                      "text" => "My Text",
+                      "marks" => [
+                        %{
+                          "data" => %{},
+                          "type" => "bold",
+                          "object" => "mark"
+                        }
+                      ],
+                      "object" => "text"
+                    }
+                  ],
+                  "object" => "block"
+                }
+              ],
+              "object" => "document"
+            }
+          },
+          "origin" => "user"
         }
       }
 
@@ -1049,7 +1052,7 @@ defmodule TdDfLib.FormatTest do
         %{
           "name" => "group",
           "fields" => [
-            %{"name" => "foo", "default" => "foo"},
+            %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
             %{"name" => "bay", "type" => "enriched_text"}
@@ -1058,15 +1061,15 @@ defmodule TdDfLib.FormatTest do
       ]
 
       assert Format.search_values(content, %{content: fields}) == %{
-               "foo" => "foo",
-               "bar" => [""],
-               "baz" => [""],
-               "bay" => "My Text"
+               "foo" => %{"value" => "foo", "origin" => "default"},
+               "bar" => %{"value" => [""], "origin" => "default"},
+               "baz" => %{"value" => [""], "origin" => "default"},
+               "bay" => %{"value" => "My Text", "origin" => "user"}
              }
     end
 
     test "search_values/2 gets system from cache and formats it", %{system: system} do
-      content = %{"system" => %{"id" => system.id}}
+      content = %{"system" => %{"value" => %{"id" => system.id}, "origin" => "user"}}
 
       fields = [
         %{
@@ -1077,9 +1080,10 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => [system]} = Format.search_values(content, %{content: fields})
+      assert %{"system" => %{"value" => [system], "origin" => "user"}} =
+               Format.search_values(content, %{content: fields})
 
-      content = %{"system" => [%{"id" => system.id}]}
+      content = %{"system" => %{"value" => [%{"id" => system.id}], "origin" => "user"}}
 
       fields = [
         %{
@@ -1090,11 +1094,12 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"system" => [_system]} = Format.search_values(content, %{content: fields})
+      assert %{"system" => %{"value" => [_system], "origin" => "user"}} =
+               Format.search_values(content, %{content: fields})
     end
 
     test "search_values/2 returns unchanged domain fields" do
-      content = %{"domain" => 123}
+      content = %{"domain" => %{"value" => 123, "origin" => "user"}}
 
       fields = [
         %{
@@ -1105,9 +1110,10 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"domain" => 123} = Format.search_values(content, %{content: fields})
+      assert %{"domain" => %{"value" => 123, "origin" => "user"}} =
+               Format.search_values(content, %{content: fields})
 
-      content = %{"domain" => [123, 456]}
+      content = %{"domain" => %{"value" => [123, 456], "origin" => "user"}}
 
       fields = [
         %{
@@ -1118,11 +1124,12 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"domain" => [123, 456]} = Format.search_values(content, %{content: fields})
+      assert %{"domain" => %{"value" => [123, 456], "origin" => "user"}} =
+               Format.search_values(content, %{content: fields})
     end
 
     test "search_values/2 returns nil when no template is provided" do
-      content = %{"xyzzy" => "spqr"}
+      content = %{"xyzzy" => %{"value" => "spqr", "origin" => "user"}}
       assert is_nil(Format.search_values(content, nil))
     end
 
@@ -1131,7 +1138,7 @@ defmodule TdDfLib.FormatTest do
         %{
           "name" => "group",
           "fields" => [
-            %{"name" => "foo", "default" => "foo"},
+            %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
             %{"name" => "bay", "type" => "enriched_text"}
@@ -1144,36 +1151,39 @@ defmodule TdDfLib.FormatTest do
 
     test "search_values/2 omits values of type image and copy" do
       content = %{
-        "xyzzy" => "spqr",
+        "xyzzy" => %{"value" => "spqr", "origin" => "user"},
         "foo" => %{
-          "object" => "value",
-          "document" => %{
-            "data" => %{},
-            "nodes" => [
-              %{
-                "data" => %{},
-                "type" => "paragraph",
-                "nodes" => [
-                  %{
-                    "text" => "My Text",
-                    "marks" => [
-                      %{
-                        "data" => %{},
-                        "type" => "bold",
-                        "object" => "mark"
-                      }
-                    ],
-                    "object" => "text"
-                  }
-                ],
-                "object" => "block"
-              }
-            ],
-            "object" => "document"
-          }
+          "value" => %{
+            "object" => "value",
+            "document" => %{
+              "data" => %{},
+              "nodes" => [
+                %{
+                  "data" => %{},
+                  "type" => "paragraph",
+                  "nodes" => [
+                    %{
+                      "text" => "My Text",
+                      "marks" => [
+                        %{
+                          "data" => %{},
+                          "type" => "bold",
+                          "object" => "mark"
+                        }
+                      ],
+                      "object" => "text"
+                    }
+                  ],
+                  "object" => "block"
+                }
+              ],
+              "object" => "document"
+            }
+          },
+          "origin" => "user"
         },
-        "bay" => "photo code...",
-        "xyz" => "some json code as tring..."
+        "bay" => %{"value" => "photo code...", "origin" => "user"},
+        "xyz" => %{"value" => "some json code as tring...", "origin" => "user"}
       }
 
       fields = [
@@ -1190,15 +1200,15 @@ defmodule TdDfLib.FormatTest do
       ]
 
       assert Format.search_values(content, %{content: fields}) == %{
-               "bar" => [""],
-               "baz" => [""],
-               "foo" => "My Text"
+               "bar" => %{"value" => [""], "origin" => "default"},
+               "baz" => %{"value" => [""], "origin" => "default"},
+               "foo" => %{"value" => "My Text", "origin" => "user"}
              }
     end
 
     test "search_values/2 omits url type when is empty string" do
       content = %{
-        "url_field" => ""
+        "url_field" => %{"value" => "", "origin" => "user"}
       }
 
       fields = [

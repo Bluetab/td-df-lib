@@ -194,20 +194,34 @@ defmodule TdDfLib.Format do
   end
 
   defp set_search_value(%{"name" => name, "type" => "url"}, acc) do
-    case Map.get(acc, name) do
+    %{"value" => field_content_value} = field_content = Map.get(acc, name)
+
+    case field_content_value do
       "" -> Map.delete(acc, name)
-      url -> Map.put(acc, name, url)
+      _url -> Map.put(acc, name, field_content)
     end
   end
 
   defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
-    Map.put(acc, name, RichText.to_plain_text(Map.get(acc, name)))
+    %{"value" => field_content_value} = field_content = Map.get(acc, name)
+
+    new_field_content =
+      Map.put(field_content, "value", RichText.to_plain_text(field_content_value))
+
+    Map.put(acc, name, new_field_content)
   end
 
   defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
-    case Map.get(acc, name) do
-      value = %{} -> Map.put(acc, name, [value])
-      value -> Map.put(acc, name, value)
+    %{"value" => field_content_value} = field_content = Map.get(acc, name)
+
+    new_field_content = Map.put(field_content, "value", field_content_value)
+
+    case field_content_value do
+      value = %{} ->
+        Map.put(acc, name, Map.put(field_content, "value", [value]))
+
+      _value ->
+        Map.put(acc, name, new_field_content)
     end
   end
 
@@ -452,7 +466,16 @@ defmodule TdDfLib.Format do
   end
 
   defp set_cached_value(%{"name" => name, "type" => "system", "cardinality" => cardinality}, acc) do
-    Map.put(acc, name, format_system(Map.get(acc, name), cardinality))
+    %{"value" => field_content_value} = field_content = Map.get(acc, name)
+
+    new_field_content =
+      Map.put(
+        field_content,
+        "value",
+        format_system(field_content_value, cardinality)
+      )
+
+    Map.put(acc, name, new_field_content)
   end
 
   defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
