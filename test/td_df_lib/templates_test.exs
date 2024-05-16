@@ -23,11 +23,19 @@ defmodule TdDfLib.TemplatesTest do
   test "visible_fields/2 returns the visible fields of a template including dependent fields", %{
     template_name: template_name
   } do
-    visible_fields = Templates.visible_fields(template_name, %{"lista_radio" => "Si"})
+    visible_fields =
+      Templates.visible_fields(template_name, %{
+        "lista_radio" => %{"value" => "Si", "origin" => "user"}
+      })
+
     assert Enum.count(visible_fields) == 19
     assert Enum.member?(visible_fields, "texto_dependiente")
 
-    visible_fields = Templates.visible_fields(template_name, %{"lista_radio" => "No"})
+    visible_fields =
+      Templates.visible_fields(template_name, %{
+        "lista_radio" => %{"value" => "No", "origin" => "user"}
+      })
+
     assert Enum.count(visible_fields) == 17
     refute Enum.member?(visible_fields, "texto_dependiente")
     refute Enum.member?(visible_fields, "lista_dependiente")
@@ -36,17 +44,25 @@ defmodule TdDfLib.TemplatesTest do
   test "visible_fields/2 returns the visible fields of a template including switch fields", %{
     template_name: template_name
   } do
-    visible_fields = Templates.visible_fields(template_name, %{"lista_dropdown" => "Elemento1"})
+    visible_fields =
+      Templates.visible_fields(template_name, %{
+        "lista_dropdown" => %{"value" => "Elemento1", "origin" => "user"}
+      })
+
     assert Enum.count(visible_fields) == 18
     assert Enum.member?(visible_fields, "linked_dropdown")
 
-    visible_fields = Templates.visible_fields(template_name, %{"lista_dropdown" => "other_value"})
+    visible_fields =
+      Templates.visible_fields(template_name, %{
+        "lista_dropdown" => %{"value" => "other_value", "origin" => "user"}
+      })
+
     assert Enum.count(visible_fields) == 17
     refute Enum.member?(visible_fields, "linked_dropdown")
   end
 
   test "completeness/2 returns the completeness of some content", %{template_name: template_name} do
-    content = %{"texto" => "foo"}
+    content = %{"texto" => %{"value" => "foo", "origin" => "user"}}
     assert Templates.completeness(content, template_name) == Float.round(100.0 * 1.0 / 17.0, 2)
   end
 
@@ -55,9 +71,9 @@ defmodule TdDfLib.TemplatesTest do
          template_name: template_name
        } do
     content = %{
-      "demo.filter" => "a",
-      "independent_multiple" => ["foo"],
-      "lista_radio" => "Si"
+      "demo.filter" => %{"value" => "a", "origin" => "user"},
+      "independent_multiple" => %{"value" => ["foo"], "origin" => "user"},
+      "lista_radio" => %{"value" => "Si", "origin" => "user"}
     }
 
     assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 19.0, 2)
@@ -102,7 +118,7 @@ defmodule TdDfLib.TemplatesTest do
           "fields" => [
             %{
               "cardinality" => "?",
-              "default" => "Elemento11",
+              "default" => %{"value" => "Elemento11", "origin" => "user"},
               "label" => "Lista con desplegable",
               "name" => "lista_dropdown",
               "type" => "string",
@@ -241,7 +257,7 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "?",
-              "default" => "",
+              "default" => %{"value" => "", "origin" => "user"},
               "label" => "Nuevo Campo filtrable demo",
               "name" => "demo.filter",
               "type" => "string",
@@ -250,7 +266,7 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "?",
-              "default" => "",
+              "default" => %{"value" => "", "origin" => "user"},
               "label" => "Mandatory dependent on single field",
               "name" => "mandatory.dependent.on_single",
               "mandatory" => %{"on" => "demo.filter", "to_be" => ["a", "e"]},
@@ -260,7 +276,7 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "?",
-              "default" => "",
+              "default" => %{"value" => "", "origin" => "user"},
               "label" => "Mandatory dependent on multiple field",
               "name" => "mandatory.dependent.on_multiple",
               "mandatory" => %{"on" => "independent_multiple", "to_be" => ["foo"]},
@@ -270,7 +286,7 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "?",
-              "default" => "",
+              "default" => %{"value" => "", "origin" => "user"},
               "label" => "Lista de usuarios",
               "name" => "data_owner",
               "type" => "user",
@@ -300,7 +316,7 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "*",
-              "default" => "",
+              "default" => %{"value" => "", "origin" => "user"},
               "label" => "Tabla",
               "name" => "table_field",
               "type" => "table",
@@ -321,7 +337,7 @@ defmodule TdDfLib.TemplatesTest do
           "fields" => [
             %{
               "cardinality" => "?",
-              "default" => "No",
+              "default" => %{"value" => "No", "origin" => "user"},
               "label" => "Confidencial",
               "name" => "_confidential",
               "type" => "string",
