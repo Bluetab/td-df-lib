@@ -134,7 +134,11 @@ defmodule TdDfLib.Parser do
   end
 
   defp get_field_value(content, name),
-    do: Map.get(content, name) || Map.get(content, String.to_atom(name))
+    do:
+      content
+      |> Map.get(name, %{})
+      |> Map.get("value") ||
+        Map.get(content, String.to_atom(name))
 
   defp parse_field(%{"type" => "url"}, %{url_value: url_value}, _ctx), do: url_value
   defp parse_field(%{"type" => "url"}, %{"url_value" => url_value}, _ctx), do: url_value

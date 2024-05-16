@@ -425,7 +425,10 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      content = %{"Category" => "A", "Dependent" => "one"}
+      content = %{
+        "Category" => %{"value" => "A", "origin" => "user"},
+        "Dependent" => %{"value" => "one", "origin" => "user"}
+      }
 
       lang = "es"
 
