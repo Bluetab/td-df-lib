@@ -269,7 +269,7 @@ defmodule TdDfLib.ParserTest do
     test "formats type url" do
       url_value = "url_value"
       fields = [%{"type" => "url", "name" => @field_name}]
-      content = %{@atom_field_name => %{url_value: url_value}}
+      content = %{@atom_field_name => %{"value" => %{url_value: url_value}, "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == [url_value]
     end
@@ -279,7 +279,10 @@ defmodule TdDfLib.ParserTest do
       %{id: domain_id_2} = CacheHelpers.put_domain(external_id: "domain_2_external_id")
 
       fields = [%{"type" => "domain", "name" => @field_name}]
-      content = %{@atom_field_name => [domain_id_1, domain_id_2]}
+
+      content = %{
+        @atom_field_name => %{"value" => [domain_id_1, domain_id_2], "origin" => "user"}
+      }
 
       assert Parser.append_parsed_fields([], fields, content) == [
                "domain_1_external_id|domain_2_external_id"
@@ -300,7 +303,10 @@ defmodule TdDfLib.ParserTest do
         CacheHelpers.put_domain(external_id: "domain_2_external_id", name: "domain_2_name")
 
       fields = [%{"type" => "domain", "name" => @field_name}]
-      content = %{@atom_field_name => [domain_id_1, domain_id_2]}
+
+      content = %{
+        @atom_field_name => %{"value" => [domain_id_1, domain_id_2], "origin" => "user"}
+      }
 
       assert Parser.append_parsed_fields([], fields, content, domain_type: :with_domain_name) == [
                "domain_1_name|domain_2_name"
@@ -325,14 +331,14 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      content = %{@atom_field_name => ["1927_50", "1927_51"]}
+      content = %{@atom_field_name => %{"value" => ["1927_50", "1927_51"], "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["/#{node1_name}|/#{node2_name}"]
     end
 
     test "formats type system" do
       fields = [%{"type" => "system", "name" => @field_name}]
-      content = %{@atom_field_name => %{name: "system"}}
+      content = %{@atom_field_name => %{"value" => %{name: "system"}, "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["system"]
     end
@@ -352,7 +358,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      content = %{@atom_field_name => ["v1", "v2"]}
+      content = %{@atom_field_name => %{"value" => ["v1", "v2"], "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["t1|t2"]
     end
@@ -372,7 +378,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      content = %{@atom_field_name => ["v1", "v2"]}
+      content = %{@atom_field_name => %{"value" => ["v1", "v2"], "origin" => "user"}}
 
       lang = "en"
 
@@ -391,7 +397,7 @@ defmodule TdDfLib.ParserTest do
         }
       ]
 
-      content = %{@atom_field_name => ["v1", "v2"]}
+      content = %{@atom_field_name => %{"value" => ["v1", "v2"], "origin" => "user"}}
 
       lang = "en"
 
@@ -449,14 +455,14 @@ defmodule TdDfLib.ParserTest do
 
     test "field named tags is formatted" do
       fields = [%{"name" => "tags"}]
-      content = %{tags: ["tag1", "tag2"]}
+      content = %{tags: %{"value" => ["tag1", "tag2"], "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["tag1|tag2"]
     end
 
     test "formats field to string" do
       fields = [%{"name" => @field_name}]
-      content = %{@atom_field_name => "value"}
+      content = %{@atom_field_name => %{"value" => "value", "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["value"]
     end
