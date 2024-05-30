@@ -244,7 +244,7 @@ defmodule TdDfLib.Format do
 
   def set_default_value(
         content,
-        %{"name" => name, "default" => default = %{}, "values" => %{"switch" => %{"on" => on}}} =
+        %{"name" => name, "default" => %{"value" => default_value}, "values" => %{"switch" => %{"on" => on}}} =
           field,
         opts
       ) do
@@ -254,9 +254,11 @@ defmodule TdDfLib.Format do
       |> Map.get("value")
 
     default_value =
-      default
-      |> Map.get("value")
-      |> Map.get(dependent_value)
+      default_value
+      |> case do
+        default_value = %{} -> Map.get(default_value, dependent_value)
+        d -> d
+      end
 
     case default_value do
       nil ->
