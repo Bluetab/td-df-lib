@@ -232,7 +232,7 @@ defmodule TdDfLib.Format do
   def set_default_value(content, %{"depends" => %{"on" => on, "to_be" => to_be}} = field, opts) do
     dependent_value =
       content
-      |> Map.get(on)
+      |> Map.get(on, %{})
       |> Map.get("value")
 
     if Enum.member?(to_be, dependent_value) do
@@ -244,8 +244,11 @@ defmodule TdDfLib.Format do
 
   def set_default_value(
         content,
-        %{"name" => name, "default" => %{"value" => default_value}, "values" => %{"switch" => %{"on" => on}}} =
-          field,
+        %{
+          "name" => name,
+          "default" => %{"value" => default_value},
+          "values" => %{"switch" => %{"on" => on}}
+        } = field,
         opts
       ) do
     dependent_value =
