@@ -137,8 +137,8 @@ defmodule TdDfLib.Parser do
     field = Map.get(content, name) || Map.get(content, String.to_atom(name))
 
     case field do
-      nil -> nil
-      _ -> Map.get(field, "value")
+      %{"value" => value} -> value
+      value when not is_map(value) -> value
     end
   end
 
