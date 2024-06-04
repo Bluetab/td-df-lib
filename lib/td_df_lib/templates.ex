@@ -164,8 +164,11 @@ defmodule TdDfLib.Templates do
          content
        ) do
     content
-    |> Map.get(on, %{})
-    |> Map.get("value")
+    |> Map.get(on)
+    |> case do
+      %{"value" => value} -> value
+      value -> value
+    end
     |> meets_dependency?(target)
   end
 
