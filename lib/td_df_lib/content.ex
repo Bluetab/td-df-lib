@@ -40,7 +40,6 @@ defmodule TdDfLib.Content do
   def merge(%{} = content, %{} = current_content) do
     content
     |> Enum.reject(&empty?/1)
-    |> Enum.reject(fn {_key, %{"value" => value}} -> empty?(value) end)
     |> Map.new()
     |> Map.merge(current_content, fn _field, new_val, _current_val -> new_val end)
   end
@@ -48,6 +47,7 @@ defmodule TdDfLib.Content do
   @spec empty?(term()) :: boolean()
   defp empty?(term)
 
+  defp empty?({_k, %{"value" => v}}), do: empty?(v)
   defp empty?({_k, v}), do: empty?(v)
   defp empty?(nil), do: true
   defp empty?(""), do: true
