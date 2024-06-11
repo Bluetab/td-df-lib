@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.7.0]
+
+### Fixed
+
+- [TD-6440] Fix hierarchy bug
+
 ## [6.5.1] 2024-04-30
 
 ### Added
