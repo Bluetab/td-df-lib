@@ -921,6 +921,20 @@ defmodule TdDfLib.FormatTest do
                })
     end
 
+    test "format_field with content hierarchy by key", %{
+      hierarchy: %{id: id, nodes: nodes}
+    } do
+      [%{key: key} | _] = nodes
+
+      assert [^key] =
+               Format.format_field(%{
+                 "content" => key,
+                 "type" => "hierarchy",
+                 "cardinality" => "+",
+                 "values" => %{"hierarchy" => %{"id" => id}}
+               })
+    end
+
     test "format_field of integer and float types" do
       assert 1 == Format.format_field(%{"content" => "1", "type" => "integer"})
       assert -1 == Format.format_field(%{"content" => "-1", "type" => "integer"})

@@ -6,6 +6,12 @@
 
 - [TD-6499] Manage template contents with origins
 
+## [6.7.0] 2024-06-11
+
+### Fixed
+
+- [TD-6440] Fix hierarchy bug
+
 ## [6.5.1] 2024-04-30
 
 ### Added

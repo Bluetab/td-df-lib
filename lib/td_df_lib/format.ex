@@ -439,7 +439,7 @@ defmodule TdDfLib.Format do
       {:ok, %{nodes: nodes}} ->
         nodes_found =
           nodes
-          |> Enum.filter(&match_node_path(&1, content))
+          |> Enum.filter(&match_node(&1, content))
           |> Enum.map(&Map.take(&1, ["key", "name"]))
 
         case nodes_found do
@@ -460,10 +460,12 @@ defmodule TdDfLib.Format do
 
   def format_field(%{"content" => content}), do: content
 
-  defp match_node_path(node, content) do
-    if String.starts_with?(content, "/"),
-      do: node["path"] === content,
-      else: String.ends_with?(node["path"], content)
+  defp match_node(%{"key" => key} = node, content) do
+    case {String.starts_with?(content, "/"), String.ends_with?(node["path"], content)} do
+      {true, _} -> node["path"] === content
+      {_, true} -> String.ends_with?(node["path"], content)
+      _ -> key === content
+    end
   end
 
   defp set_cached_values(content, fields) do
