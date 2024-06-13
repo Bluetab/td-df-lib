@@ -22,14 +22,18 @@ defmodule TdDfLib.Parser do
 
   def format_content(
         %{
-          content: content,
+          content: params_content,
           content_schema: content_schema,
           domain_ids: domain_ids
         } = params
       )
-      when not is_nil(content) do
+      when not is_nil(params_content) do
     lang = Map.get(params, :lang, get_default_lang())
-    content = Format.apply_template(content, content_schema, domain_ids: domain_ids)
+
+    template_content =
+      Format.apply_template(params_content, content_schema, domain_ids: domain_ids)
+
+    content = get_from_content(template_content, "value")
 
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
@@ -44,6 +48,7 @@ defmodule TdDfLib.Parser do
       not is_nil(field_content) and is_binary(field_content)
     end)
     |> Enum.into(content, &format_field(&1, content, lang))
+    |> merge_with_content(template_content)
   end
 
   def format_content(_params), do: nil
@@ -96,6 +101,24 @@ defmodule TdDfLib.Parser do
     end)
   end
 
+  def get_from_content(content, content_key) do
+    content
+    |> Enum.map(fn {key, value} ->
+      {key, Map.get(value, content_key, "")}
+    end)
+    |> Map.new()
+  end
+
+  defp merge_with_content(content, template_content) do
+    content
+    |> Enum.map(fn {key, value} ->
+      template_content
+      |> Map.get(key)
+      |> then(fn content_value -> {key, Map.put(content_value, "value", value)} end)
+    end)
+    |> Map.new()
+  end
+
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
   defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
@@ -110,8 +133,14 @@ defmodule TdDfLib.Parser do
     |> Enum.join("|")
   end
 
-  defp get_field_value(content, name),
-    do: Map.get(content, name) || Map.get(content, String.to_atom(name))
+  defp get_field_value(content, name) do
+    field = Map.get(content, name) || Map.get(content, String.to_atom(name))
+
+    case field do
+      %{"value" => value} -> value
+      value when not is_map(value) -> value
+    end
+  end
 
   defp parse_field(%{"type" => "url"}, %{url_value: url_value}, _ctx), do: url_value
   defp parse_field(%{"type" => "url"}, %{"url_value" => url_value}, _ctx), do: url_value

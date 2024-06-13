@@ -8,7 +8,7 @@ defmodule TdDfLib.ValidationTest do
 
   @unsafe "javascript:alert(document)"
 
-  describe "validations" do
+  describe "build_changeset/2 & build_changeset/3" do
     setup do
       %{id: template_id} = template = build(:template)
       hierarchy = create_hierarchy(234)
@@ -201,7 +201,12 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"image_name" => <<"data:image/jpeg;base64,/888j/4QAYRXhXXXX">>},
+          %{
+            "image_name" => %{
+              "value" => <<"data:image/jpeg;base64,/888j/4QAYRXhXXXX">>,
+              "origin" => "user"
+            }
+          },
           schema
         )
 
@@ -231,7 +236,12 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"image_name" => <<"data:application/pdf;base64,JVBERi0xLjUNJeLj">>},
+          %{
+            "image_name" => %{
+              "value" => <<"data:application/pdf;base64,JVBERi0xLjUNJeLj">>,
+              "origin" => "user"
+            }
+          },
           schema
         )
 
@@ -261,7 +271,7 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"hierarchy_field" => "234_52"},
+          %{"hierarchy_field" => %{"value" => "234_52", "origin" => "user"}},
           schema
         )
 
@@ -269,7 +279,7 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"hierarchy_field" => "234_50"},
+          %{"hierarchy_field" => %{"value" => "234_50", "origin" => "user"}},
           schema
         )
 
@@ -329,7 +339,7 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "string" => {:error, error_mgs}
+            "string" => %{"value" => {:error, error_mgs}, "origin" => "user"}
           },
           schema
         )
@@ -364,7 +374,7 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "list" => [{:error, error_mgs}, "two"]
+            "list" => %{"value" => [{:error, error_mgs}, "two"], "origin" => "user"}
           },
           schema
         )
@@ -397,12 +407,15 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" => {
-              :error,
-              [
-                %{"key" => "50_41", "name" => "foo"},
-                %{"key" => "50_51", "name" => "foo"}
-              ]
+            "hierarchy_name" => %{
+              "value" => {
+                :error,
+                [
+                  %{"key" => "50_41", "name" => "foo"},
+                  %{"key" => "50_51", "name" => "foo"}
+                ]
+              },
+              "origin" => "user"
             }
           },
           schema
@@ -434,22 +447,25 @@ defmodule TdDfLib.ValidationTest do
       changeset =
         Validation.build_changeset(
           %{
-            "hierarchy_name" => [
-              {
-                :error,
-                [
-                  %{"key" => "50_41", "name" => "foo"},
-                  %{"key" => "50_51", "name" => "foo"}
-                ]
-              },
-              {
-                :error,
-                [
-                  %{"key" => "50_42", "name" => "bar"},
-                  %{"key" => "50_52", "name" => "bar"}
-                ]
-              }
-            ]
+            "hierarchy_name" => %{
+              "value" => [
+                {
+                  :error,
+                  [
+                    %{"key" => "50_41", "name" => "foo"},
+                    %{"key" => "50_51", "name" => "foo"}
+                  ]
+                },
+                {
+                  :error,
+                  [
+                    %{"key" => "50_42", "name" => "bar"},
+                    %{"key" => "50_52", "name" => "bar"}
+                  ]
+                }
+              ],
+              "origin" => "user"
+            }
           },
           schema
         )
@@ -481,7 +497,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
-      changeset = Validation.build_changeset(%{"radio_list" => "No"}, schema)
+
+      changeset =
+        Validation.build_changeset(
+          %{"radio_list" => %{"value" => "No", "origin" => "user"}},
+          schema
+        )
+
       assert changeset.valid?
     end
 
@@ -508,7 +530,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
-      changeset = Validation.build_changeset(%{"radio_list" => "Yes"}, schema)
+
+      changeset =
+        Validation.build_changeset(
+          %{"radio_list" => %{"value" => "Yes", "origin" => "user"}},
+          schema
+        )
+
       refute changeset.valid?
     end
 
@@ -536,7 +564,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
-      changeset = Validation.build_changeset(%{"radio_list" => ["Yes"]}, schema)
+
+      changeset =
+        Validation.build_changeset(
+          %{"radio_list" => %{"value" => "Yes", "origin" => "user"}},
+          schema
+        )
+
       refute changeset.valid?
     end
 
@@ -560,7 +594,11 @@ defmodule TdDfLib.ValidationTest do
 
       {:ok, _} = TemplateCache.put(template)
 
-      content = %{"radio_list" => "Yes", "dependant_text" => "value"}
+      content = %{
+        "radio_list" => %{"value" => "Yes", "origin" => "user"},
+        "dependant_text" => %{"value" => "value", "origin" => "user"}
+      }
+
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       assert changeset.valid?
@@ -591,7 +629,11 @@ defmodule TdDfLib.ValidationTest do
 
       {:ok, _} = TemplateCache.put(template)
 
-      content = %{"dropdown_fixed_list" => "Yes", "dropdown_fixed_tuple" => "No"}
+      content = %{
+        "dropdown_fixed_list" => %{"value" => "Yes", "origin" => "user"},
+        "dropdown_fixed_tuple" => %{"value" => "No", "origin" => "user"}
+      }
+
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       assert changeset.valid?
@@ -613,7 +655,7 @@ defmodule TdDfLib.ValidationTest do
 
       {:ok, _} = TemplateCache.put(template)
 
-      content = %{"dropdown_fixed_list" => "Other"}
+      content = %{"dropdown_fixed_list" => %{"value" => "Other", "origin" => "user"}}
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       refute changeset.valid?
@@ -637,7 +679,7 @@ defmodule TdDfLib.ValidationTest do
 
       {:ok, _} = TemplateCache.put(template)
 
-      content = %{"dropdown_fixed_tuple" => "Other"}
+      content = %{"dropdown_fixed_tuple" => %{"value" => "Other", "origin" => "user"}}
       {:ok, schema} = TemplateCache.get(template.id, :content)
       changeset = Validation.build_changeset(content, schema)
       refute changeset.valid?
@@ -674,7 +716,12 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
       {:ok, schema} = TemplateCache.get(template.id, :content)
       schema = Enum.flat_map(schema, &Map.get(&1, "fields"))
-      content = %{"string" => "xyx", "list" => "three"}
+
+      content = %{
+        "string" => %{"value" => "xyx", "origin" => "user"},
+        "list" => %{"value" => "three", "origin" => "user"}
+      }
+
       changeset = Validation.build_changeset(content, schema)
 
       assert %{
@@ -682,7 +729,11 @@ defmodule TdDfLib.ValidationTest do
                valid?: false
              } = changeset
 
-      content = %{"string" => "xyx", "list" => "one"}
+      content = %{
+        "string" => %{"value" => "xyx", "origin" => "user"},
+        "list" => %{"value" => "one", "origin" => "user"}
+      }
+
       changeset = Validation.build_changeset(content, schema)
 
       assert %{
@@ -690,10 +741,20 @@ defmodule TdDfLib.ValidationTest do
                valid?: false
              } = changeset
 
-      content = %{"string" => "xyx", "list" => "one", "dependent_multiple" => ["foo"]}
+      content = %{
+        "string" => %{"value" => "xyx", "origin" => "user"},
+        "list" => %{"value" => "one", "origin" => "user"},
+        "dependent_multiple" => %{"value" => ["foo"], "origin" => "user"}
+      }
+
       changeset = Validation.build_changeset(content, schema)
       assert %{valid?: true} = changeset
-      content = %{"string" => "xyx", "list" => "two"}
+
+      content = %{
+        "string" => %{"value" => "xyx", "origin" => "user"},
+        "list" => %{"value" => "two", "origin" => "user"}
+      }
+
       changeset = Validation.build_changeset(content, schema)
 
       assert %{
@@ -701,7 +762,12 @@ defmodule TdDfLib.ValidationTest do
                valid?: false
              } = changeset
 
-      content = %{"string" => "xyx", "list" => "two", "dependent_single" => "bar"}
+      content = %{
+        "string" => %{"value" => "xyx", "origin" => "user"},
+        "list" => %{"value" => "two", "origin" => "user"},
+        "dependent_single" => %{"value" => "bar", "origin" => "user"}
+      }
+
       changeset = Validation.build_changeset(content, schema)
       assert %{valid?: true} = changeset
     end
@@ -727,7 +793,13 @@ defmodule TdDfLib.ValidationTest do
       {:ok, _} = TemplateCache.put(template)
       {:ok, schema} = TemplateCache.get(template.id, :content)
       schema = Enum.flat_map(schema, &Map.get(&1, "fields"))
-      content = %{"string" => "foo", "list" => "one", "domain_dependent" => ["xyz"]}
+
+      content = %{
+        "string" => %{"value" => "foo", "origin" => "user"},
+        "list" => %{"value" => "one", "origin" => "user"},
+        "domain_dependent" => %{"value" => ["xyz"], "origin" => "user"}
+      }
+
       changeset = Validation.build_changeset(content, schema, domain_ids: [1, 3])
 
       assert %{
@@ -739,7 +811,12 @@ defmodule TdDfLib.ValidationTest do
                valid?: false
              } = changeset
 
-      content = %{"string" => "foo", "list" => "one", "domain_dependent" => ["xyz"]}
+      content = %{
+        "string" => %{"value" => "foo", "origin" => "user"},
+        "list" => %{"value" => "one", "origin" => "user"},
+        "domain_dependent" => %{"value" => ["xyz"], "origin" => "user"}
+      }
+
       assert %{valid?: true} = Validation.build_changeset(content, schema, domain_id: 2)
 
       assert %{
@@ -780,10 +857,13 @@ defmodule TdDfLib.ValidationTest do
       assert is_function(validator, 2)
 
       assert [{:content, {"list: is invalid - string: can't be blank", _errors}}] =
-               validator.(:content, %{"list" => "four"})
+               validator.(:content, %{"list" => %{"value" => "four", "origin" => "user"}})
 
       assert [{:content, "invalid content"}] =
-               validator.(:content, %{"list" => "one", "string" => @unsafe})
+               validator.(:content, %{
+                 "list" => %{"value" => "one", "origin" => "user"},
+                 "string" => %{"value" => @unsafe, "origin" => "user"}
+               })
     end
 
     test "returns a validator that join all errors", %{template: %{name: template_name}} do
@@ -791,7 +871,7 @@ defmodule TdDfLib.ValidationTest do
       assert is_function(validator, 2)
 
       assert [{:content, {"string: can't be blank - list: is invalid", _}}] =
-               validator.(:content, %{"list" => ["four"]})
+               validator.(:content, %{"list" => %{"value" => ["four"], "origin" => "user"}})
     end
 
     test "returns a validator that validates translation errors", %{
@@ -802,9 +882,62 @@ defmodule TdDfLib.ValidationTest do
 
       assert [{:content, {"list: translation not found", [list: :no_translation_found]}}] =
                validator.(:content, %{
-                 "string" => "one",
-                 "list" => {:error, :no_translation_found}
+                 "string" => %{"value" => "one", "origin" => "user"},
+                 "list" => %{"value" => {:error, :no_translation_found}, "origin" => "user"}
                })
+    end
+
+    test "returns valid changeset for permitted origins" do
+      allowed_origins = Validation.allowed_origins()
+
+      content =
+        Enum.reduce(allowed_origins, %{}, fn origin, acc ->
+          Map.put(acc, origin, %{"value" => origin, "origin" => origin})
+        end)
+
+      schema =
+        Enum.map(allowed_origins, fn origin ->
+          %{
+            "cardinality" => "1",
+            "group" => "group_name48",
+            "label" => "#{origin} label",
+            "name" => origin,
+            "type" => "string",
+            "values" => nil
+          }
+        end)
+
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: true, errors: []} = changeset
+    end
+
+    test "returns invalid changeset for not permitted origins" do
+      not_allowed_domains = ["stop", "inventing"]
+
+      content =
+        Enum.reduce(not_allowed_domains, %{}, fn origin, acc ->
+          Map.put(acc, origin, %{"value" => origin, "origin" => origin})
+        end)
+
+      schema =
+        Enum.map(not_allowed_domains, fn origin ->
+          %{
+            "cardinality" => "1",
+            "group" => "group_name48",
+            "label" => "#{origin} label",
+            "name" => origin,
+            "type" => "string",
+            "values" => nil
+          }
+        end)
+
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+
+      assert {"invalid origin", [origin: "stop"]} = Access.get(errors, :stop)
+      assert {"invalid origin", [origin: "inventing"]} = Access.get(errors, :inventing)
     end
   end
 
@@ -827,6 +960,14 @@ defmodule TdDfLib.ValidationTest do
     end
   end
 
+  describe "allowed_origins/0" do
+    test "returns allowed origins list" do
+      allowed_origins = ["user", "ai", "default", "autogenerated", "file"]
+
+      assert allowed_origins == Validation.allowed_origins()
+    end
+  end
+
   defp get_changeset_for(field_type, field_value, cardinality, template) do
     template
     |> Map.put(:content, [
@@ -838,7 +979,7 @@ defmodule TdDfLib.ValidationTest do
     ])
     |> TemplateCache.put()
 
-    content = %{"field" => field_value}
+    content = %{"field" => %{"value" => field_value, "origin" => "user"}}
     {:ok, schema} = TemplateCache.get(template.id, :content)
     Validation.build_changeset(content, schema)
   end

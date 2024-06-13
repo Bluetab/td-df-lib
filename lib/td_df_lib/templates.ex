@@ -165,6 +165,10 @@ defmodule TdDfLib.Templates do
        ) do
     content
     |> Map.get(on)
+    |> case do
+      %{"value" => value} -> value
+      value -> value
+    end
     |> meets_dependency?(target)
   end
 
@@ -173,7 +177,8 @@ defmodule TdDfLib.Templates do
          content
        ) do
     content
-    |> Map.get(on)
+    |> Map.get(on, %{})
+    |> Map.get("value")
     |> meets_dependency?(Map.keys(target))
   end
 
@@ -205,6 +210,7 @@ defmodule TdDfLib.Templates do
     Float.round(100 * completed_count / count, 2)
   end
 
+  defp is_complete?(%{"value" => value, "origin" => _}), do: is_complete?(value)
   defp is_complete?(nil), do: false
   defp is_complete?([]), do: false
   defp is_complete?(%{} = value) when value == %{}, do: false

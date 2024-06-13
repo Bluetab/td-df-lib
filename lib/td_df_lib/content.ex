@@ -14,20 +14,20 @@ defmodule TdDfLib.Content do
 
   ## Examples
 
-      iex> Content.merge(nil, %{foo: 1})
+      iex> Content.merge(nil, %{foo: %{"value" => 1, "origin" => "user"}})
       nil
 
-      iex> Content.merge(%{foo: 1}, nil)
-      %{foo: 1}
+      iex> Content.merge(%{foo: %{"value" => 1, "origin" => "user"}}, nil)
+      %{foo: %{"value" => 1, "origin" => "user"}}
 
-      iex> Content.merge(%{foo: ""}, %{})
+      iex> Content.merge(%{foo: %{"value" => "", "origin" => "user"}}, %{})
       %{}
 
-      iex> Content.merge(%{foo: ""}, %{foo: "foo", bar: "bar"})
-      %{foo: "foo", bar: "bar"}
+      iex> Content.merge(%{foo: %{"value" => "", "origin" => "user"}}, %{foo: %{"value" => "foo", "origin" => "user"}, bar: %{"value" => "bar", "origin" => "user"}})
+      %{foo: %{"value" => "foo", "origin" => "user"}, bar: %{"value" => "bar", "origin" => "user"}}
 
-      iex> Content.merge(%{foo: "new"}, %{foo: "foo", bar: "bar"})
-      %{foo: "new", bar: "bar"}
+      iex> Content.merge(%{foo: %{"value" => "new", "origin" => "user"}}, %{foo: %{"value" => "foo", "origin" => "user"}, bar: %{"value" => "bar", "origin" => "user"}})
+      %{foo: %{"value" => "new", "origin" => "user"}, bar: %{"value" => "bar", "origin" => "user"}}
 
   """
   @spec merge(map() | nil, map() | nil) :: map() | nil
@@ -47,6 +47,7 @@ defmodule TdDfLib.Content do
   @spec empty?(term()) :: boolean()
   defp empty?(term)
 
+  defp empty?({_k, %{"value" => v}}), do: empty?(v)
   defp empty?({_k, v}), do: empty?(v)
   defp empty?(nil), do: true
   defp empty?(""), do: true

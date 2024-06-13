@@ -1,6 +1,12 @@
 # Changelog
 
-## [6.7.0]
+## [6.8.0] 2024-06-13
+
+### Added
+
+- [TD-6499] Manage template contents with origins
+
+## [6.7.0] 2024-06-11
 
 ### Fixed
 
