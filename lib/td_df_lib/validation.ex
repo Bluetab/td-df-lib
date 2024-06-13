@@ -4,7 +4,6 @@ defmodule TdDfLib.Validation do
   """
 
   alias Ecto.Changeset
-  alias ElixirSense.Core.Parser
   alias TdCache.HierarchyCache
   alias TdDfLib.Format
   alias TdDfLib.Parser
@@ -435,12 +434,10 @@ defmodule TdDfLib.Validation do
     origins
     |> Map.to_list()
     |> Enum.reduce(changeset, fn {key, value}, changeset ->
-      case Enum.member?(@allowed_origins, value) do
-        true ->
-          changeset
-
-        false ->
-          Changeset.add_error(changeset, String.to_atom(key), "invalid origin", origin: value)
+      if Enum.member?(@allowed_origins, value) do
+        changeset
+      else
+        Changeset.add_error(changeset, String.to_atom(key), "invalid origin", origin: value)
       end
     end)
   end
