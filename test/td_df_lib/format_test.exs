@@ -1278,7 +1278,6 @@ defmodule TdDfLib.FormatTest do
                Format.enrich_content_values(content, %{content: fields}, [:domain])
     end
 
-    @tag jandro: true
     test "enrich_content_values/2 gets cached values for hierarchy fields", %{
       hierarchy: %{nodes: nodes}
     } do
