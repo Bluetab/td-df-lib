@@ -1281,10 +1281,11 @@ defmodule TdDfLib.FormatTest do
     test "enrich_content_values/2 gets cached values for hierarchy fields", %{
       hierarchy: %{nodes: nodes}
     } do
-      [%{node_id: node_id, name: node_name, path: path} | _] = nodes
-
-      content_hierarchy_id = "1927_#{node_id}"
-      content = %{"hierarchy_field" => content_hierarchy_id}
+      [
+        %{name: node_1_name, path: node_1_path, key: node_1_key, hierarchy_id: hierarchy_id},
+        %{name: node_2_name, path: node_2_path, key: node_2_key},
+        %{name: node_3_name, path: node_3_path, key: node_3_key}
+      ] = Enum.take(nodes, 3)
 
       fields = [
         %{
@@ -1292,21 +1293,59 @@ defmodule TdDfLib.FormatTest do
           "fields" => [
             %{
               "cardinality" => 1,
-              "name" => "hierarchy_field",
+              "name" => "hierarchy_single",
               "type" => "hierarchy",
-              "values" => %{"hierarchy" => %{"id" => 1927}}
+              "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
+            }
+          ]
+        },
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => "+",
+              "name" => "hierarchy_multi",
+              "type" => "hierarchy",
+              "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
             }
           ]
         }
       ]
 
+      content_single = %{"hierarchy_single" => %{"value" => node_1_key, "origin" => "user"}}
+
       assert %{
-               "hierarchy_field" => %{
-                 "id" => ^content_hierarchy_id,
-                 "name" => ^node_name,
-                 "path" => ^path
+               "hierarchy_single" => %{
+                 "value" => %{
+                   "id" => ^node_1_key,
+                   "name" => ^node_1_name,
+                   "path" => ^node_1_path
+                 },
+                 "origin" => _
                }
-             } = Format.enrich_content_values(content, %{content: fields}, [:hierarchy])
+             } = Format.enrich_content_values(content_single, %{content: fields}, [:hierarchy])
+
+      content_multi = %{
+        "hierarchy_multi" => %{"value" => [node_2_key, node_3_key], "origin" => "user"}
+      }
+
+      assert %{
+               "hierarchy_multi" => %{
+                 "value" => [
+                   %{
+                     "id" => ^node_2_key,
+                     "name" => ^node_2_name,
+                     "path" => ^node_2_path
+                   },
+                   %{
+                     "id" => ^node_3_key,
+                     "name" => ^node_3_name,
+                     "path" => ^node_3_path
+                   }
+                 ],
+                 "origin" => _
+               }
+             } = Format.enrich_content_values(content_multi, %{content: fields}, [:hierarchy])
     end
   end
 

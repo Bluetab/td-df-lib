@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.8.1] 2024-06-17
+
+### Fixed
+
+- [TD-6499] Fix hierarchy preview
+
 ## [6.8.0] 2024-06-13
 
 ### Added

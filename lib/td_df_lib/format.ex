@@ -541,6 +541,10 @@ defmodule TdDfLib.Format do
 
   defp format_domain(domain_id, _cardinality), do: domain_id
 
+  defp format_hierarchy(%{"value" => field_value} = field_content, cardinality) do
+    Map.put(field_content, "value", format_hierarchy(field_value, cardinality))
+  end
+
   defp format_hierarchy(key, cardinality) when is_binary(key) do
     case HierarchyCache.get_node!(key) do
       %{"name" => name, "path" => path} ->
