@@ -3,6 +3,8 @@ defmodule TdDfLib.Content do
   Support for managing dynamic content
   """
 
+  alias TdDfLib.Parser
+
   @doc """
   Merges `current_content` into `content`, after first removing empty-valued
   keys from `content`. A value is considered empty if is `nil`, the empty list
@@ -42,6 +44,18 @@ defmodule TdDfLib.Content do
     |> Enum.reject(&empty?/1)
     |> Map.new()
     |> Map.merge(current_content, fn _field, new_val, _current_val -> new_val end)
+  end
+
+  def legacy_content_support(content, legacy_content_key, new_content_key \\ :dynamic_content) do
+    dynamic_content = Map.get(content, legacy_content_key)
+
+    legacy_content =
+      Enum.map(dynamic_content, fn {key, %{"value" => value}} -> {key, value} end)
+      |> Map.new()
+
+    content
+    |> Map.put(legacy_content_key, legacy_content)
+    |> Map.put(new_content_key, dynamic_content)
   end
 
   @spec empty?(term()) :: boolean()
