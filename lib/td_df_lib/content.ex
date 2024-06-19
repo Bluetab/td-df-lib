@@ -48,8 +48,12 @@ defmodule TdDfLib.Content do
     dynamic_content = Map.get(content, legacy_content_key)
 
     legacy_content =
-      Enum.map(dynamic_content, fn {key, %{"value" => value}} -> {key, value} end)
-      |> Map.new()
+      if is_nil(dynamic_content) do
+        nil
+      else
+        Enum.map(dynamic_content, fn {key, %{"value" => value}} -> {key, value} end)
+        |> Map.new()
+      end
 
     content
     |> Map.put(legacy_content_key, legacy_content)
