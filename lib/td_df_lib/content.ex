@@ -3,8 +3,6 @@ defmodule TdDfLib.Content do
   Support for managing dynamic content
   """
 
-  alias TdDfLib.Parser
-
   @doc """
   Merges `current_content` into `content`, after first removing empty-valued
   keys from `content`. A value is considered empty if is `nil`, the empty list
