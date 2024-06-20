@@ -51,7 +51,10 @@ defmodule TdDfLib.Content do
       if is_nil(dynamic_content) do
         nil
       else
-        Enum.map(dynamic_content, fn {key, %{"value" => value}} -> {key, value} end)
+        Enum.map(dynamic_content, fn
+          {key, %{"value" => value}} -> {key, value}
+          {key, value} -> {key, value}
+        end)
         |> Map.new()
       end
 
