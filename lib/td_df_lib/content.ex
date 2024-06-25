@@ -44,6 +44,25 @@ defmodule TdDfLib.Content do
     |> Map.merge(current_content, fn _field, new_val, _current_val -> new_val end)
   end
 
+  def legacy_content_support(content, legacy_content_key, new_content_key \\ :dynamic_content) do
+    dynamic_content = Map.get(content, legacy_content_key)
+
+    legacy_content =
+      if is_nil(dynamic_content) do
+        nil
+      else
+        Enum.map(dynamic_content, fn
+          {key, %{"value" => value}} -> {key, value}
+          {key, value} -> {key, value}
+        end)
+        |> Map.new()
+      end
+
+    content
+    |> Map.put(legacy_content_key, legacy_content)
+    |> Map.put(new_content_key, dynamic_content)
+  end
+
   @spec empty?(term()) :: boolean()
   defp empty?(term)
 

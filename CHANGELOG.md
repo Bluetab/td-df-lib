@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.8.2] 2024-06-25
+
+### Added
+
+- [TD-6499] Add support for legacy API connections
+
 ## [6.8.1] 2024-06-17
 
 ### Fixed
