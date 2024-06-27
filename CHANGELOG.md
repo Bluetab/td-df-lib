@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-6602] Update td-cache
+
 ## [6.8.2] 2024-06-25
 
 ### Added
