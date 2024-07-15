@@ -194,11 +194,9 @@ defmodule TdDfLib.Format do
   end
 
   defp set_search_value(%{"name" => name, "type" => "url"}, acc) do
-    %{"value" => field_content_value} = field_content = Map.get(acc, name)
-
-    case field_content_value do
-      "" -> Map.delete(acc, name)
-      _url -> Map.put(acc, name, field_content)
+    case Map.get(acc, name, %{"value" => nil}) do
+      %{"value" => ""} -> Map.delete(acc, name)
+      %{"value" => url} -> Map.put(acc, name, %{"value" => url, "origin" => "system"})
     end
   end
 
