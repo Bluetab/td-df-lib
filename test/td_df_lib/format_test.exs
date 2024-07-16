@@ -1365,6 +1365,38 @@ defmodule TdDfLib.FormatTest do
       assert %{"Enriched text" => %{"value" => ""}} =
                Format.search_values(content_without_enriched_text, %{content: fields})
     end
+
+    test "search_values/2 works well for system fields" do
+      content = %{
+        "layer" => %{"value" => "Landing", "origin" => "user"}
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => "?",
+              "label" => "Layer",
+              "name" => "layer",
+              "type" => "string",
+              "values" => %{
+                "fixed" => ["Business", "Landing", "Staging", "Source"]
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "1",
+              "label" => "system",
+              "name" => "System",
+              "type" => "system"
+            }
+          ]
+        }
+      ]
+
+      assert %{"System" => %{"value" => nil}} = Format.search_values(content, %{content: fields})
+    end
   end
 
   describe "enrich_content_values/2" do
