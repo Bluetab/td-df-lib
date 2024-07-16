@@ -1282,7 +1282,88 @@ defmodule TdDfLib.FormatTest do
         }
       ]
 
-      assert %{"Link documentación" => %{"value" => nil}, "layer" => %{"value" => "Landing"}} = Format.search_values(content, %{content: fields})
+      assert %{"Link documentación" => %{"value" => nil}, "layer" => %{"value" => "Landing"}} =
+               Format.search_values(content, %{content: fields})
+    end
+
+    test "search_values/2 works well for enriched texts" do
+      content_with_enriched_text = %{
+        "layer" => %{"value" => "Landing", "origin" => "user"},
+        "Enriched text" => %{
+          "value" => %{
+            "object" => "value",
+            "document" => %{
+              "data" => %{},
+              "nodes" => [
+                %{
+                  "data" => %{},
+                  "type" => "paragraph",
+                  "nodes" => [
+                    %{
+                      "text" => "Enriched example",
+                      "marks" => [
+                        %{
+                          "data" => %{},
+                          "type" => "bold",
+                          "object" => "mark"
+                        }
+                      ],
+                      "object" => "text"
+                    }
+                  ],
+                  "object" => "block"
+                }
+              ],
+              "object" => "document"
+            }
+          },
+          "origin" => "another_user"
+        }
+      }
+
+      content_without_enriched_text = %{
+        "layer" => %{"value" => "Landing", "origin" => "user"}
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => "?",
+              "label" => "Layer",
+              "name" => "layer",
+              "type" => "string",
+              "values" => %{
+                "fixed" => ["Business", "Landing", "Staging", "Source"]
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "*",
+              "default" => "",
+              "depends" => %{
+                "on" => "layer",
+                "to_be" => ["Business", "Staging"]
+              },
+              "label" => "Enriched text",
+              "mandatory" => %{
+                "on" => ""
+              },
+              "name" => "Enriched text",
+              "type" => "enriched_text",
+              "values" => nil,
+              "widget" => "text"
+            }
+          ]
+        }
+      ]
+
+      assert %{"Enriched text" => %{"value" => "Enriched example", "origin" => "another_user"}} =
+               Format.search_values(content_with_enriched_text, %{content: fields})
+
+      assert %{"Enriched text" => %{"value" => ""}} =
+               Format.search_values(content_without_enriched_text, %{content: fields})
     end
   end
 

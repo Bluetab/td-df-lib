@@ -193,20 +193,17 @@ defmodule TdDfLib.Format do
     Enum.reduce(fields, content, &set_default_value(&2, &1, opts))
   end
 
+  @nil_content %{"value" => nil, "origin" => "system"}
   defp set_search_value(%{"name" => name, "type" => "url"}, acc) do
-    case Map.get(acc, name, %{"value" => nil}) do
+    case Map.get(acc, name, @nil_content) do
       %{"value" => ""} -> Map.delete(acc, name)
-      %{"value" => url} -> Map.put(acc, name, %{"value" => url, "origin" => "system"})
+      content -> Map.put(acc, name, content)
     end
   end
 
   defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
-    %{"value" => field_content_value} = field_content = Map.get(acc, name)
-
-    new_field_content =
-      Map.put(field_content, "value", RichText.to_plain_text(field_content_value))
-
-    Map.put(acc, name, new_field_content)
+    %{"value" => value, "origin" => origin} = Map.get(acc, name, @nil_content)
+    Map.put(acc, name, %{"value" => RichText.to_plain_text(value), "origin" => origin})
   end
 
   defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
