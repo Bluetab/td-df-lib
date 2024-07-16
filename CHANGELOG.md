@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- [TD-6713] Adjust Format.set_search_value/2 for new content structure
+
 ## [6.8.2] 2024-06-25
 
 ### Added

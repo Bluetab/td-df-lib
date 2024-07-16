@@ -1242,6 +1242,48 @@ defmodule TdDfLib.FormatTest do
 
       assert Format.search_values(content, %{content: fields}) == %{}
     end
+
+    test "search_values/2 omits url types when is empty string even with dependant fields" do
+      content = %{
+        "layer" => %{"value" => "Landing", "origin" => "user"}
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => "?",
+              "label" => "Layer",
+              "name" => "layer",
+              "type" => "string",
+              "values" => %{
+                "fixed" => ["Business", "Landing", "Staging", "Source"]
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "*",
+              "default" => "",
+              "depends" => %{
+                "on" => "layer",
+                "to_be" => ["Business", "Staging"]
+              },
+              "label" => "Link - Documentación",
+              "mandatory" => %{
+                "on" => ""
+              },
+              "name" => "Link documentación",
+              "type" => "url",
+              "values" => nil,
+              "widget" => "pair_list"
+            }
+          ]
+        }
+      ]
+
+      assert %{"Link documentación" => %{"value" => nil}, "layer" => %{"value" => "Landing"}} = Format.search_values(content, %{content: fields})
+    end
   end
 
   describe "enrich_content_values/2" do
