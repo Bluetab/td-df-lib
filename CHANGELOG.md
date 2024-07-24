@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.9.4] 2024-07-24
+
+### Fixed
+
+- [TD-6723-2] hierarchy cached values
+
 ## [6.9.3] 2024-07-24
 
 ### Added
@@ -10,7 +16,7 @@
 
 ### Fixed
 
-- [TD-6713] Adjust Format.set_cached_value/2 for new content structure
+- [TD-6723] Adjust Format.set_cached_value/2 for new content structure
 
 ## [6.9.1] 2024-07-19
 
