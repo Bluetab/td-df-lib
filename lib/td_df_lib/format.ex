@@ -476,8 +476,7 @@ defmodule TdDfLib.Format do
          %{"name" => name, "type" => "hierarchy", "cardinality" => cardinality},
          acc
        ) do
-    %{"value" => value} = field = Map.get(acc, name, @nil_content)
-    Map.put(acc, name, %{field | "value" => format_hierarchy(value, cardinality)})
+    Map.put(acc, name, format_hierarchy(Map.get(acc, name, @nil_content), cardinality))
   end
 
   defp set_cached_value(_field, acc), do: acc
