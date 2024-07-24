@@ -1404,8 +1404,20 @@ defmodule TdDfLib.FormatTest do
 
     test "cached_values/2 works well for empty system fields" do
       content = %{
-        "layer" => %{"value" => "Landing", "origin" => "user"},
-        "system" => %{}
+        "Date" => %{"value" => "", "origin" => "user"},
+        "link" => %{"value" => "", "origin" => "user"},
+        "Float" => %{"value" => "", "origin" => "user"},
+        "radio" => %{"value" => nil, "origin" => "user"},
+        "checkbox" => %{"value" => nil, "origin" => "user"},
+        "hierarchy" => %{"value" => "", "origin" => "user"},
+        "text area" => %{"value" => "", "origin" => "user"},
+        "identifier" => %{"value" => "218326ea-9e90-4acf-8153-96eea0cdcad0", "origin" => "user"},
+        "text_input" => %{"value" => "", "origin" => "user"},
+        "dropdown_user" => %{"value" => "", "origin" => "user"},
+        "enriched text" => %{"value" => %{}, "origin" => "user"},
+        "dropdown_domain" => %{"value" => "", "origin" => "user"},
+        "dropdown_string" => %{"value" => nil, "origin" => "user"},
+        "dropdown_system" => %{"value" => "", "origin" => "user"}
       }
 
       fields = [
@@ -1667,7 +1679,6 @@ defmodule TdDfLib.FormatTest do
           ]
         }
       ]
-
       assert Format.enrich_content_values(content, %{content: fields})
     end
 
