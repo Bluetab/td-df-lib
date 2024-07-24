@@ -1402,6 +1402,275 @@ defmodule TdDfLib.FormatTest do
   describe "enrich_content_values/2" do
     setup [:create_domain, :create_system, :create_hierarchy]
 
+    test "cached_values/2 works well for empty system fields" do
+      content = %{
+        "layer" => %{"value" => "Landing", "origin" => "user"},
+        "system" => %{}
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Text input",
+              "name" => "text_input",
+              "type" => "string",
+              "values" => nil,
+              "widget" => "string"
+            },
+            %{
+              "cardinality" => "0",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Identifier",
+              "name" => "identifier",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => nil,
+              "widget" => "identifier"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Text area",
+              "name" => "text area",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => nil,
+              "widget" => "textarea"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Enriched text",
+              "name" => "enriched text",
+              "subscribable" => false,
+              "type" => "enriched_text",
+              "values" => nil,
+              "widget" => "enriched_text"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Dropdown string",
+              "name" => "dropdown_string",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => %{
+                "fixed" => [
+                  "D-A",
+                  "D-B",
+                  "D-C"
+                ]
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Dropdown system",
+              "name" => "dropdown_system",
+              "subscribable" => false,
+              "type" => "system",
+              "values" => nil,
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Dropdown user",
+              "name" => "dropdown_user",
+              "subscribable" => false,
+              "type" => "user",
+              "values" => %{
+                "role_users" => nil
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "*",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Dropdown domain",
+              "name" => "dropdown_domain",
+              "subscribable" => false,
+              "type" => "domain",
+              "values" => nil,
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Hierarchy",
+              "name" => "hierarchy",
+              "subscribable" => false,
+              "type" => "hierarchy",
+              "values" => %{
+                "hierarchy" => %{
+                  "id" => 1,
+                  "min_depth" => "1"
+                }
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Radio",
+              "name" => "radio",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => %{
+                "fixed" => [
+                  "R-A",
+                  "R-B",
+                  "R-C"
+                ]
+              },
+              "widget" => "radio"
+            },
+            %{
+              "cardinality" => "*",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Checkbox",
+              "name" => "checkbox",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => %{
+                "fixed" => [
+                  "C-A",
+                  "C-B",
+                  "C-C"
+                ]
+              },
+              "widget" => "checkbox"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Date",
+              "name" => "Date",
+              "subscribable" => false,
+              "type" => "date",
+              "values" => nil,
+              "widget" => "date"
+            },
+            %{
+              "cardinality" => "*",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Link",
+              "name" => "link",
+              "subscribable" => false,
+              "type" => "url",
+              "values" => nil,
+              "widget" => "pair_list"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Float",
+              "name" => "Float",
+              "subscribable" => false,
+              "type" => "float",
+              "values" => nil,
+              "widget" => "number"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Categoría",
+              "name" => "categoría",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => %{
+                "fixed" => [
+                  "Categoría A",
+                  "Categoría B"
+                ]
+              },
+              "widget" => "dropdown"
+            },
+            %{
+              "ai_suggestion" => false,
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Categoría 2",
+              "name" => "Categoría 2",
+              "subscribable" => false,
+              "type" => "string",
+              "values" => %{
+                "switch" => %{
+                  "on" => "categoría",
+                  "values" => %{
+                    "Categoría A" => [
+                      "Uno",
+                      "Dos"
+                    ],
+                    "Categoría B" => [
+                      "Tres",
+                      "Cuatro"
+                    ]
+                  }
+                }
+              },
+              "widget" => "dropdown"
+            }
+          ]
+        }
+      ]
+
+      assert Format.enrich_content_values(content, %{content: fields})
+    end
+
     test "enrich_content_values/2 gets cached values for system and domain fields", %{
       domain: %{id: domain_id} = domain,
       system: system

@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.9.2] 2024-07-24
+
+### Fixed
+
+- [TD-6713] Adjust Format.set_cached_value/2 for new content structure
+
 ## [6.9.1] 2024-07-19
 
 ### Fixed
