@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.9.3] 2024-07-24
+
+### Added
+
+- [TD-6689] Update td-cache lib
+
 ## [6.9.2] 2024-07-24
 
 ### Fixed

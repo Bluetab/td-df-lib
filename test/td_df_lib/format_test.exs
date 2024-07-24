@@ -1679,6 +1679,7 @@ defmodule TdDfLib.FormatTest do
           ]
         }
       ]
+
       assert Format.enrich_content_values(content, %{content: fields})
     end
 
