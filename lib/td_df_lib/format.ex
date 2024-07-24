@@ -202,15 +202,16 @@ defmodule TdDfLib.Format do
   end
 
   defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
-    %{"value" => value, "origin" => origin} = Map.get(acc, name, @nil_content)
-    Map.put(acc, name, %{"value" => RichText.to_plain_text(value), "origin" => origin})
+    %{"value" => value} = field = Map.get(acc, name, @nil_content)
+    Map.put(acc, name, %{field | "value" => RichText.to_plain_text(value)})
   end
 
   defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
-    %{"value" => value} = field_content = Map.get(acc, name, @nil_content)
+    %{"value" => value} = field = Map.get(acc, name, @nil_content)
+
     case value do
-      %{} -> Map.put(acc, name, Map.put(field_content, "value", [value]))
-      value -> Map.put(acc, name, Map.put(field_content, "value", value))
+      %{} -> Map.put(acc, name, %{field | "value" => [value]})
+      value -> Map.put(acc, name, %{field | "value" => value})
     end
   end
 
@@ -462,36 +463,21 @@ defmodule TdDfLib.Format do
   end
 
   defp set_cached_value(%{"name" => name, "type" => "system", "cardinality" => cardinality}, acc) do
-    %{"value" => field_content_value} = field_content = Map.get(acc, name)
-
-    new_field_content =
-      Map.put(
-        field_content,
-        "value",
-        format_system(field_content_value, cardinality)
-      )
-
-    Map.put(acc, name, new_field_content)
+    %{"value" => value} = field = Map.get(acc, name, @nil_content)
+    Map.put(acc, name, %{field | "value" => format_system(value, cardinality)})
   end
 
   defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
-    %{"value" => field_content_value} = field_content = Map.get(acc, name)
-
-    new_field_content =
-      Map.put(
-        field_content,
-        "value",
-        format_domain(field_content_value, cardinality)
-      )
-
-    Map.put(acc, name, new_field_content)
+    %{"value" => value} = field = Map.get(acc, name, @nil_content)
+    Map.put(acc, name, %{field | "value" => format_domain(value, cardinality)})
   end
 
   defp set_cached_value(
          %{"name" => name, "type" => "hierarchy", "cardinality" => cardinality},
          acc
        ) do
-    Map.put(acc, name, format_hierarchy(Map.get(acc, name), cardinality))
+    %{"value" => value} = field = Map.get(acc, name, @nil_content)
+    Map.put(acc, name, %{field | "value" => format_hierarchy(value, cardinality)})
   end
 
   defp set_cached_value(_field, acc), do: acc
