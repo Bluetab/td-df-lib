@@ -208,6 +208,7 @@ defmodule TdDfLib.Format do
 
   defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
     %{"value" => value} = field = Map.get(acc, name, @nil_content)
+
     case value do
       %{} -> Map.put(acc, name, %{field | "value" => [value]})
       value -> Map.put(acc, name, %{field | "value" => value})
