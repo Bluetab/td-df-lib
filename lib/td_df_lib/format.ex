@@ -463,13 +463,11 @@ defmodule TdDfLib.Format do
   end
 
   defp set_cached_value(%{"name" => name, "type" => "system", "cardinality" => cardinality}, acc) do
-    %{"value" => value} = field = Map.get(acc, name, @nil_content)
-    Map.put(acc, name, %{field | "value" => format_system(value, cardinality)})
+    Map.put(acc, name, format_system(Map.get(acc, name, @nil_content), cardinality))
   end
 
   defp set_cached_value(%{"name" => name, "type" => "domain", "cardinality" => cardinality}, acc) do
-    %{"value" => value} = field = Map.get(acc, name, @nil_content)
-    Map.put(acc, name, %{field | "value" => format_domain(value, cardinality)})
+    Map.put(acc, name, format_domain(Map.get(acc, name, @nil_content), cardinality))
   end
 
   defp set_cached_value(
@@ -480,6 +478,10 @@ defmodule TdDfLib.Format do
   end
 
   defp set_cached_value(_field, acc), do: acc
+
+  defp format_system(%{"value" => field_value} = field_content, cardinality) do
+    Map.put(field_content, "value", format_system(field_value, cardinality))
+  end
 
   defp format_system(%{} = system, _cardinality) do
     id = Map.get(system, "id")
@@ -501,6 +503,10 @@ defmodule TdDfLib.Format do
   end
 
   defp format_system(system, _cardinality), do: system
+
+  defp format_domain(%{"value" => field_value} = field_content, cardinality) do
+    Map.put(field_content, "value", format_domain(field_value, cardinality))
+  end
 
   defp format_domain([_ | _] = domain_ids, cardinality) do
     Enum.map(domain_ids, &format_domain(&1, cardinality))
