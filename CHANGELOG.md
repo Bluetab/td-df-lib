@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.9.5] 2024-07-26
+
+### Fixed
+
+- [TD-6733] Adjust Format.set_cached_value/2 for legacy content
+
 ## [6.9.4] 2024-07-24
 
 ### Fixed

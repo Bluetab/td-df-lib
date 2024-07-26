@@ -1417,7 +1417,9 @@ defmodule TdDfLib.FormatTest do
         "enriched text" => %{"value" => %{}, "origin" => "user"},
         "dropdown_domain" => %{"value" => "", "origin" => "user"},
         "dropdown_string" => %{"value" => nil, "origin" => "user"},
-        "dropdown_system" => %{"value" => "", "origin" => "user"}
+        "dropdown_system" => %{"value" => "", "origin" => "user"},
+        "dropdown_system_no_origin" => nil,
+        "dropdown_domain_no_origin" => nil
       }
 
       fields = [
@@ -1513,6 +1515,19 @@ defmodule TdDfLib.FormatTest do
                 "origin" => "default",
                 "value" => ""
               },
+              "label" => "Dropdown system no origin",
+              "name" => "dropdown_system_no_origin",
+              "subscribable" => false,
+              "type" => "system",
+              "values" => nil,
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "?",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
               "label" => "Dropdown user",
               "name" => "dropdown_user",
               "subscribable" => false,
@@ -1530,6 +1545,19 @@ defmodule TdDfLib.FormatTest do
               },
               "label" => "Dropdown domain",
               "name" => "dropdown_domain",
+              "subscribable" => false,
+              "type" => "domain",
+              "values" => nil,
+              "widget" => "dropdown"
+            },
+            %{
+              "cardinality" => "*",
+              "default" => %{
+                "origin" => "default",
+                "value" => ""
+              },
+              "label" => "Dropdown domain no origin",
+              "name" => "dropdown_domain_no_origin",
               "subscribable" => false,
               "type" => "domain",
               "values" => nil,
