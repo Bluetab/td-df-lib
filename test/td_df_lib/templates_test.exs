@@ -79,6 +79,20 @@ defmodule TdDfLib.TemplatesTest do
     assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 19.0, 2)
   end
 
+  test "completeness/2 returns the completeness of some content including hidden conditional fields witrh legacy data",
+       %{
+         template_name: template_name
+       } do
+    content = %{
+      "demo.filter" => "a",
+      "independent_multiple" => ["foo"],
+      "lista_radio" => "Si",
+      "lista_dropdown" => ""
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 19.0, 2)
+  end
+
   test "group_name/2 returns the group name of a field", %{template_name: template_name} do
     assert Templates.group_name(template_name, "linked_dropdown") == "Lists"
   end

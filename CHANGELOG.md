@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.9.6] 2024-07-29
+
+### Fixed
+
+- [TD-6734] Adjust Template.visible_fields/2 for legacy content
+
 ## [6.9.5] 2024-07-26
 
 ### Fixed
