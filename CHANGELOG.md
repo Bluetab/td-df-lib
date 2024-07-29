@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- [TD-6733] Adjust Format.set_cached_value/2 for legacy content
+- [TD-6734] Adjust Template.visible_fields/2 for legacy content
 
 ## [6.9.5] 2024-07-26
 
