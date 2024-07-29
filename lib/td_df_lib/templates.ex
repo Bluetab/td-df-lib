@@ -165,10 +165,7 @@ defmodule TdDfLib.Templates do
        ) do
     content
     |> Map.get(on)
-    |> case do
-      %{"value" => value} -> value
-      value -> value
-    end
+    |> get_field_value()
     |> meets_dependency?(target)
   end
 
@@ -177,12 +174,15 @@ defmodule TdDfLib.Templates do
          content
        ) do
     content
-    |> Map.get(on, %{})
-    |> Map.get("value")
+    |> Map.get(on)
+    |> get_field_value()
     |> meets_dependency?(Map.keys(target))
   end
 
   defp is_visible?(_, _), do: true
+
+  defp get_field_value(%{"value" => value}), do: value
+  defp get_field_value(value), do: value
 
   defp template_completeness(nil = _template, _content), do: 0.0
 
