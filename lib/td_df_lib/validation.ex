@@ -293,8 +293,8 @@ defmodule TdDfLib.Validation do
          %{"name" => name, "type" => "user_group", "values" => %{"role_groups" => role_groups}},
          domain_ids
        ) do
-    user_names = fetch_user_names(domain_ids, role_groups)
-    groups = fetch_group_names(domain_ids, role_groups)
+    user_names = domain_ids |> fetch_user_names(role_groups) |> Enum.map(&"user:#{&1}")
+    groups = domain_ids |> fetch_group_names(role_groups) |> Enum.map(&"group:#{&1}")
 
     validate_inclusion(changeset, name, groups ++ user_names)
   end

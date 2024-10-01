@@ -896,33 +896,44 @@ defmodule TdDfLib.ValidationTest do
       CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
       CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
 
-      content = %{"data_owner" => %{"value" => "foo", "origin" => "user"}}
       schema = Enum.flat_map(template.content, & &1["fields"])
+      content = %{"data_owner" => %{"value" => "user:foo", "origin" => "user"}}
 
-      # Invalid user or group
+      # Invalid user
       %Ecto.Changeset{valid?: false, errors: errors} =
         Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
 
-      assert user.full_name in enum
-      assert group.name in enum
+      assert "user:#{user.full_name}" in enum
+      assert "group:#{group.name}" in enum
+
+      # Invalid group
+      content = %{"data_owner" => %{"value" => "group:foo", "origin" => "user"}}
+
+      %Ecto.Changeset{valid?: false, errors: errors} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
+
+      assert "user:#{user.full_name}" in enum
+      assert "group:#{group.name}" in enum
 
       # Valid user
-      content = %{"data_owner" => %{"value" => user.full_name, "origin" => "user"}}
+      content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
 
       %Ecto.Changeset{valid?: true, changes: changes} =
         Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
-      assert changes == %{data_owner: user.full_name}
+      assert changes == %{data_owner: "user:#{user.full_name}"}
 
       # Valid group
-      content = %{"data_owner" => %{"value" => group.name, "origin" => "user"}}
+      content = %{"data_owner" => %{"value" => "group:#{group.name}", "origin" => "user"}}
 
       %Ecto.Changeset{valid?: true, changes: changes} =
         Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
-      assert changes == %{data_owner: group.name}
+      assert changes == %{data_owner: "group:#{group.name}"}
     end
   end
 
