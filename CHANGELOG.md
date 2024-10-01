@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-6817] Inclusion validation for `user` and `user_group` template fields.
+
 ## [6.9.6] 2024-07-29
 
 ### Fixed
