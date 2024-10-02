@@ -337,14 +337,8 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
-  def format_field(
-        %{
-          "type" => type,
-          "content" => content,
-          "cardinality" => cardinality
-        } = schema
-      )
-      when cardinality in ["+", "*"] and is_binary(content) and type !== "user" do
+  def format_field(%{"content" => content, "cardinality" => cardinality} = schema)
+      when cardinality in ["+", "*"] and is_binary(content) do
     content
     |> String.split("|", trim: true)
     |> Enum.map(fn c ->
@@ -389,11 +383,6 @@ defmodule TdDfLib.Format do
 
   def format_field(%{"content" => content, "type" => "enriched_text"}) do
     RichText.to_rich_text(content)
-  end
-
-  def format_field(%{"content" => content, "type" => "user", "cardinality" => cardinality})
-      when cardinality in ["+", "*"] and is_binary(content) do
-    [content]
   end
 
   def format_field(%{"content" => "", "type" => "integer"}), do: nil
