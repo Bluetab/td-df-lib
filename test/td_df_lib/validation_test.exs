@@ -9,8 +9,17 @@ defmodule TdDfLib.ValidationTest do
   @unsafe "javascript:alert(document)"
 
   describe "build_changeset/2 & build_changeset/3" do
-    setup do
-      %{id: template_id} = template = build(:template)
+    setup context do
+      %{id: template_id} =
+        template =
+        case context[:template_content] do
+          [_ | _] = content ->
+            build(:template, content: content)
+
+          nil ->
+            build(:template)
+        end
+
       hierarchy = create_hierarchy(234)
 
       on_exit(fn -> TemplateCache.delete(template_id) end)
@@ -825,6 +834,106 @@ defmodule TdDfLib.ValidationTest do
              } = Validation.build_changeset(content, schema)
 
       refute Map.has_key?(changes, :domain_dependent)
+    end
+
+    @tag template_content: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "user"},
+                 "label" => "User list",
+                 "name" => "data_owner",
+                 "type" => "user",
+                 "values" => %{"processed_users" => [], "role_users" => "Data Owner"},
+                 "widget" => "dropdown"
+               }
+             ]
+           }
+         ]
+    test "validates user role values", %{template: template} do
+      domain = CacheHelpers.put_domain()
+      user = CacheHelpers.insert_user()
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      content = %{"data_owner" => %{"value" => "foo", "origin" => "user"}}
+      schema = Enum.flat_map(template.content, & &1["fields"])
+
+      %Ecto.Changeset{valid?: false, errors: errors} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert errors[:data_owner] ==
+               {"is invalid", [validation: :inclusion, enum: [user.full_name]]}
+
+      content = %{"data_owner" => %{"value" => user.full_name, "origin" => "user"}}
+
+      %Ecto.Changeset{valid?: true, changes: changes} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert changes == %{data_owner: user.full_name}
+    end
+
+    @tag template_content: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "cardinality" => "?",
+                 "default" => %{"value" => "", "origin" => "user"},
+                 "label" => "List of users/groups",
+                 "name" => "data_owner",
+                 "type" => "user_group",
+                 "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+                 "widget" => "dropdown"
+               }
+             ]
+           }
+         ]
+    test "validates user group content", %{template: template} do
+      domain = CacheHelpers.put_domain()
+      user = CacheHelpers.insert_user()
+      group = CacheHelpers.insert_group()
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      schema = Enum.flat_map(template.content, & &1["fields"])
+      content = %{"data_owner" => %{"value" => "user:foo", "origin" => "user"}}
+
+      # Invalid user
+      %Ecto.Changeset{valid?: false, errors: errors} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
+
+      assert "user:#{user.full_name}" in enum
+      assert "group:#{group.name}" in enum
+
+      # Invalid group
+      content = %{"data_owner" => %{"value" => "group:foo", "origin" => "user"}}
+
+      %Ecto.Changeset{valid?: false, errors: errors} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
+
+      assert "user:#{user.full_name}" in enum
+      assert "group:#{group.name}" in enum
+
+      # Valid user
+      content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
+
+      %Ecto.Changeset{valid?: true, changes: changes} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert changes == %{data_owner: "user:#{user.full_name}"}
+
+      # Valid group
+      content = %{"data_owner" => %{"value" => "group:#{group.name}", "origin" => "user"}}
+
+      %Ecto.Changeset{valid?: true, changes: changes} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert changes == %{data_owner: "group:#{group.name}"}
     end
   end
 

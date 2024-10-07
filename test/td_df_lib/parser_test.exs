@@ -241,6 +241,42 @@ defmodule TdDfLib.ParserTest do
                  domain_ids: []
                })
     end
+
+    test "format user and group values with multiple cardinality" do
+      schema = [
+        %{
+          "cardinality" => "*",
+          "name" => "data_owner",
+          "type" => "user_group",
+          "label" => "List of users/groups",
+          "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        },
+        %{
+          "cardinality" => "+",
+          "name" => "data_officer",
+          "type" => "user",
+          "label" => "List of users",
+          "values" => %{"processed_users" => [], "role_users" => "Data Officer"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{
+        "data_owner" => %{"origin" => "file", "value" => "user:user|group:group"},
+        "data_officer" => %{"origin" => "file", "value" => "user|user1"}
+      }
+
+      assert %{
+               "data_owner" => %{"origin" => "file", "value" => ["user:user", "group:group"]},
+               "data_officer" => %{"origin" => "file", "value" => ["user", "user1"]}
+             } ==
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: []
+               })
+    end
   end
 
   describe "get_from_content/2" do

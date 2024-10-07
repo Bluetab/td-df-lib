@@ -4,7 +4,7 @@ defmodule TdDfLib.MixProject do
   def project do
     [
       app: :td_df_lib,
-      version: "6.9.6",
+      version: "6.13.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,

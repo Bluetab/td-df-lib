@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.13.0] 2024-10-07
+
+### Added
+
+- [TD-6817]:
+  - Inclusion validation for `user` and `user_group` template fields.
+  - Process `user` and `user_group` template field binary values with multiple cardinality and `|` separator.
+
 ## [6.9.6] 2024-07-29
 
 ### Fixed
