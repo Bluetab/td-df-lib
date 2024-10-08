@@ -388,17 +388,19 @@ defmodule TdDfLib.Format do
   def format_field(%{"content" => "", "type" => "integer"}), do: nil
 
   def format_field(%{"content" => content, "type" => "integer"}) when is_binary(content) do
-    {parsed, _} = Integer.parse(content)
-
-    parsed
+    case Integer.parse(content) do
+      {parsed, _} -> parsed
+      :error -> {:error, :invalid_format}
+    end
   end
 
   def format_field(%{"content" => "", "type" => "float"}), do: nil
 
   def format_field(%{"content" => content, "type" => "float"}) when is_binary(content) do
-    {parsed, _} = Float.parse(content)
-
-    parsed
+    case Float.parse(content) do
+      {parsed, _} -> parsed
+      :error -> {:error, :invalid_format}
+    end
   end
 
   def format_field(%{"content" => content, "type" => "domain"}) do

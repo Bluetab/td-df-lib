@@ -6,6 +6,10 @@
 
 - [TD-6773]: Require validation for table field columns in dynamic forms content.
 
+### Changed
+
+- [TD-6773]: Validate number fields on format parsing.
+
 ## [6.13.0] 2024-10-07
 
 ### Added
