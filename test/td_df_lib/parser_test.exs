@@ -278,7 +278,7 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
-    test "foo" do
+    test "returns error for numbers with invalid format" do
       schema = [
         %{
           "cardinality" => "?",
