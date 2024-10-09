@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.13.0] 2024-10-09
+
+### Changed
+
+- [TD-6469] Updates `td-cache` version for compatibility.
+
 ## [6.13.0] 2024-10-07
 
 ### Added
