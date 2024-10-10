@@ -317,6 +317,34 @@ defmodule TdDfLib.ParserTest do
       assert fields["input_float"]["value"] == {:error, :invalid_format}
       assert fields["input_integer"]["value"] == {:error, :invalid_format}
     end
+
+    test "returns error for numbers with float format" do
+      schema = [
+        %{
+          "cardinality" => "?",
+          "default" => %{"value" => "", "origin" => "default"},
+          "description" => "Input your integer",
+          "label" => "Number",
+          "name" => "input_integer",
+          "type" => "integer",
+          "widget" => "number",
+          "values" => nil
+        }
+      ]
+
+      content = %{
+        "input_integer" => %{"origin" => "file", "value" => "1.5"}
+      }
+
+      fields =
+        Parser.format_content(%{
+          content: content,
+          content_schema: schema,
+          domain_ids: []
+        })
+
+      assert fields["input_integer"]["value"] == {:error, :invalid_format}
+    end
   end
 
   describe "get_from_content/2" do

@@ -389,8 +389,8 @@ defmodule TdDfLib.Format do
 
   def format_field(%{"content" => content, "type" => "integer"}) when is_binary(content) do
     case Integer.parse(content) do
-      {parsed, _} -> parsed
-      :error -> {:error, :invalid_format}
+      {parsed, ""} -> parsed
+      _ -> {:error, :invalid_format}
     end
   end
 
