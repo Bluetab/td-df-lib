@@ -1,5 +1,15 @@
 # Changelog
 
+## [6.13.2] 2024-10-10
+
+### Added
+
+- [TD-6773]: Require validation for table field columns in dynamic forms content.
+
+### Changed
+
+- [TD-6773]: Validate number fields on format parsing.
+
 ## [6.13.1] 2024-10-09
 
 ### Changed
