@@ -1004,6 +1004,95 @@ defmodule TdDfLib.ValidationTest do
       assert {_message, multiple_string_validation} = errors[:multiple_string]
       assert multiple_string_validation[:validation] == :required
     end
+
+    @tag template_content: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "ai_suggestion" => false,
+                 "cardinality" => "*",
+                 "default" => %{"origin" => "default", "value" => ""},
+                 "group" => "Table Group",
+                 "label" => "Table Field",
+                 "name" => "table_field",
+                 "subscribable" => false,
+                 "type" => "table",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"mandatory" => true, "name" => "First Column"},
+                     %{"mandatory" => false, "name" => "Second Column"},
+                     %{"mandatory" => true, "name" => "Third Column"}
+                   ]
+                 },
+                 "widget" => "table"
+               }
+             ]
+           }
+         ]
+    test "validates table required colums", %{template: template} do
+      schema = Enum.flat_map(template.content, & &1["fields"])
+
+      # With blank fields in columns
+      content = %{
+        "table_field" => %{
+          "origin" => "user",
+          "value" => [
+            %{"First Column" => nil, "Second Column" => "Bar"},
+            %{"First Column" => "Foo", "Second Column" => "Bar"},
+            %{"Second Column" => "Bar"},
+            %{"First Column" => "", "Second Column" => "Bar"}
+          ]
+        }
+      }
+
+      assert %Ecto.Changeset{valid?: false, errors: errors} =
+               Validation.build_changeset(content, schema)
+
+      assert Enum.count(errors) == 2
+
+      for {:table_field, error} <- errors do
+        {message, validation} = error
+
+        case message do
+          "First Column can't be blank" ->
+            assert validation == [validation: :required, rows: [0, 2, 3]]
+
+          "Third Column can't be blank" ->
+            assert validation == [validation: :required, rows: [0, 1, 2, 3]]
+        end
+      end
+
+      # With valid values in columns
+      content = %{
+        "table_field" => %{
+          "origin" => "user",
+          "value" => [
+            %{"First Column" => "Foo", "Second Column" => "Bar", "Third Column" => "Baz"}
+          ]
+        }
+      }
+
+      assert %Ecto.Changeset{valid?: true, data: data} =
+               Validation.build_changeset(content, schema)
+
+      assert data == %{
+               "table_field" => [
+                 %{"First Column" => "Foo", "Second Column" => "Bar", "Third Column" => "Baz"}
+               ]
+             }
+
+      # Skips validation when value is empty (table fields are optional by definition)
+      content = %{"table_field" => %{"origin" => "user", "value" => []}}
+
+      assert %Ecto.Changeset{valid?: true, data: data} =
+               Validation.build_changeset(content, schema)
+
+      assert data == %{"table_field" => []}
+
+      assert %Ecto.Changeset{valid?: true, data: data} = Validation.build_changeset(%{}, schema)
+      assert data == %{}
+    end
   end
 
   describe "validator/2" do

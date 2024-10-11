@@ -232,7 +232,44 @@ defmodule TdDfLib.Validation do
     end
   end
 
+  defp add_require_validation(changeset, %{
+         "type" => "table",
+         "name" => name,
+         "values" => %{"table_columns" => columns}
+       }) do
+    field = String.to_atom(name)
+
+    mandatory_columns = columns |> Enum.filter(& &1["mandatory"]) |> Enum.map(& &1["name"])
+
+    changeset
+    |> Changeset.get_change(field, [])
+    |> Enum.with_index(&columns_with_errors(&2, &1, mandatory_columns))
+    |> List.flatten()
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> then(fn
+      errors = %{} when map_size(errors) > 0 ->
+        Enum.reduce(errors, changeset, fn {column_name, rows}, changeset ->
+          Changeset.add_error(
+            changeset,
+            field,
+            "#{column_name} can't be blank",
+            validation: :required,
+            rows: rows
+          )
+        end)
+
+      _errors ->
+        changeset
+    end)
+  end
+
   defp add_require_validation(changeset, %{}), do: changeset
+
+  defp columns_with_errors(row, value, mandatory_columns) do
+    mandatory_columns
+    |> Enum.filter(fn column -> Map.get(value, column) in [nil, ""] end)
+    |> Enum.map(fn column_name -> {column_name, row} end)
+  end
 
   defp add_inclusion_validation(
          changeset,
