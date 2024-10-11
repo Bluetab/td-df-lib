@@ -935,6 +935,75 @@ defmodule TdDfLib.ValidationTest do
 
       assert changes == %{data_owner: "group:#{group.name}"}
     end
+
+    @tag template_content: [
+           %{
+             "name" => "group",
+             "fields" => [
+               %{
+                 "ai_suggestion" => false,
+                 "cardinality" => "+",
+                 "default" => %{
+                   "origin" => "default",
+                   "value" => ""
+                 },
+                 "label" => "Hierarchy multiple",
+                 "name" => "multiple_hierarchy",
+                 "subscribable" => false,
+                 "type" => "hierarchy",
+                 "values" => %{
+                   "hierarchy" => %{
+                     "id" => 1,
+                     "min_depth" => "0"
+                   }
+                 },
+                 "widget" => "dropdown"
+               },
+               %{
+                 "cardinality" => "1",
+                 "default" => "",
+                 "label" => "Enriched text",
+                 "name" => "enriched_text",
+                 "type" => "enriched_text",
+                 "values" => nil,
+                 "widget" => "text"
+               },
+               %{
+                 "ai_suggestion" => false,
+                 "name" => "multiple_string",
+                 "type" => "string",
+                 "cardinality" => "+"
+               }
+             ]
+           }
+         ]
+    test "validates required fields with multiple cardinality", %{template: template} do
+      schema = Enum.flat_map(template.content, & &1["fields"])
+
+      content = %{
+        "multiple_hierarchy" => %{"origin" => "file", "value" => []},
+        "enriched_text" => %{"origin" => "file", "value" => %{}},
+        "multiple_string" => %{"origin" => "file", "value" => [nil]}
+      }
+
+      %Ecto.Changeset{valid?: false, errors: errors} =
+        Validation.build_changeset(content, schema, [])
+
+      assert {_message, min_length_validation} = errors[:multiple_hierarchy]
+
+      assert Keyword.equal?(min_length_validation,
+               validation: :length,
+               kind: :min,
+               type: :list,
+               count: 1
+             )
+
+      assert {_message, empty_object_validation} = errors[:enriched_text]
+      assert empty_object_validation[:validation] == :required
+
+      assert {_message, multiple_string_validation} = errors[:multiple_string]
+      assert multiple_string_validation[:validation] == :required
+    end
   end
 
   describe "validator/2" do
