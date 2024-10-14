@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.13.4] 2024-10-14
+
+### Added
+
+- [TD-6617] Hint for required validations over fields with multiple cardinality
+
 ## [6.13.3] 2024-10-10
 
 ### Fixed

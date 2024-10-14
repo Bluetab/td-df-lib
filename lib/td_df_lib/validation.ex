@@ -377,14 +377,14 @@ defmodule TdDfLib.Validation do
 
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
-      true -> Keyword.new([{field, "should not contain empty values"}])
+      true -> Keyword.new([{field, {"should not contain empty values", validation: :required}}])
       _ -> []
     end
   end
 
   defp validate_no_empty_items(field, %{} = values) do
     case values == %{} do
-      true -> Keyword.new([{field, "map should not be empty"}])
+      true -> Keyword.new([{field, {"map should not be empty", validation: :required}}])
       _ -> []
     end
   end
