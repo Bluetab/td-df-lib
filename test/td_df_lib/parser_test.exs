@@ -345,6 +345,83 @@ defmodule TdDfLib.ParserTest do
 
       assert fields["input_integer"]["value"] == {:error, :invalid_format}
     end
+
+    test "formats values of type table for bulk upload" do
+      schema = [
+        %{
+          "name" => "Table Field",
+          "label" => "Table Field",
+          "type" => "table",
+          "cardinality" => "*",
+          "values" => %{
+            "table_columns" => [
+              %{"mandatory" => true, "name" => "First Column"},
+              %{"mandatory" => true, "name" => "Second Column"}
+            ]
+          }
+        }
+      ]
+
+      # Valid table content
+      content = %{
+        "Table Field" => %{
+          "origin" => "file",
+          "value" =>
+            "First Column;Second Column\r\nFirst Field;Second Field\r\nThird Field;Fourth Field"
+        }
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"First Column" => "First Field", "Second Column" => "Second Field"},
+                   %{"First Column" => "Third Field", "Second Column" => "Fourth Field"}
+                 ]
+               }
+             }
+
+      # Empty table content
+      content = %{
+        "Table Field" => %{
+          "origin" => "file",
+          "value" => ""
+        }
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{"Table Field" => %{"origin" => "file", "value" => []}}
+
+      # Empty values in every row
+      content = %{
+        "Table Field" => %{
+          "origin" => "file",
+          "value" => "First Column;Second Column\r\n;;;;\r\n;Second Value\r\nThird Value"
+        }
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"First Column" => "", "Second Column" => ""},
+                   %{"First Column" => "", "Second Column" => "Second Value"},
+                   %{"First Column" => "Third Value"}
+                 ]
+               }
+             }
+    end
   end
 
   describe "get_from_content/2" do

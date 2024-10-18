@@ -10,6 +10,8 @@ defmodule TdDfLib.Format do
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
+  NimbleCSV.define(TableParser, separator: "\;", escape: "\"")
+
   def apply_template(content, fields, opts \\ [])
 
   def apply_template(nil, _, _opts), do: %{}
@@ -437,6 +439,25 @@ defmodule TdDfLib.Format do
       _ ->
         nil
     end
+  end
+
+  def format_field(%{"type" => "table", "content" => content}) when is_binary(content) do
+    content
+    |> TableParser.parse_string(skip_headers: false)
+    |> then(fn
+      [] ->
+        nil
+
+      [_headers] ->
+        nil
+
+      [headers | rows] ->
+        Enum.map(rows, fn row ->
+          headers
+          |> Enum.zip(row)
+          |> Map.new()
+        end)
+    end)
   end
 
   def format_field(%{"content" => content}), do: content

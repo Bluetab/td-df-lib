@@ -37,7 +37,7 @@ defmodule TdDfLib.Parser do
 
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
-      schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy"] or
+      schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy", "table"] or
         (schema_type in ["string", "user", "user_group"] and cardinality in ["*", "+"]) or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
