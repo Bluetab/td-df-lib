@@ -8,6 +8,8 @@ defmodule TdDfLib.Parser do
   alias TdCache.I18nCache
   alias TdDfLib.Format
 
+  NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
+
   def append_parsed_fields(acc, fields, content, opts \\ []) do
     ctx =
       context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
@@ -124,6 +126,23 @@ defmodule TdDfLib.Parser do
 
   defp field_to_string(_field, nil, _ctx), do: ""
 
+  defp field_to_string(
+         %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
+         content,
+         _domain_map
+       ) do
+    colums = Enum.map(colums, &Map.get(&1, "name"))
+
+    rows =
+      content
+      |> get_field_value(name)
+      |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
+
+    [colums | rows]
+    |> Parser.Table.dump_to_iodata()
+    |> IO.iodata_to_binary()
+  end
+
   defp field_to_string(%{"name" => name} = field, content, domain_map) do
     content
     |> get_field_value(name)
@@ -148,7 +167,6 @@ defmodule TdDfLib.Parser do
 
   defp parse_field(%{"type" => "domain"}, value, %{domains: domains}), do: Map.get(domains, value)
 
-  defp parse_field(%{"type" => "table"}, _value, _ctx), do: ""
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
   defp parse_field(

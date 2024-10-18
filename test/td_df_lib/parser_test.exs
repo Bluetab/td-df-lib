@@ -647,5 +647,35 @@ defmodule TdDfLib.ParserTest do
 
       assert Parser.append_parsed_fields([], fields, content) == ["value"]
     end
+
+    test "parses table fields to binary for excel download" do
+      content = %{
+        "table_name" => %{
+          "origin" => "file",
+          "value" => [
+            %{"col1" => "First Field"},
+            %{"col2" => "Second Field", "col3" => "Third Field"}
+          ]
+        }
+      }
+
+      fields = [
+        %{
+          "type" => "table",
+          "name" => "table_name",
+          "values" => %{
+            "table_columns" => [
+              %{"name" => "col1", "mandatory" => true},
+              %{"name" => "col2", "mandatory" => true},
+              %{"name" => "col3", "mandatory" => true}
+            ]
+          }
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content) == [
+               "col1;col2;col3\nFirst Field;;\n;Second Field;Third Field\n"
+             ]
+    end
   end
 end
