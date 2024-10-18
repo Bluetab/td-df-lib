@@ -30,6 +30,7 @@ defmodule TdDfLib.MixProject do
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:ecto, "~> 3.10"},
       {:ex_machina, "~> 2.3", only: :test},
+      {:nimble_csv, "~> 1.1"},
       {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "6.13.0"}
     ]
   end
