@@ -136,6 +136,7 @@ defmodule TdDfLib.Parser do
     rows =
       content
       |> get_field_value(name)
+      |> value_to_list()
       |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
 
     [colums | rows]
