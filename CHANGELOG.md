@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-6880] Use a CSV-like format to define table fields in Excel, including parsing for both upload and download processes.
+
 ## [6.13.4] 2024-10-14
 
 ### Added
