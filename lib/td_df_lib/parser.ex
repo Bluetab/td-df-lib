@@ -18,7 +18,7 @@ defmodule TdDfLib.Parser do
     Enum.reduce(
       fields,
       acc,
-      &(&2 ++ [field_to_string(&1, content, ctx)])
+      &(&2 ++ [field_to_string(&1, content, ctx, Keyword.get(opts, :xlsx))])
     )
   end
 
@@ -124,12 +124,13 @@ defmodule TdDfLib.Parser do
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
   defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
-  defp field_to_string(_field, nil, _ctx), do: ""
+  defp field_to_string(_field, nil, _ctx, _xlsx), do: ""
 
   defp field_to_string(
          %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
          content,
-         _domain_map
+         _domain_map,
+         xlsx
        ) do
     colums = Enum.map(colums, &Map.get(&1, "name"))
 
@@ -143,9 +144,10 @@ defmodule TdDfLib.Parser do
     |> Parser.Table.dump_to_iodata()
     |> IO.iodata_to_binary()
     |> String.replace_trailing("\n", "")
+    |> then(&if xlsx, do: [&1, align_vertical: :top], else: &1)
   end
 
-  defp field_to_string(%{"name" => name} = field, content, domain_map) do
+  defp field_to_string(%{"name" => name} = field, content, domain_map, _xlsx) do
     content
     |> get_field_value(name)
     |> value_to_list()
