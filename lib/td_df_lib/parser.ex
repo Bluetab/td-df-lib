@@ -142,6 +142,7 @@ defmodule TdDfLib.Parser do
     [colums | rows]
     |> Parser.Table.dump_to_iodata()
     |> IO.iodata_to_binary()
+    |> String.replace_trailing("\n", "")
   end
 
   defp field_to_string(%{"name" => name} = field, content, domain_map) do
