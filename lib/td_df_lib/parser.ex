@@ -8,6 +8,8 @@ defmodule TdDfLib.Parser do
   alias TdCache.I18nCache
   alias TdDfLib.Format
 
+  NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
+
   def append_parsed_fields(acc, fields, content, opts \\ []) do
     ctx =
       context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
@@ -16,7 +18,7 @@ defmodule TdDfLib.Parser do
     Enum.reduce(
       fields,
       acc,
-      &(&2 ++ [field_to_string(&1, content, ctx)])
+      &(&2 ++ [field_to_string(&1, content, ctx, Keyword.get(opts, :xlsx))])
     )
   end
 
@@ -37,7 +39,7 @@ defmodule TdDfLib.Parser do
 
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
-      schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy"] or
+      schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy", "table"] or
         (schema_type in ["string", "user", "user_group"] and cardinality in ["*", "+"]) or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
@@ -122,9 +124,30 @@ defmodule TdDfLib.Parser do
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
   defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
-  defp field_to_string(_field, nil, _ctx), do: ""
+  defp field_to_string(_field, nil, _ctx, _xlsx), do: ""
 
-  defp field_to_string(%{"name" => name} = field, content, domain_map) do
+  defp field_to_string(
+         %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
+         content,
+         _domain_map,
+         xlsx
+       ) do
+    colums = Enum.map(colums, &Map.get(&1, "name"))
+
+    rows =
+      content
+      |> get_field_value(name)
+      |> value_to_list()
+      |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
+
+    [colums | rows]
+    |> Parser.Table.dump_to_iodata()
+    |> IO.iodata_to_binary()
+    |> String.replace_trailing("\n", "")
+    |> then(&if xlsx, do: [&1, align_vertical: :top], else: &1)
+  end
+
+  defp field_to_string(%{"name" => name} = field, content, domain_map, _xlsx) do
     content
     |> get_field_value(name)
     |> value_to_list()
@@ -148,7 +171,6 @@ defmodule TdDfLib.Parser do
 
   defp parse_field(%{"type" => "domain"}, value, %{domains: domains}), do: Map.get(domains, value)
 
-  defp parse_field(%{"type" => "table"}, _value, _ctx), do: ""
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
   defp parse_field(

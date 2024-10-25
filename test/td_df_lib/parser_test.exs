@@ -345,6 +345,83 @@ defmodule TdDfLib.ParserTest do
 
       assert fields["input_integer"]["value"] == {:error, :invalid_format}
     end
+
+    test "formats values of type table for bulk upload" do
+      schema = [
+        %{
+          "name" => "Table Field",
+          "label" => "Table Field",
+          "type" => "table",
+          "cardinality" => "*",
+          "values" => %{
+            "table_columns" => [
+              %{"mandatory" => true, "name" => "First Column"},
+              %{"mandatory" => true, "name" => "Second Column"}
+            ]
+          }
+        }
+      ]
+
+      # Valid table content
+      content = %{
+        "Table Field" => %{
+          "origin" => "file",
+          "value" =>
+            "First Column;Second Column\r\nFirst Field;Second Field\r\nThird Field;Fourth Field"
+        }
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"First Column" => "First Field", "Second Column" => "Second Field"},
+                   %{"First Column" => "Third Field", "Second Column" => "Fourth Field"}
+                 ]
+               }
+             }
+
+      # Empty table content
+      content = %{
+        "Table Field" => %{
+          "origin" => "file",
+          "value" => ""
+        }
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{"Table Field" => %{"origin" => "file", "value" => []}}
+
+      # Empty values in every row
+      content = %{
+        "Table Field" => %{
+          "origin" => "file",
+          "value" => "First Column;Second Column\r\n;;;;\r\n;Second Value\r\nThird Value"
+        }
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "Table Field" => %{
+                 "origin" => "file",
+                 "value" => [
+                   %{"First Column" => "", "Second Column" => ""},
+                   %{"First Column" => "", "Second Column" => "Second Value"},
+                   %{"First Column" => "Third Value"}
+                 ]
+               }
+             }
+    end
   end
 
   describe "get_from_content/2" do
@@ -569,6 +646,69 @@ defmodule TdDfLib.ParserTest do
       content = %{@atom_field_name => %{"value" => "value", "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["value"]
+    end
+
+    test "parses table fields to binary for excel download" do
+      content = %{
+        "table_name" => %{
+          "origin" => "file",
+          "value" => [
+            %{"col1" => "First Field"},
+            %{"col2" => "Second Field", "col3" => "Third Field"}
+          ]
+        }
+      }
+
+      fields = [
+        %{
+          "type" => "table",
+          "name" => "table_name",
+          "values" => %{
+            "table_columns" => [
+              %{"name" => "col1", "mandatory" => true},
+              %{"name" => "col2", "mandatory" => true},
+              %{"name" => "col3", "mandatory" => true}
+            ]
+          }
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
+               [
+                 "col1;col2;col3\nFirst Field;;\n;Second Field;Third Field",
+                 {:align_vertical, :top}
+               ]
+             ]
+    end
+
+    test "parses table fields to binary for non excel download" do
+      content = %{
+        "table_name" => %{
+          "origin" => "file",
+          "value" => [
+            %{"col1" => "First Field"},
+            %{"col2" => "Second Field", "col3" => "Third Field"}
+          ]
+        }
+      }
+
+      fields = [
+        %{
+          "type" => "table",
+          "name" => "table_name",
+          "values" => %{
+            "table_columns" => [
+              %{"name" => "col1", "mandatory" => true},
+              %{"name" => "col2", "mandatory" => true},
+              %{"name" => "col3", "mandatory" => true}
+            ]
+          }
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content) == [
+               "col1;col2;col3\nFirst Field;;\n;Second Field;Third Field"
+             ]
     end
   end
 end

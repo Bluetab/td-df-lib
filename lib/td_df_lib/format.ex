@@ -439,6 +439,25 @@ defmodule TdDfLib.Format do
     end
   end
 
+  def format_field(%{"type" => "table", "content" => content}) when is_binary(content) do
+    content
+    |> Parser.Table.parse_string(skip_headers: false)
+    |> then(fn
+      [] ->
+        nil
+
+      [_headers] ->
+        nil
+
+      [headers | rows] ->
+        Enum.map(rows, fn row ->
+          headers
+          |> Enum.zip(row)
+          |> Map.new()
+        end)
+    end)
+  end
+
   def format_field(%{"content" => content}), do: content
 
   defp match_node(%{"key" => key} = node, content) do
