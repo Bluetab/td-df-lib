@@ -710,5 +710,30 @@ defmodule TdDfLib.ParserTest do
                "col1;col2;col3\nFirst Field;;\n;Second Field;Third Field"
              ]
     end
+
+    test "returns empty string if no rows when parses table" do
+      content = %{
+        "table_name" => %{
+          "origin" => "file",
+          "value" => []
+        }
+      }
+
+      fields = [
+        %{
+          "type" => "table",
+          "name" => "table_name",
+          "values" => %{
+            "table_columns" => [
+              %{"name" => "col1", "mandatory" => true},
+              %{"name" => "col2", "mandatory" => true},
+              %{"name" => "col3", "mandatory" => true}
+            ]
+          }
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content) == [""]
+    end
   end
 end

@@ -1,6 +1,12 @@
 # Changelog
 
-## [6.14.0] 1024-10-25
+## [6.14.0] 2024-10-25
+
+### Changed
+
+- [TD-6880] add table type fields with no rows are returned as empty string.
+
+## [6.14.0] 2024-10-25
 
 ### Added
 
