@@ -444,13 +444,17 @@ defmodule TdDfLib.Format do
     |> Parser.Table.parse_string(skip_headers: false)
     |> then(fn
       [] ->
-        nil
+        []
 
       [_headers] ->
-        nil
+        []
 
       [headers | rows] ->
-        Enum.map(rows, fn row ->
+        rows
+        |> Enum.reject(fn row ->
+          [""] == row
+        end)
+        |> Enum.map(fn row ->
           headers
           |> Enum.zip(row)
           |> Map.new()
