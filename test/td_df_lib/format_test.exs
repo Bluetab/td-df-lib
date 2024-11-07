@@ -942,6 +942,71 @@ defmodule TdDfLib.FormatTest do
       assert -1.5 == Format.format_field(%{"content" => "-1.5", "type" => "float"})
       assert -1.0 == Format.format_field(%{"content" => "-1", "type" => "float"})
     end
+
+    test "format_field for table field" do
+      assert [] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+    end
+
+    test "format_field for table field with \n in content" do
+      assert [] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\n",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+
+      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1\n",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+
+      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+
+      assert [
+               %{"Col A" => "Cell A1", "Col B" => " Cell B1"},
+               %{"Col A" => "Cell A2", "Col B" => " Cell B2"}
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1\nCell A2; Cell B2",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+    end
+
+    test "format_field for table field with \n\n in content" do
+      assert [] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\n\n",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+
+      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1\n\n",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+
+      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\n\nCell A1; Cell B1\n\n",
+                 "type" => "table",
+                 "cardinality" => "*"
+               })
+    end
   end
 
   test "flatten_content_fields will list all fields of content" do

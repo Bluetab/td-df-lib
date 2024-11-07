@@ -134,17 +134,21 @@ defmodule TdDfLib.Parser do
        ) do
     colums = Enum.map(colums, &Map.get(&1, "name"))
 
-    rows =
-      content
-      |> get_field_value(name)
-      |> value_to_list()
-      |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
+    content
+    |> get_field_value(name)
+    |> value_to_list()
+    |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
+    |> case do
+      [] ->
+        ""
 
-    [colums | rows]
-    |> Parser.Table.dump_to_iodata()
-    |> IO.iodata_to_binary()
-    |> String.replace_trailing("\n", "")
-    |> then(&if xlsx, do: [&1, align_vertical: :top], else: &1)
+      [_ | _] = rows ->
+        [colums | rows]
+        |> Parser.Table.dump_to_iodata()
+        |> IO.iodata_to_binary()
+        |> String.replace_trailing("\n", "")
+        |> then(&if xlsx, do: [&1, align_vertical: :top], else: &1)
+    end
   end
 
   defp field_to_string(%{"name" => name} = field, content, domain_map, _xlsx) do
