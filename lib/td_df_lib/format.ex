@@ -439,26 +439,21 @@ defmodule TdDfLib.Format do
     end
   end
 
-  def format_field(%{"type" => "table", "content" => content}) when is_binary(content) do
+  def format_field(%{"content" => content, "type" => "table"}) when is_binary(content) do
     content
     |> Parser.Table.parse_string(skip_headers: false)
     |> then(fn
-      [] ->
-        []
-
-      [_headers] ->
-        []
-
       [headers | rows] ->
         rows
-        |> Enum.reject(fn row ->
-          [""] == row
-        end)
+        |> Enum.reject(&(&1 == [""]))
         |> Enum.map(fn row ->
           headers
           |> Enum.zip(row)
           |> Map.new()
         end)
+
+      _ ->
+        []
     end)
   end
 
