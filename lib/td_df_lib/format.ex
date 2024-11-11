@@ -18,6 +18,7 @@ defmodule TdDfLib.Format do
 
   def apply_template(%{} = content, fields, opts) do
     content
+    |> IO.inspect(label: "apply_template")
     |> default_values(fields, opts)
     |> cached_values(fields)
     |> take_template_fields(fields)
@@ -186,10 +187,12 @@ defmodule TdDfLib.Format do
 
     content
     |> Map.take(field_names)
+    |> IO.inspect(label: "default_values")
     |> set_default_values(fields, opts)
   end
 
   def set_default_values(content, fields, opts \\ []) do
+    IO.inspect(fields, label: "fields")
     Enum.reduce(fields, content, &set_default_value(&2, &1, opts))
   end
 
