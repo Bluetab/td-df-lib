@@ -118,6 +118,14 @@ defmodule TdDfLib.TemplatesTest do
     %{^name => ["lista_dropdown"]} = Templates.subscribable_fields_by_type(scope)
   end
 
+  test "content_schema_for_scope/1 gets flat template fields for all templates in a scope", %{
+    template: template
+  } do
+    fields = Templates.content_schema_for_scope(template.scope)
+    assert Enum.count(fields) == 21
+    assert fields == List.flatten(fields)
+  end
+
   defp test_template do
     id = System.unique_integer([:positive])
 
