@@ -26,7 +26,7 @@ defmodule TdDfLib.Templates do
   def visible_fields(%{content: template_content} = _template, %{} = content) do
     template_content
     |> Enum.flat_map(&Map.get(&1, "fields", []))
-    |> Enum.filter(&is_visible?(&1, content))
+    |> Enum.filter(&visible?(&1, content))
     |> Enum.map(&Map.get(&1, "name"))
   end
 
@@ -41,7 +41,7 @@ defmodule TdDfLib.Templates do
   def subscribable_fields(%{content: content} = _template) do
     content
     |> Enum.flat_map(&Map.get(&1, "fields", []))
-    |> Enum.filter(&is_subscribable?/1)
+    |> Enum.filter(&subscribable?/1)
     |> Enum.map(&Map.get(&1, "name"))
   end
 
@@ -159,7 +159,7 @@ defmodule TdDfLib.Templates do
     |> Enum.member?(field_name)
   end
 
-  defp is_visible?(
+  defp visible?(
          %{"depends" => %{"on" => on, "to_be" => target = [_ | _]}},
          content
        ) do
@@ -169,7 +169,7 @@ defmodule TdDfLib.Templates do
     |> meets_dependency?(target)
   end
 
-  defp is_visible?(
+  defp visible?(
          %{"values" => %{"switch" => %{"on" => on, "values" => %{} = target}}},
          content
        ) do
@@ -179,7 +179,7 @@ defmodule TdDfLib.Templates do
     |> meets_dependency?(Map.keys(target))
   end
 
-  defp is_visible?(_, _), do: true
+  defp visible?(_, _), do: true
 
   defp get_field_value(%{"value" => value}), do: value
   defp get_field_value(value), do: value
@@ -201,7 +201,7 @@ defmodule TdDfLib.Templates do
     {completed_count, count} =
       visible_fields
       |> Enum.map(&Map.get(content, &1))
-      |> Enum.map(&is_complete?/1)
+      |> Enum.map(&complete?/1)
       |> Enum.reduce({0, 0}, fn
         true, {completed_count, count} -> {completed_count + 1, count + 1}
         _, {completed_count, count} -> {completed_count, count + 1}
@@ -210,12 +210,12 @@ defmodule TdDfLib.Templates do
     Float.round(100 * completed_count / count, 2)
   end
 
-  defp is_complete?(%{"value" => value, "origin" => _}), do: is_complete?(value)
-  defp is_complete?(nil), do: false
-  defp is_complete?([]), do: false
-  defp is_complete?(%{} = value) when value == %{}, do: false
+  defp complete?(%{"value" => value, "origin" => _}), do: complete?(value)
+  defp complete?(nil), do: false
+  defp complete?([]), do: false
+  defp complete?(%{} = value) when value == %{}, do: false
 
-  defp is_complete?(value) when is_binary(value) do
+  defp complete?(value) when is_binary(value) do
     length =
       value
       |> String.trim()
@@ -224,7 +224,7 @@ defmodule TdDfLib.Templates do
     length > 0
   end
 
-  defp is_complete?(_value), do: true
+  defp complete?(_value), do: true
 
-  defp is_subscribable?(field), do: Map.get(field, "subscribable")
+  defp subscribable?(field), do: Map.get(field, "subscribable")
 end
