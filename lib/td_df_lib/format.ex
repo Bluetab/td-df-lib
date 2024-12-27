@@ -108,6 +108,7 @@ defmodule TdDfLib.Format do
   def search_values(content, fields, opts \\ [])
 
   def search_values(%{} = content, %{content: fields}, opts) do
+    opts = Keyword.put_new(opts, :apply_default_values?, false)
     fields = flatten_content_fields(fields)
 
     content
@@ -182,11 +183,15 @@ defmodule TdDfLib.Format do
   end
 
   defp default_values(content, fields, opts) do
-    field_names = Enum.map(fields, &Map.get(&1, "name"))
+    if Keyword.get(opts, :apply_default_values?, true) do
+      field_names = Enum.map(fields, &Map.get(&1, "name"))
 
-    content
-    |> Map.take(field_names)
-    |> set_default_values(fields, opts)
+      content
+      |> Map.take(field_names)
+      |> set_default_values(fields, opts)
+    else
+      content
+    end
   end
 
   def set_default_values(content, fields, opts \\ []) do
