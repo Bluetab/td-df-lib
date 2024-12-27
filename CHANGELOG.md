@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- [TD-7011] Format.search_values/2 doesn't apply default values by default
+
 ## [6.15.0] 2024-11-27
 
 ### Changed
