@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-5713] Gets flatten content schema for scope
+
 ## [7.0.0] 2025-01-02
 
 ### Changed
