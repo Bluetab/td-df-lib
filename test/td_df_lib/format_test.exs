@@ -1110,7 +1110,7 @@ defmodule TdDfLib.FormatTest do
   describe "search_values/2" do
     setup :create_system
 
-    test "search_values/2 removes redundant fields" do
+    test "removes redundant fields and applies default values" do
       content = %{
         "xyzzy" => %{"value" => "spqr", "origin" => "user"},
         "bay" => %{
@@ -1158,11 +1158,66 @@ defmodule TdDfLib.FormatTest do
       ]
 
       assert Format.search_values(content, %{content: fields}) == %{
+               "bay" => %{"value" => "My Text", "origin" => "user"},
+               "bar" => %{"origin" => "default", "value" => [""]},
+               "baz" => %{"origin" => "default", "value" => [""]},
+               "foo" => %{"origin" => "default", "value" => "foo"}
+             }
+    end
+
+    test "doesn't apply default values when specified" do
+      content = %{
+        "xyzzy" => %{"value" => "spqr", "origin" => "user"},
+        "bay" => %{
+          "value" => %{
+            "object" => "value",
+            "document" => %{
+              "data" => %{},
+              "nodes" => [
+                %{
+                  "data" => %{},
+                  "type" => "paragraph",
+                  "nodes" => [
+                    %{
+                      "text" => "My Text",
+                      "marks" => [
+                        %{
+                          "data" => %{},
+                          "type" => "bold",
+                          "object" => "mark"
+                        }
+                      ],
+                      "object" => "text"
+                    }
+                  ],
+                  "object" => "block"
+                }
+              ],
+              "object" => "document"
+            }
+          },
+          "origin" => "user"
+        }
+      }
+
+      fields = [
+        %{
+          "name" => "group",
+          "fields" => [
+            %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
+            %{"name" => "bar", "cardinality" => "+", "values" => []},
+            %{"name" => "baz", "cardinality" => "*", "values" => []},
+            %{"name" => "bay", "type" => "enriched_text"}
+          ]
+        }
+      ]
+
+      assert Format.search_values(content, %{content: fields}, apply_default_values?: false) == %{
                "bay" => %{"value" => "My Text", "origin" => "user"}
              }
     end
 
-    test "search_values/2 gets system from cache and formats it", %{system: system} do
+    test "gets system from cache and formats it", %{system: system} do
       content = %{"system" => %{"value" => %{"id" => system.id}, "origin" => "user"}}
 
       fields = [
@@ -1192,7 +1247,7 @@ defmodule TdDfLib.FormatTest do
                Format.search_values(content, %{content: fields})
     end
 
-    test "search_values/2 returns unchanged domain fields" do
+    test "returns unchanged domain fields" do
       content = %{"domain" => %{"value" => 123, "origin" => "user"}}
 
       fields = [
@@ -1222,12 +1277,12 @@ defmodule TdDfLib.FormatTest do
                Format.search_values(content, %{content: fields})
     end
 
-    test "search_values/2 returns nil when no template is provided" do
+    test "returns nil when no template is provided" do
       content = %{"xyzzy" => %{"value" => "spqr", "origin" => "user"}}
       assert is_nil(Format.search_values(content, nil))
     end
 
-    test "search_values/2 returns nil when no content is provided" do
+    test "returns nil when no content is provided" do
       fields = [
         %{
           "name" => "group",
@@ -1243,7 +1298,7 @@ defmodule TdDfLib.FormatTest do
       assert is_nil(Format.search_values(nil, fields))
     end
 
-    test "search_values/2 omits values of type image and copy" do
+    test "omits values of type image and copy" do
       content = %{
         "xyzzy" => %{"value" => "spqr", "origin" => "user"},
         "foo" => %{
@@ -1294,11 +1349,13 @@ defmodule TdDfLib.FormatTest do
       ]
 
       assert Format.search_values(content, %{content: fields}) == %{
-               "foo" => %{"value" => "My Text", "origin" => "user"}
+               "foo" => %{"value" => "My Text", "origin" => "user"},
+               "bar" => %{"origin" => "default", "value" => [""]},
+               "baz" => %{"origin" => "default", "value" => [""]}
              }
     end
 
-    test "search_values/2 omits url type when is empty string" do
+    test "omits url type when is empty string" do
       content = %{
         "url_field" => %{"value" => "", "origin" => "user"}
       }
@@ -1321,7 +1378,7 @@ defmodule TdDfLib.FormatTest do
       assert Format.search_values(content, %{content: fields}) == %{}
     end
 
-    test "search_values/2 omits url types when is empty string even with dependant fields" do
+    test "omits url types when is empty string even with dependant fields" do
       content = %{
         "layer" => %{"value" => "Landing", "origin" => "user"}
       }
@@ -1364,7 +1421,7 @@ defmodule TdDfLib.FormatTest do
                Format.search_values(content, %{content: fields})
     end
 
-    test "search_values/2 works well for enriched texts" do
+    test "works well for enriched texts" do
       content_with_enriched_text = %{
         "layer" => %{"value" => "Landing", "origin" => "user"},
         "Enriched text" => %{
@@ -1444,7 +1501,7 @@ defmodule TdDfLib.FormatTest do
                Format.search_values(content_without_enriched_text, %{content: fields})
     end
 
-    test "search_values/2 works well for system fields" do
+    test "works well for system fields" do
       content = %{
         "layer" => %{"value" => "Landing", "origin" => "user"}
       }

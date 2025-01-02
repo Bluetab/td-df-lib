@@ -108,7 +108,6 @@ defmodule TdDfLib.Format do
   def search_values(content, fields, opts \\ [])
 
   def search_values(%{} = content, %{content: fields}, opts) do
-    opts = Keyword.put_new(opts, :apply_default_values?, false)
     fields = flatten_content_fields(fields)
 
     content
