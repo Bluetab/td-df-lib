@@ -6,6 +6,12 @@
 
 - [TD-6911] Bump to Elixir 1.18 and updated dependencies
 
+## [7.0.0] 2025-01-02
+
+### Changed
+
+- [TD-7011] Format.search_values/2 doesn't apply default values when specified
+
 ## [6.15.0] 2024-11-27
 
 ### Changed
