@@ -5,7 +5,7 @@ defmodule TdDfLib.MixProject do
     [
       app: :td_df_lib,
       version: "6.14.1",
-      elixir: "~> 1.17",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -26,7 +26,7 @@ defmodule TdDfLib.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.7.10", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
       {:ecto, "~> 3.12.5"},
       {:ex_machina, "~> 2.8", only: :test},
