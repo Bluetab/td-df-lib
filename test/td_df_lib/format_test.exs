@@ -722,7 +722,11 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
 
       assert ["bar"] ==
-               Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
+               Format.format_field(%{
+                 "content" => ["bar"],
+                 "type" => "user",
+                 "cardinality" => "+"
+               })
 
       assert "bar" ==
                Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})

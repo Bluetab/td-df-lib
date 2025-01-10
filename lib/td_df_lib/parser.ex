@@ -181,11 +181,9 @@ defmodule TdDfLib.Parser do
   defp parse_field(%{"type" => "url"}, %{"url_name" => url_name, "url_value" => url_value}, _ctx),
     do: "[#{url_name}] (#{url_value})"
 
-  defp parse_field(%{"type" => "url"}, %{url_value: url_value}, _ctx),
-    do: url_value
+  defp parse_field(%{"type" => "url"}, %{url_value: url_value}, _ctx), do: url_value
 
-  defp parse_field(%{"type" => "url"}, %{"url_value" => url_value}, _ctx),
-    do: url_value
+  defp parse_field(%{"type" => "url"}, %{"url_value" => url_value}, _ctx), do: url_value
 
   defp parse_field(%{"type" => "url"}, _, _ctx), do: nil
 
