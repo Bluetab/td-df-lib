@@ -169,8 +169,24 @@ defmodule TdDfLib.Parser do
     end
   end
 
-  defp parse_field(%{"type" => "url"}, %{url_value: url_value}, _ctx), do: url_value
-  defp parse_field(%{"type" => "url"}, %{"url_value" => url_value}, _ctx), do: url_value
+  defp parse_field(%{"type" => "url"}, %{url_name: "", url_value: url_value}, _ctx),
+    do: url_value
+
+  defp parse_field(%{"type" => "url"}, %{"url_name" => "", "url_value" => url_value}, _ctx),
+    do: url_value
+
+  defp parse_field(%{"type" => "url"}, %{url_name: url_name, url_value: url_value}, _ctx),
+    do: "[#{url_name}] (#{url_value})"
+
+  defp parse_field(%{"type" => "url"}, %{"url_name" => url_name, "url_value" => url_value}, _ctx),
+    do: "[#{url_name}] (#{url_value})"
+
+  defp parse_field(%{"type" => "url"}, %{url_value: url_value}, _ctx),
+    do: url_value
+
+  defp parse_field(%{"type" => "url"}, %{"url_value" => url_value}, _ctx),
+    do: url_value
+
   defp parse_field(%{"type" => "url"}, _, _ctx), do: nil
 
   defp parse_field(%{"type" => "domain"}, value, %{domains: domains}), do: Map.get(domains, value)
@@ -207,7 +223,9 @@ defmodule TdDfLib.Parser do
          |> Enum.find(fn %{"value" => map_value} -> value == map_value end)
          |> then(fn
            %{"text" => text} ->
-             I18nCache.get_definition(lang, "fields." <> label <> "." <> text, default_value: text)
+             I18nCache.get_definition(lang, "fields." <> label <> "." <> text,
+               default_value: text
+             )
 
            _ ->
              nil
