@@ -122,6 +122,12 @@ defmodule TdDfLib.Templates do
     end
   end
 
+  def content_schema_for_scope(scope) do
+    scope
+    |> @templates.list_by_scope!()
+    |> Enum.flat_map(fn %{content: content} -> Format.flatten_content_fields(content) end)
+  end
+
   defp map_suggestion_field(%{"values" => %{"fixed" => possible_values}} = field) do
     field
     |> Map.take(["name", "description"])
