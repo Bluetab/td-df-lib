@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.0.3] 2025-01-13
+
+### Changed
+
+- [TD-3612] Update td-cache
+
 ## [7.0.2] 2025-01-10
 
 ### Added
