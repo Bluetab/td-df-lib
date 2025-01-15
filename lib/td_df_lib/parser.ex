@@ -219,7 +219,9 @@ defmodule TdDfLib.Parser do
          |> Enum.find(fn %{"value" => map_value} -> value == map_value end)
          |> then(fn
            %{"text" => text} ->
-             I18nCache.get_definition(lang, "fields." <> label <> "." <> text, default_value: text)
+             I18nCache.get_definition(lang, "fields." <> label <> "." <> text,
+               default_value: text
+             )
 
            _ ->
              nil
