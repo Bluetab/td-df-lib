@@ -317,7 +317,9 @@ defmodule TdDfLib.Format do
   defp generate_default_return_map(value), do: %{"value" => value, "origin" => "default"}
 
   def format_field(%{"content" => content, "type" => "url"}) do
-    [%{"url_name" => content, "url_value" => content}]
+    content
+    |> String.split("|", trim: true)
+    |> Enum.map(&format_url/1)
   end
 
   def format_field(%{
@@ -557,6 +559,26 @@ defmodule TdDfLib.Format do
   end
 
   defp format_hierarchy(hierarchy, _cardinality), do: hierarchy
+
+  defp format_url(content) do
+    case [
+      String.starts_with?(content, "["),
+      String.contains?(content, "] ("),
+      String.ends_with?(content, ")")
+    ] do
+      [true, true, true] ->
+        [url_name, url_value] =
+          content
+          |> String.replace_prefix("[", "")
+          |> String.replace_suffix(")", "")
+          |> String.split("] (")
+
+        %{"url_name" => url_name, "url_value" => url_value}
+
+      _ ->
+        %{"url_name" => content, "url_value" => content}
+    end
+  end
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
 

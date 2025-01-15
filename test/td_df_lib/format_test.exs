@@ -594,6 +594,53 @@ defmodule TdDfLib.FormatTest do
              ]
     end
 
+    test "format_field returns url with name wrapped" do
+      formatted_value =
+        Format.format_field(%{"content" => "[Google] (https://google.es)", "type" => "url"})
+
+      assert formatted_value == [
+               %{
+                 "url_name" => "Google",
+                 "url_value" => "https://google.es"
+               }
+             ]
+    end
+
+    test "format_field returns url with empty name" do
+      formatted_value =
+        Format.format_field(%{"content" => "[] (https://google.es)", "type" => "url"})
+
+      assert formatted_value == [
+               %{
+                 "url_name" => "",
+                 "url_value" => "https://google.es"
+               }
+             ]
+    end
+
+    test "format_field returns multiple url wrapped" do
+      formatted_value =
+        Format.format_field(%{
+          "content" => "[com] (www.com.com)|[] (www.net.net)|www.org.org",
+          "type" => "url"
+        })
+
+      assert formatted_value == [
+               %{
+                 "url_name" => "com",
+                 "url_value" => "www.com.com"
+               },
+               %{
+                 "url_name" => "",
+                 "url_value" => "www.net.net"
+               },
+               %{
+                 "url_name" => "www.org.org",
+                 "url_value" => "www.org.org"
+               }
+             ]
+    end
+
     test "format_field of string with fixed tuple values returns value if text is provided " do
       fixed_tuples = [%{"value" => "value1", "text" => "description1"}]
 
@@ -722,7 +769,11 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
 
       assert ["bar"] ==
-               Format.format_field(%{"content" => ["bar"], "type" => "user", "cardinality" => "+"})
+               Format.format_field(%{
+                 "content" => ["bar"],
+                 "type" => "user",
+                 "cardinality" => "+"
+               })
 
       assert "bar" ==
                Format.format_field(%{"content" => "bar", "type" => "user", "cardinality" => "1"})
