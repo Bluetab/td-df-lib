@@ -577,11 +577,19 @@ defmodule TdDfLib.Format do
           |> String.replace_suffix(")", "")
           |> String.split("] (")
 
-        %{"url_name" => url_name, "url_value" => url_value}
+        format_url(url_name, url_value)
 
       _ ->
-        %{"url_name" => content, "url_value" => content}
+        format_url(content, content)
     end
+  end
+
+  defp format_url("", url_value) do
+    format_url(url_value, url_value)
+  end
+
+  defp format_url(url_name, url_value) do
+    %{"url_name" => url_name, "url_value" => url_value}
   end
 
   defp apply_cardinality(value = %{}, cardinality) when cardinality in ["*", "+"], do: [value]
