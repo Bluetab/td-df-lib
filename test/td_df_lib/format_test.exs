@@ -588,7 +588,7 @@ defmodule TdDfLib.FormatTest do
 
       assert formatted_value == [
                %{
-                 "url_name" => "https://google.es",
+                 "url_name" => "",
                  "url_value" => "https://google.es"
                }
              ]
@@ -612,7 +612,7 @@ defmodule TdDfLib.FormatTest do
 
       assert formatted_value == [
                %{
-                 "url_name" => "https://google.es",
+                 "url_name" => "",
                  "url_value" => "https://google.es"
                }
              ]
@@ -631,11 +631,11 @@ defmodule TdDfLib.FormatTest do
                  "url_value" => "www.com.com"
                },
                %{
-                 "url_name" => "www.net.net",
+                 "url_name" => "",
                  "url_value" => "www.net.net"
                },
                %{
-                 "url_name" => "www.org.org",
+                 "url_name" => "",
                  "url_value" => "www.org.org"
                }
              ]
