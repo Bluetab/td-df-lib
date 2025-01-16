@@ -316,9 +316,8 @@ defmodule TdDfLib.Format do
 
   defp generate_default_return_map(value), do: %{"value" => value, "origin" => "default"}
 
-  def format_field(%{"content" => "", "type" => "url"}) do
-    [%{"url_name" => "", "url_value" => ""}]
-  end
+  def format_field(%{"content" => "", "type" => "url"}),
+    do: [%{"url_name" => "", "url_value" => ""}]
 
   def format_field(%{"content" => content, "type" => "url"}) do
     content
@@ -576,6 +575,7 @@ defmodule TdDfLib.Format do
           |> String.replace_prefix("[", "")
           |> String.replace_suffix(")", "")
           |> String.split("] (")
+          |> Enum.map(&String.trim/1)
 
         %{"url_name" => url_name, "url_value" => url_value}
 
