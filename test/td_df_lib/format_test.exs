@@ -641,6 +641,18 @@ defmodule TdDfLib.FormatTest do
              ]
     end
 
+    test "format_field returns empty url for empty value" do
+      formatted_value =
+        Format.format_field(%{"content" => "", "type" => "url"})
+
+      assert formatted_value == [
+               %{
+                 "url_name" => "",
+                 "url_value" => ""
+               }
+             ]
+    end
+
     test "format_field of string with fixed tuple values returns value if text is provided " do
       fixed_tuples = [%{"value" => "value1", "text" => "description1"}]
 
