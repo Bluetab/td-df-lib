@@ -324,7 +324,6 @@ defmodule TdDfLib.Format do
     content
     |> String.split("|", trim: true)
     |> Enum.map(&format_url/1)
-    |> dbg
   end
 
   def format_field(%{
