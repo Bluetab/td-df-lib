@@ -55,6 +55,12 @@ defmodule TdDfLib.TemplateFactory do
               name: "list",
               type: "list",
               values: %{"fixed" => ["one", "two", "three"]}
+            ),
+            build(:template_field,
+              name: "url",
+              type: "url",
+              cardinality: "*",
+              widget: "pair_list"
             )
           ]
         }
