@@ -94,9 +94,6 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_content_validation(changeset, %{} = field_spec, opts) do
-    IO.inspect(changeset, label: "Changeset", limit: :infinity)
-    IO.inspect(field_spec, label: "Changeset 2", limit: :infinity)
-
     changeset
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec, opts)
