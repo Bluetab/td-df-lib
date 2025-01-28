@@ -76,7 +76,27 @@ defmodule TdDfLib.Validation do
     end
   end
 
+  # Filters schema for switch applicable dependant field
+  defp add_content_validation(
+         changeset,
+         %{"name" => name, "values" => %{"switch" => %{"on" => on, "values" => to_be}}},
+         _opts
+       ) do
+    dependent_value = Changeset.get_field(changeset, on)
+
+    case Map.get(to_be, dependent_value) do
+      nil ->
+        changeset
+
+      values when is_list(values) ->
+        Changeset.validate_inclusion(changeset, String.to_atom(name), values)
+    end
+  end
+
   defp add_content_validation(changeset, %{} = field_spec, opts) do
+    IO.inspect(changeset, label: "Changeset", limit: :infinity)
+    IO.inspect(field_spec, label: "Changeset 2", limit: :infinity)
+
     changeset
     |> add_require_validation(field_spec)
     |> add_inclusion_validation(field_spec, opts)
