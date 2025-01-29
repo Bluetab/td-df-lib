@@ -447,12 +447,75 @@ defmodule TdDfLib.ParserTest do
   end
 
   describe "append_parsed_fields/3" do
-    test "formats type url" do
+    test "formats type url without name" do
       url_value = "url_value"
       fields = [%{"type" => "url", "name" => @field_name}]
       content = %{@atom_field_name => %{"value" => %{url_value: url_value}, "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == [url_value]
+    end
+
+    test "formats type url with name" do
+      url_name = "url_name"
+      url_value = "url_value"
+      fields = [%{"type" => "url", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{
+          "value" => %{url_name: url_name, url_value: url_value},
+          "origin" => "user"
+        }
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == ["[#{url_name}] (#{url_value})"]
+    end
+
+    test "formats type multiple url without name" do
+      url_value = "url_value"
+      url_value_2 = "url_value_2"
+      fields = [%{"type" => "url", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{
+          "value" => [
+            %{url_name: "", url_value: url_value},
+            %{url_value: url_value_2}
+          ],
+          "origin" => "user"
+        }
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == ["#{url_value}|#{url_value_2}"]
+    end
+
+    test "formats type multiple url with name" do
+      url_name = "url_name"
+      url_value = "url_value"
+      url_name_2 = "url_name_2"
+      url_value_2 = "url_value_2"
+
+      fields = [%{"type" => "url", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{
+          "value" => [
+            %{url_name: url_name, url_value: url_value},
+            %{url_name: url_name_2, url_value: url_value_2}
+          ],
+          "origin" => "user"
+        }
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == [
+               "[#{url_name}] (#{url_value})|[#{url_name_2}] (#{url_value_2})"
+             ]
+    end
+
+    test "formats type url without value" do
+      fields = [%{"type" => "url", "name" => @field_name}]
+      content = %{@atom_field_name => %{"value" => %{url_value: ""}, "origin" => "user"}}
+
+      assert Parser.append_parsed_fields([], fields, content) == [""]
     end
 
     test "formats type domain using external id by default and if specified" do

@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.1.0] 2025-01-29
+
+### Changed
+
+- [TD-6921] Change URL type field parser
+
 ## [7.0.3] 2025-01-13
 
 ### Changed
