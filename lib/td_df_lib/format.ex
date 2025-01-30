@@ -429,7 +429,7 @@ defmodule TdDfLib.Format do
 
         case nodes_found do
           [] ->
-            nil
+            :error
 
           [%{"key" => key}] ->
             key
