@@ -114,9 +114,6 @@ defmodule TdDfLib.Validation do
         [{:error, _} | _] ->
           true
 
-        :error ->
-          true
-
         value ->
           hierarchy_id = Map.get(hierarchy, "id")
           min_depth = Map.get(hierarchy, "min_depth", 0)
@@ -138,7 +135,7 @@ defmodule TdDfLib.Validation do
          %{"type" => "hierarchy", "name" => name}
        ) do
     case Map.get(data, name, nil) do
-      :error ->
+      {:error, _} ->
         Ecto.Changeset.add_error(
           changeset,
           String.to_atom(name),

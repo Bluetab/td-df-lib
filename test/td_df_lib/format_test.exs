@@ -896,7 +896,7 @@ defmodule TdDfLib.FormatTest do
     test "format_field with invalid content hierarchy  cardinality 1", %{
       hierarchy: %{id: id}
     } do
-      assert :error =
+      assert {:error, _} =
                Format.format_field(%{
                  "content" => "invalid",
                  "type" => "hierarchy",

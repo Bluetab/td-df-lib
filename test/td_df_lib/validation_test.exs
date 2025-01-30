@@ -499,7 +499,7 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"hierarchy_name" => %{"value" => :error, "origin" => "user"}},
+          %{"hierarchy_name" => %{"value" => {:error, :not_found}, "origin" => "user"}},
           schema
         )
 
