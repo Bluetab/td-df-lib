@@ -135,7 +135,7 @@ defmodule TdDfLib.Validation do
          %{"type" => "hierarchy", "name" => name}
        ) do
     case Map.get(data, name, nil) do
-      {:error, _} ->
+      {:error, :not_found} ->
         Ecto.Changeset.add_error(
           changeset,
           String.to_atom(name),
