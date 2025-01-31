@@ -85,6 +85,7 @@ defmodule TdDfLib.Validation do
     |> add_url_validation(field_spec)
     |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
+    |> add_hierarchy_value_validation(field_spec)
   end
 
   defp add_content_validation(changeset, [], _opts), do: changeset
@@ -128,6 +129,27 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_hierarchy_depth_validation(changeset, _), do: changeset
+
+  defp add_hierarchy_value_validation(
+         %{data: data} = changeset,
+         %{"type" => "hierarchy", "name" => name}
+       ) do
+    case Map.get(data, name, nil) do
+      {:error, :not_found} ->
+        Ecto.Changeset.add_error(
+          changeset,
+          String.to_atom(name),
+          "template.upload.failed.hierarchy_value_error",
+          name: name,
+          value: "hierarchy"
+        )
+
+      _nil_or_value ->
+        changeset
+    end
+  end
+
+  defp add_hierarchy_value_validation(changeset, _), do: changeset
 
   def validate_hierarchy_depth(hierarchy, keys, depth \\ 0)
 
