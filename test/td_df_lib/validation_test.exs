@@ -503,10 +503,7 @@ defmodule TdDfLib.ValidationTest do
           schema
         )
 
-      assert [
-               {:hierarchy_name,
-                {"template.upload.failed.hierarchy_value_error", [name: "hierarchy_name"]}}
-             ] = changeset.errors
+      assert [{:hierarchy_name, {"hierarchy"}}] = changeset.errors
 
       refute changeset.valid?
     end

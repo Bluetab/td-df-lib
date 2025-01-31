@@ -197,7 +197,7 @@ defmodule TdDfLib.Validation do
          %{"type" => "hierarchy", "name" => name},
          :not_found
        ) do
-    error = {"template.upload.failed.hierarchy_value_error", [name: name]}
+    error = {"hierarchy"}
     insert_error_in_changeset(changeset, error, name)
   end
 
