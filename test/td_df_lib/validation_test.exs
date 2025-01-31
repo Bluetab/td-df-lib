@@ -503,6 +503,11 @@ defmodule TdDfLib.ValidationTest do
           schema
         )
 
+      assert [
+               {:hierarchy_name,
+                {"template.upload.failed.hierarchy_value_error", [name: "hierarchy_name"]}}
+             ] = changeset.errors
+
       refute changeset.valid?
     end
 
@@ -525,6 +530,8 @@ defmodule TdDfLib.ValidationTest do
         Validation.build_changeset(%{}, schema)
 
       refute changeset.valid?
+
+      assert [{:hierarchy_name, {"can't be blank", [validation: :required]}}] = changeset.errors
     end
 
     test "content with hidden required field returns valid changeset", %{template: template} do
