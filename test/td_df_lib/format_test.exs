@@ -896,15 +896,21 @@ defmodule TdDfLib.FormatTest do
     test "format_field with invalid content hierarchy  cardinality 1", %{
       hierarchy: %{id: id}
     } do
-      result =
-        Format.format_field(%{
-          "content" => "invalid",
-          "type" => "hierarchy",
-          "cardinality" => "1",
-          "values" => %{"hierarchy" => %{"id" => id}}
-        })
+      assert {:error, :not_found} =
+               Format.format_field(%{
+                 "content" => "invalid",
+                 "type" => "hierarchy",
+                 "cardinality" => "1",
+                 "values" => %{"hierarchy" => %{"id" => id}}
+               })
 
-      assert is_nil(result)
+      assert "" =
+               Format.format_field(%{
+                 "content" => "",
+                 "type" => "hierarchy",
+                 "cardinality" => "1",
+                 "values" => %{"hierarchy" => %{"id" => id}}
+               })
     end
 
     test "format_field with content hierarchy multiple node with cardinality *", %{

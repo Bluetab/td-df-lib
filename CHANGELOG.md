@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.1.1] 2025-02-03
+
+### Added
+
+- [TD-6022] add validation for template hierarchy fields
+
 ## [7.1.0] 2025-01-29
 
 ### Changed
