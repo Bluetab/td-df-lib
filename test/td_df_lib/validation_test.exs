@@ -482,6 +482,55 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "invalid hierarchy value error text", %{template: template} do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "hierarchy_name",
+            "type" => "hierarchy",
+            "cardinality" => "?",
+            "values" => %{"hierarchy" => %{"id" => 1}}
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{"hierarchy_name" => %{"value" => {:error, :not_found}, "origin" => "user"}},
+          schema
+        )
+
+      assert [{:hierarchy_name, {"hierarchy"}}] = changeset.errors
+
+      refute changeset.valid?
+    end
+
+    test "invalid hierarchy empty value", %{template: template} do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "hierarchy_name",
+            "type" => "hierarchy",
+            "cardinality" => "1",
+            "values" => %{"hierarchy" => %{"id" => 1}}
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(%{}, schema)
+
+      refute changeset.valid?
+
+      assert [{:hierarchy_name, {"can't be blank", [validation: :required]}}] = changeset.errors
+    end
+
     test "content with hidden required field returns valid changeset", %{template: template} do
       template =
         template

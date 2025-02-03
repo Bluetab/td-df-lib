@@ -209,6 +209,15 @@ defmodule TdDfLib.Validation do
     insert_error_in_changeset(changeset, error, name)
   end
 
+  defp add_content_error(
+         changeset,
+         %{"type" => "hierarchy", "name" => name},
+         :not_found
+       ) do
+    error = {"hierarchy"}
+    insert_error_in_changeset(changeset, error, name)
+  end
+
   defp add_content_error(changeset, %{"name" => name}, error),
     do: insert_error_in_changeset(changeset, error, name)
 
