@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.1.2] 2025-02-04
+
+### Added
+
+- [TD-5119] add validation for template dependant fields
+
 ## [7.1.1] 2025-02-03
 
 ### Added

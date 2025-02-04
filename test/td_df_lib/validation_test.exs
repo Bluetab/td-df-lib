@@ -625,7 +625,10 @@ defmodule TdDfLib.ValidationTest do
 
       changeset =
         Validation.build_changeset(
-          %{"radio_list" => %{"value" => "Yes", "origin" => "user"}},
+          %{
+            "radio_list" => %{"value" => "Yes", "origin" => "user"},
+            "dependant_text" => %{"value" => "test", "origin" => "user"}
+          },
           schema
         )
 
@@ -690,6 +693,112 @@ defmodule TdDfLib.ValidationTest do
       content = %{
         "dropdown_fixed_list" => %{"value" => "Yes", "origin" => "user"},
         "dropdown_fixed_tuple" => %{"value" => "No", "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+      assert changeset.valid?
+    end
+
+    test "content with incorrect values for fixed and dependant list values returns error changeset",
+         %{
+           template: template
+         } do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "father",
+            "type" => "string",
+            "label" => "father",
+            "values" => %{"fixed" => ["a1", "a2", "b1", "b2"]},
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          },
+          %{
+            "name" => "son",
+            "type" => "string",
+            "label" => "son",
+            "values" => %{
+              "switch" => %{
+                "on" => "father",
+                "values" => %{
+                  "a1" => ["a11", "a12", "a13"],
+                  "a2" => ["a21", "a22", "a23"],
+                  "b1" => ["b11", "b12", "b13"],
+                  "b2" => ["b21", "b22", "b23"]
+                }
+              }
+            },
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+
+      content = %{
+        "son" => %{"value" => "a12", "origin" => "user"},
+        "father" => %{"value" => "b1", "origin" => "file"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+      refute changeset.valid?
+    end
+
+    test "content with correct values for fixed and dependant list values returns valid changeset",
+         %{
+           template: template
+         } do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "father",
+            "type" => "string",
+            "label" => "father",
+            "values" => %{"fixed" => ["a1", "a2", "b1", "b2"]},
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          },
+          %{
+            "name" => "son",
+            "type" => "string",
+            "label" => "son",
+            "values" => %{
+              "switch" => %{
+                "on" => "father",
+                "values" => %{
+                  "a1" => ["a11", "a12", "a13"],
+                  "a2" => ["a21", "a22", "a23"],
+                  "b1" => ["b11", "b12", "b13"],
+                  "b2" => ["b21", "b22", "b23"]
+                }
+              }
+            },
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+
+      content = %{
+        "son" => %{"value" => "b12", "origin" => "user"},
+        "father" => %{"value" => "b1", "origin" => "file"}
       }
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
