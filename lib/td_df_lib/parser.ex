@@ -7,6 +7,7 @@ defmodule TdDfLib.Parser do
   alias TdCache.HierarchyCache
   alias TdCache.I18nCache
   alias TdDfLib.Format
+  alias TdDfLib.I18n
 
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
@@ -18,7 +19,15 @@ defmodule TdDfLib.Parser do
     Enum.reduce(
       fields,
       acc,
-      &(&2 ++ [field_to_string(&1, content, ctx, Keyword.get(opts, :xlsx))])
+      fn field, acc ->
+        case field_to_string(field, content, ctx, opts) do
+          {:formatted, list} ->
+            acc ++ [list]
+
+          {:plain, string} ->
+            acc ++ List.flatten([string])
+        end
+      end
     )
   end
 
@@ -124,15 +133,16 @@ defmodule TdDfLib.Parser do
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
   defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
 
-  defp field_to_string(_field, nil, _ctx, _xlsx), do: ""
+  defp field_to_string(_field, nil, _ctx, _opts), do: {:plain, ""}
 
   defp field_to_string(
          %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
          content,
          _domain_map,
-         xlsx
+         opts
        ) do
     colums = Enum.map(colums, &Map.get(&1, "name"))
+    xlsx = Keyword.get(opts, :xlsx, false)
 
     content
     |> get_field_value(name)
@@ -140,24 +150,74 @@ defmodule TdDfLib.Parser do
     |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
     |> case do
       [] ->
-        ""
+        {:plain, ""}
 
       [_ | _] = rows ->
         [colums | rows]
         |> Parser.Table.dump_to_iodata()
         |> IO.iodata_to_binary()
         |> String.replace_trailing("\n", "")
-        |> then(&if xlsx, do: [&1, align_vertical: :top], else: &1)
+        |> then(&if xlsx, do: {:formatted, [&1, align_vertical: :top]}, else: {:plain, &1})
     end
   end
 
-  defp field_to_string(%{"name" => name} = field, content, domain_map, _xlsx) do
+  defp field_to_string(field, content, domain_map, opts) do
+    translatable = I18n.is_translatable_field?(field)
+    translations = Keyword.get(opts, :translations, false)
+    locales = Keyword.get(opts, :locales, I18nCache.get_active_locales!())
+
+    if translatable and translations do
+      {:plain,
+       Enum.map(
+         locales,
+         &maybe_translatable_field_to_string(field, content, domain_map, &1, opts)
+       )}
+    else
+      {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
+    end
+  end
+
+  defp maybe_translatable_field_to_string(
+         %{"name" => name} = field,
+         content,
+         domain_map,
+         locale,
+         opts
+       ) do
+    translatable = I18n.is_translatable_field?(field)
+    translations = Keyword.get(opts, :translations, false)
+    default_locale = Keyword.get(opts, :default_locale, I18nCache.get_default_locale())
+    lang = Keyword.get(opts, :lang, default_locale)
+
+    name_with_locale =
+      case {translations, translatable, default_locale} do
+        {true, true, default_locale} when default_locale != locale ->
+          "#{name}_#{locale}"
+
+        {false, true, default_locale} when default_locale != lang ->
+          "#{name}_#{lang}"
+
+        _ ->
+          name
+      end
+
     content
-    |> get_field_value(name)
+    |> get_field_value(name, name_with_locale)
     |> value_to_list()
     |> Enum.map(&parse_field(field, &1, domain_map))
     |> Enum.reject(&is_nil/1)
     |> Enum.join("|")
+  end
+
+  defp get_field_value(content, name, name_with_locale) do
+    field =
+      Map.get(content, name_with_locale) || Map.get(content, String.to_atom(name_with_locale)) ||
+        Map.get(content, name) || Map.get(content, String.to_atom(name))
+
+    case field do
+      %{"value" => value} -> value
+      value when not is_map(value) -> value
+    end
   end
 
   defp get_field_value(content, name) do

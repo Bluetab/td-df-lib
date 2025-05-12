@@ -798,5 +798,83 @@ defmodule TdDfLib.ParserTest do
 
       assert Parser.append_parsed_fields([], fields, content) == [""]
     end
+
+    test "formats translatable fields if translations is true" do
+      content = %{
+        "i18n_test_translated" => %{"value" => "Text English", "origin" => "user"},
+        "i18n_test_translated_es" => %{"value" => "Texto Español", "origin" => "user"}
+      }
+
+      fields = [
+        %{
+          "cardinality" => "?",
+          "default" => %{"value" => "", "origin" => "default"},
+          "label" => "label_i18n_test_translated",
+          "name" => "i18n_test_translated",
+          "type" => "string",
+          "values" => nil,
+          "widget" => "string"
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content,
+               lang: "es",
+               translations: true,
+               locales: ["en", "es"],
+               default_locale: "en"
+             ) == ["Text English", "Texto Español"]
+    end
+
+    test "format fields with browser lang if translations is false" do
+      content = %{
+        "i18n_test_translated" => %{"value" => "Text English", "origin" => "user"},
+        "i18n_test_translated_es" => %{"value" => "Texto Español", "origin" => "user"}
+      }
+
+      fields = [
+        %{
+          "cardinality" => "?",
+          "default" => %{"value" => "", "origin" => "default"},
+          "label" => "label_i18n_test_translated",
+          "name" => "i18n_test_translated",
+          "type" => "string",
+          "values" => nil,
+          "widget" => "string"
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content,
+               lang: "es",
+               translations: false,
+               locales: ["en", "es"],
+               default_locale: "en"
+             ) == ["Texto Español"]
+    end
+
+    test "format fields with default lang if translations is false and browser lang is no active lang" do
+      content = %{
+        "i18n_test_translated" => %{"value" => "Text English", "origin" => "user"},
+        "i18n_test_translated_es" => %{"value" => "Texto Español", "origin" => "user"}
+      }
+
+      fields = [
+        %{
+          "cardinality" => "?",
+          "default" => %{"value" => "", "origin" => "default"},
+          "label" => "label_i18n_test_translated",
+          "name" => "i18n_test_translated",
+          "type" => "string",
+          "values" => nil,
+          "widget" => "string"
+        }
+      ]
+
+      assert Parser.append_parsed_fields([], fields, content,
+               lang: "ge",
+               translations: false,
+               locales: ["en", "es"],
+               default_locale: "en"
+             ) == ["Text English"]
+    end
   end
 end
