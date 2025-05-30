@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.5.0] 2025-05-22
+
+### Changed
+
+- [TD-6219] Update td-cache version
+
 ## [7.4.0] 2025-04-09
 
 ### Changed
