@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Changed
+
+- [TD-6468] Expand parsed fields in all active languages if translations
+
 ## [7.5.0] 2025-05-22
 
 ### Changed
