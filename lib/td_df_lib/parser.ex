@@ -12,8 +12,14 @@ defmodule TdDfLib.Parser do
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
   def append_parsed_fields(acc, fields, content, opts \\ []) do
+    opts =
+      opts
+      |> Keyword.put_new(:translations, false)
+      |> Keyword.put_new(:locales, I18nCache.get_active_locales!())
+
     ctx =
-      context_for_fields(fields, Keyword.get(opts, :domain_type, :with_domain_external_id))
+      fields
+      |> context_for_fields(Keyword.get(opts, :domain_type, :with_domain_external_id))
       |> Map.put("lang", Keyword.get(opts, :lang))
 
     Enum.reduce(
@@ -164,14 +170,14 @@ defmodule TdDfLib.Parser do
   defp field_to_string(field, content, domain_map, opts) do
     translatable = I18n.is_translatable_field?(field)
     translations = Keyword.get(opts, :translations, false)
-    locales = Keyword.get(opts, :locales, I18nCache.get_active_locales!())
 
     if translatable and translations do
-      {:plain,
-       Enum.map(
-         locales,
-         &maybe_translatable_field_to_string(field, content, domain_map, &1, opts)
-       )}
+      string_fields =
+        opts
+        |> Keyword.get(:locales)
+        |> Enum.map(&maybe_translatable_field_to_string(field, content, domain_map, &1, opts))
+
+      {:plain, string_fields}
     else
       {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
     end
