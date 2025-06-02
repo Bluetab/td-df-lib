@@ -119,21 +119,17 @@ defmodule TdDfLib.Parser do
   end
 
   def get_from_content(content, content_key) do
-    content
-    |> Enum.map(fn {key, value} ->
+    Map.new(content, fn {key, value} ->
       {key, Map.get(value, content_key, "")}
     end)
-    |> Map.new()
   end
 
   defp merge_with_content(content, template_content) do
-    content
-    |> Enum.map(fn {key, value} ->
+    Map.new(content, fn {key, value} ->
       template_content
       |> Map.get(key)
       |> then(fn content_value -> {key, Map.put(content_value, "value", value)} end)
     end)
-    |> Map.new()
   end
 
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
