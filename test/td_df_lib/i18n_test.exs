@@ -170,5 +170,9 @@ defmodule TdDfLib.I18nTest do
     test "returns original field and nil for invalid locale format" do
       assert I18n.get_field_locale("field1_eng") == {"field1_eng", nil}
     end
+
+    test "checks locale in active locales passed as option" do
+      assert I18n.get_field_locale("field1_fr", active_locales: ["fr"]) == {"field1", "fr"}
+    end
   end
 end

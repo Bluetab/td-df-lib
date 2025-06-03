@@ -28,8 +28,8 @@ defmodule TdDfLib.I18n do
   def is_translatable_field?(field) when is_map(field),
     do: field["widget"] in @translatable_widgets
 
-  def get_field_locale(field) do
-    active_locales = I18nCache.get_active_locales!()
+  def get_field_locale(field, opts \\ []) do
+    active_locales = Keyword.get(opts, :active_locales, I18nCache.get_active_locales!())
 
     case Regex.run(~r/^(.+)_([a-z]{2})$/, field) do
       [_, base_field, locale] ->
