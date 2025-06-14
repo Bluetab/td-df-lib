@@ -8,7 +8,7 @@
 
 ## [7.6.0] 2025-06-06
 
-## Changed
+### Changed
 
 - [TD-6468] Expand parsed fields in all active languages if translations
 
@@ -287,25 +287,25 @@
 
 ## [5.11.0] 2023-07-14
 
-## Changed
+### Changed
 
 - [TD-5844] Change in parser for get from domain widget name or external id
 
 ## [5.8.1] 2023-06-05
 
-## Changed
+### Changed
 
 - [TD-5697] Use `HierarchyCache.get_node/1`
 
 ## [5.8.0] 2023-05-25
 
-## Added
+### Added
 
 - [TD-3916] Hierarchy depth validation
 
 ## [5.5.0] 2023-03-29
 
-## Added
+### Added
 
 - [TD-5650] Format and validations for hierarchies
 
