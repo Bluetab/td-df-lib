@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-### Add
+### Added
 
 - [TD-7300] Update td-cache lib to add Link origin
 
