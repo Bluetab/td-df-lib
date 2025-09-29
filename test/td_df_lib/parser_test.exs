@@ -744,8 +744,8 @@ defmodule TdDfLib.ParserTest do
         "table_name" => %{
           "origin" => "file",
           "value" => [
-            %{"col1" => "First Field"},
-            %{"col2" => "Second Field", "col3" => "Third Field"}
+            %{"col1" => %{"value" => "First Field"}},
+            %{"col2" => %{"value" => "Second Field"}, "col3" => %{"value" => "Third Field"}}
           ]
         }
       }
@@ -756,9 +756,33 @@ defmodule TdDfLib.ParserTest do
           "name" => "table_name",
           "values" => %{
             "table_columns" => [
-              %{"name" => "col1", "mandatory" => true},
-              %{"name" => "col2", "mandatory" => true},
-              %{"name" => "col3", "mandatory" => true}
+              %{
+                "cardinality" => "1",
+                "default" => %{"value" => "", "origin" => "user"},
+                "label" => "col1",
+                "name" => "col1",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "col2",
+                "name" => "col2",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "col3",
+                "name" => "col3",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              }
             ]
           }
         }
@@ -777,8 +801,8 @@ defmodule TdDfLib.ParserTest do
         "table_name" => %{
           "origin" => "file",
           "value" => [
-            %{"col1" => "First Field"},
-            %{"col2" => "Second Field", "col3" => "Third Field"}
+            %{"col1" => %{"value" => "First Field"}},
+            %{"col2" => %{"value" => "Second Field"}, "col3" => %{"value" => "Third Field"}}
           ]
         }
       }
@@ -789,9 +813,33 @@ defmodule TdDfLib.ParserTest do
           "name" => "table_name",
           "values" => %{
             "table_columns" => [
-              %{"name" => "col1", "mandatory" => true},
-              %{"name" => "col2", "mandatory" => true},
-              %{"name" => "col3", "mandatory" => true}
+              %{
+                "cardinality" => "1",
+                "default" => %{"value" => "", "origin" => "user"},
+                "label" => "col1",
+                "name" => "col1",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "col2",
+                "name" => "col2",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "col3",
+                "name" => "col3",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              }
             ]
           }
         }
@@ -816,9 +864,33 @@ defmodule TdDfLib.ParserTest do
           "name" => "table_name",
           "values" => %{
             "table_columns" => [
-              %{"name" => "col1", "mandatory" => true},
-              %{"name" => "col2", "mandatory" => true},
-              %{"name" => "col3", "mandatory" => true}
+              %{
+                "cardinality" => "1",
+                "default" => %{"value" => "", "origin" => "user"},
+                "label" => "col1",
+                "name" => "col1",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "col2",
+                "name" => "col2",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "col3",
+                "name" => "col3",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              }
             ]
           }
         }

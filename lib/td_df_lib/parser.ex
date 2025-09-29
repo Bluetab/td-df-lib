@@ -22,19 +22,7 @@ defmodule TdDfLib.Parser do
       |> context_for_fields(Keyword.get(opts, :domain_type, :with_domain_external_id))
       |> Map.put("lang", Keyword.get(opts, :lang))
 
-    Enum.reduce(
-      fields,
-      acc,
-      fn field, acc ->
-        case field_to_string(field, content, ctx, opts) do
-          {:formatted, list} ->
-            acc ++ [list]
-
-          {:plain, string} ->
-            acc ++ List.flatten([string])
-        end
-      end
-    )
+    fields_to_string(acc, fields, content, ctx, opts)
   end
 
   def format_content(
@@ -140,27 +128,27 @@ defmodule TdDfLib.Parser do
   defp field_to_string(
          %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
          content,
-         _domain_map,
+         context,
          opts
        ) do
-    colums = Enum.map(colums, &Map.get(&1, "name"))
+    headers = Enum.map(colums, &Map.get(&1, "name"))
     xlsx = Keyword.get(opts, :xlsx, false)
 
     content
     |> get_field_value(name)
     |> value_to_list()
-    |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
-    |> case do
-      [] ->
-        {:plain, ""}
-
+    |> Enum.map(fn content -> fields_to_string([], colums, content, context, opts) end)
+    |> then(fn
       [_ | _] = rows ->
-        [colums | rows]
+        [headers | rows]
         |> Parser.Table.dump_to_iodata()
         |> IO.iodata_to_binary()
         |> String.replace_trailing("\n", "")
         |> then(&if xlsx, do: {:formatted, [&1, align_vertical: :top]}, else: {:plain, &1})
-    end
+
+      [] ->
+        {:plain, ""}
+    end)
   end
 
   defp field_to_string(field, content, domain_map, opts) do
@@ -299,6 +287,22 @@ defmodule TdDfLib.Parser do
   end
 
   defp parse_field(_, value, _), do: value
+
+  defp fields_to_string(acc, fields, content, ctx, opts) do
+    Enum.reduce(
+      fields,
+      acc,
+      fn field, acc ->
+        case field_to_string(field, content, ctx, opts) do
+          {:formatted, list} ->
+            acc ++ [list]
+
+          {:plain, string} ->
+            acc ++ List.flatten([string])
+        end
+      end
+    )
+  end
 
   defp value_to_list(nil), do: []
   defp value_to_list([""]), do: []
