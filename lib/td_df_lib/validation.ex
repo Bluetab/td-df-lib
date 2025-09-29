@@ -532,20 +532,20 @@ defmodule TdDfLib.Validation do
     Changeset.validate_change(changeset, field, fn ^field, table_content_rows ->
       table_content_rows
       |> Enum.with_index(fn element, index -> {build_changeset(element, colums, opts), index} end)
-      |> Enum.flat_map(fn
-        {%{valid?: true}, _index} ->
-          []
-
-        {changeset, index} ->
-          Enum.map(changeset.errors, fn {column, {error, validation}} ->
-            extra = [row: index, column: column]
-            {field, {error, Keyword.merge(validation, extra)}}
-          end)
-      end)
+      |> Enum.flat_map(&parse_row_errors(&1, field))
     end)
   end
 
   defp add_table_validation(changeset, _field_spec, _opts), do: changeset
+
+  defp parse_row_errors({%{valid?: true}, _index}, _field), do: []
+
+  defp parse_row_errors({changeset, index}, field) do
+    Enum.map(changeset.errors, fn {column, {error, validation}} ->
+      extra = [row: index, column: column]
+      {field, {error, Keyword.merge(validation, extra)}}
+    end)
+  end
 
   def allowed_origins, do: @allowed_origins
 end
