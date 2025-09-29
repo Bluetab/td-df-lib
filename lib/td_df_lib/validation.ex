@@ -102,6 +102,7 @@ defmodule TdDfLib.Validation do
     |> add_url_validation(field_spec)
     |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
+    |> add_table_validation(field_spec, opts)
   end
 
   defp add_content_validation(changeset, [], _opts), do: changeset
@@ -258,44 +259,7 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp add_require_validation(changeset, %{
-         "type" => "table",
-         "name" => name,
-         "values" => %{"table_columns" => columns}
-       }) do
-    field = String.to_atom(name)
-
-    mandatory_columns = columns |> Enum.filter(& &1["mandatory"]) |> Enum.map(& &1["name"])
-
-    changeset
-    |> Changeset.get_change(field, [])
-    |> Enum.with_index(&columns_with_errors(&2, &1, mandatory_columns))
-    |> List.flatten()
-    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-    |> then(fn
-      errors = %{} when map_size(errors) > 0 ->
-        Enum.reduce(errors, changeset, fn {column_name, rows}, changeset ->
-          Changeset.add_error(
-            changeset,
-            field,
-            "#{column_name} can't be blank",
-            validation: :required,
-            rows: rows
-          )
-        end)
-
-      _errors ->
-        changeset
-    end)
-  end
-
   defp add_require_validation(changeset, %{}), do: changeset
-
-  defp columns_with_errors(row, value, mandatory_columns) do
-    mandatory_columns
-    |> Enum.filter(fn column -> Map.get(value, column) in [nil, ""] end)
-    |> Enum.map(fn column_name -> {column_name, row} end)
-  end
 
   defp add_inclusion_validation(
          changeset,
@@ -521,15 +485,13 @@ defmodule TdDfLib.Validation do
 
   def validate_safe(field, value) when is_map(value) do
     formated_value =
-      value
-      |> Enum.map(fn
+      Map.new(value, fn
         {f, {:error, v}} ->
           {f, %{error: v}}
 
         v ->
           v
       end)
-      |> Map.new()
 
     validate_safe(field, Jason.encode!(formated_value))
   end
@@ -559,6 +521,31 @@ defmodule TdDfLib.Validation do
       end
     end)
   end
+
+  defp add_table_validation(
+         changeset,
+         %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
+         opts
+       ) do
+    field = String.to_atom(name)
+
+    Changeset.validate_change(changeset, field, fn ^field, table_content_rows ->
+      table_content_rows
+      |> Enum.with_index(fn element, index -> {build_changeset(element, colums, opts), index} end)
+      |> Enum.flat_map(fn
+        {%{valid?: true}, _index} ->
+          []
+
+        {changeset, index} ->
+          Enum.map(changeset.errors, fn {column, {error, validation}} ->
+            extra = [row: index, column: column]
+            {field, {error, Keyword.merge(validation, extra)}}
+          end)
+      end)
+    end)
+  end
+
+  defp add_table_validation(changeset, _field_spec, _opts), do: changeset
 
   def allowed_origins, do: @allowed_origins
 end
