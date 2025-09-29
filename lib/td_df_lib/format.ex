@@ -456,8 +456,10 @@ defmodule TdDfLib.Format do
         rows
         |> Enum.reject(&(&1 == [""]))
         |> Enum.map(fn row ->
+          values = Enum.map(row, &%{"value" => &1, "origin" => "file"})
+
           headers
-          |> Enum.zip(row)
+          |> Enum.zip(values)
           |> Map.new()
         end)
 

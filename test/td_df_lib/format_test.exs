@@ -1045,14 +1045,24 @@ defmodule TdDfLib.FormatTest do
                  "cardinality" => "*"
                })
 
-      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1\n",
                  "type" => "table",
                  "cardinality" => "*"
                })
 
-      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1",
                  "type" => "table",
@@ -1060,8 +1070,14 @@ defmodule TdDfLib.FormatTest do
                })
 
       assert [
-               %{"Col A" => "Cell A1", "Col B" => " Cell B1"},
-               %{"Col A" => "Cell A2", "Col B" => " Cell B2"}
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               },
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A2"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B2"}
+               }
              ] ==
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1\nCell A2; Cell B2",
@@ -1078,14 +1094,24 @@ defmodule TdDfLib.FormatTest do
                  "cardinality" => "*"
                })
 
-      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1\n\n",
                  "type" => "table",
                  "cardinality" => "*"
                })
 
-      assert [%{"Col A" => "Cell A1", "Col B" => " Cell B1"}] ==
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
                Format.format_field(%{
                  "content" => "Col A;Col B\n\nCell A1; Cell B1\n\n",
                  "type" => "table",

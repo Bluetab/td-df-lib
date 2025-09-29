@@ -355,8 +355,24 @@ defmodule TdDfLib.ParserTest do
           "cardinality" => "*",
           "values" => %{
             "table_columns" => [
-              %{"mandatory" => true, "name" => "First Column"},
-              %{"mandatory" => true, "name" => "Second Column"}
+              %{
+                "cardinality" => "1",
+                "default" => %{"value" => "", "origin" => "user"},
+                "label" => "First Column",
+                "name" => "First Column",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "dropdown"
+              },
+              %{
+                "cardinality" => "?",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "Second Column",
+                "name" => "Second Column",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              }
             ]
           }
         }
@@ -379,8 +395,14 @@ defmodule TdDfLib.ParserTest do
                "Table Field" => %{
                  "origin" => "file",
                  "value" => [
-                   %{"First Column" => "First Field", "Second Column" => "Second Field"},
-                   %{"First Column" => "Third Field", "Second Column" => "Fourth Field"}
+                   %{
+                     "First Column" => %{"value" => "First Field", "origin" => "file"},
+                     "Second Column" => %{"value" => "Second Field", "origin" => "file"}
+                   },
+                   %{
+                     "First Column" => %{"value" => "Third Field", "origin" => "file"},
+                     "Second Column" => %{"value" => "Fourth Field", "origin" => "file"}
+                   }
                  ]
                }
              }
@@ -415,9 +437,15 @@ defmodule TdDfLib.ParserTest do
                "Table Field" => %{
                  "origin" => "file",
                  "value" => [
-                   %{"First Column" => "", "Second Column" => ""},
-                   %{"First Column" => "", "Second Column" => "Second Value"},
-                   %{"First Column" => "Third Value"}
+                   %{
+                     "First Column" => %{"value" => "", "origin" => "file"},
+                     "Second Column" => %{"value" => "", "origin" => "file"}
+                   },
+                   %{
+                     "First Column" => %{"value" => "", "origin" => "file"},
+                     "Second Column" => %{"value" => "Second Value", "origin" => "file"}
+                   },
+                   %{"First Column" => %{"value" => "Third Value", "origin" => "file"}}
                  ]
                }
              }
