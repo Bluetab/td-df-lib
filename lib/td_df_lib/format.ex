@@ -291,6 +291,31 @@ defmodule TdDfLib.Format do
 
   def set_default_value(
         content,
+        %{
+          "name" => name,
+          "type" => "table",
+          "values" => %{"table_columns" => columns}
+        },
+        opts
+      ) do
+    case Map.get(content, name, %{"value" => []}) do
+      %{"value" => []} ->
+        content
+
+      %{"value" => [_ | _] = rows} ->
+        put_in(
+          content,
+          [name, "value"],
+          Enum.map(rows, fn row -> default_values(row, columns, opts) end)
+        )
+
+      _other ->
+        content
+    end
+  end
+
+  def set_default_value(
+        content,
         %{"name" => name, "cardinality" => "*", "values" => values},
         _opts
       )

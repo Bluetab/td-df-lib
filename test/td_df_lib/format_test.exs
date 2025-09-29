@@ -534,6 +534,30 @@ defmodule TdDfLib.FormatTest do
              }
     end
 
+    test "sets default values for table field" do
+      columns = [
+        %{
+          "name" => "foo",
+          "cardinality" => "1",
+          "values" => [],
+          "default" => %{"value" => "foo", "origin" => "default"}
+        }
+      ]
+
+      fields = [
+        %{"type" => "table", "name" => "table_name", "values" => %{"table_columns" => columns}}
+      ]
+
+      assert Format.apply_template(%{"table_name" => %{"value" => [%{}]}}, fields) == %{
+               "table_name" => %{
+                 "value" => [%{"foo" => %{"origin" => "default", "value" => "foo"}}]
+               }
+             }
+
+      assert Format.apply_template(%{"table_name" => []}, fields) == %{"table_name" => []}
+      assert Format.apply_template(%{}, fields) == %{}
+    end
+
     test "return node correctly when template and node exist" do
       create_hierarchy(nil)
       content = %{"hierarchy_field" => %{"value" => 51, "origin" => "user"}}
