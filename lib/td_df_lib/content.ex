@@ -51,16 +51,28 @@ defmodule TdDfLib.Content do
       if is_nil(dynamic_content) do
         nil
       else
-        Enum.map(dynamic_content, fn
-          {key, %{"value" => value}} -> {key, value}
-          {key, value} -> {key, value}
-        end)
-        |> Map.new()
+        to_legacy(dynamic_content)
       end
 
     content
     |> Map.put(legacy_content_key, legacy_content)
     |> Map.put(new_content_key, dynamic_content)
+  end
+
+  defp to_legacy({key, %{"value" => value}}) when is_list(value) do
+    {key, Enum.map(value, &to_legacy/1)}
+  end
+
+  defp to_legacy({key, %{"value" => value}}) do
+    {key, value}
+  end
+
+  defp to_legacy({key, value}) do
+    {key, value}
+  end
+
+  defp to_legacy(%{} = map) do
+    Map.new(map, &to_legacy/1)
   end
 
   @spec empty?(term()) :: boolean()
