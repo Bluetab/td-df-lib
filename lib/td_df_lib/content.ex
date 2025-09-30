@@ -75,6 +75,10 @@ defmodule TdDfLib.Content do
     Map.new(map, &to_legacy/1)
   end
 
+  defp to_legacy(other) do
+    other
+  end
+
   @spec empty?(term()) :: boolean()
   defp empty?(term)
 
