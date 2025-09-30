@@ -1245,7 +1245,9 @@ defmodule TdDfLib.ValidationTest do
       for {:table_field, error} <- errors do
         {message, validation} = error
 
-        assert message == "#{validation[:column]} column can't be blank"
+        assert message ==
+                 "#{validation[:column]} column in table row #{validation[:row]} can't be blank"
+
         assert validation[:validation] == :required
 
         case validation[:column] do
@@ -1524,7 +1526,7 @@ defmodule TdDfLib.ValidationTest do
                Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert errors[:table_field] ==
-               {"string_field column can't be blank",
+               {"string_field column in table row 0 can't be blank",
                 [validation: :required, row: 0, column: :string_field]}
     end
 
@@ -1547,7 +1549,7 @@ defmodule TdDfLib.ValidationTest do
                Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert errors[:table_field] ==
-               {"data_owner column is invalid",
+               {"data_owner column in table row 0 is invalid",
                 [
                   validation: :inclusion,
                   enum: ["user:#{user.full_name}"],
