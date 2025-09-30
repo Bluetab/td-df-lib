@@ -558,6 +558,49 @@ defmodule TdDfLib.FormatTest do
       assert Format.apply_template(%{}, fields) == %{}
     end
 
+    test "sets default values of table dependent field" do
+      columns = [
+        %{
+          "name" => "foo",
+          "cardinality" => "1",
+          "values" => [],
+          "default" => %{"value" => "foo", "origin" => "default"}
+        }
+      ]
+
+      fields = [
+        %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
+        %{
+          "type" => "table",
+          "name" => "table_name",
+          "values" => %{"table_columns" => columns},
+          "depends" => %{"on" => "bar", "to_be" => ["1", "2"]}
+        }
+      ]
+
+      content = %{
+        "bar" => %{"value" => "3", "origin" => "default"},
+        "table_name" => %{"value" => [%{}]}
+      }
+
+      assert Format.apply_template(content, fields) == %{
+               "bar" => %{"value" => "3", "origin" => "default"},
+               "table_name" => %{"value" => [%{}]}
+             }
+
+      content = %{
+        "bar" => %{"value" => "1", "origin" => "default"},
+        "table_name" => %{"value" => [%{}]}
+      }
+
+      assert Format.apply_template(content, fields) == %{
+               "bar" => %{"value" => "1", "origin" => "default"},
+               "table_name" => %{
+                 "value" => [%{"foo" => %{"origin" => "default", "value" => "foo"}}]
+               }
+             }
+    end
+
     test "return node correctly when template and node exist" do
       create_hierarchy(nil)
       content = %{"hierarchy_field" => %{"value" => 51, "origin" => "user"}}
