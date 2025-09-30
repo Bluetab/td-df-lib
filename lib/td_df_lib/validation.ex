@@ -543,7 +543,8 @@ defmodule TdDfLib.Validation do
   defp parse_row_errors({changeset, index}, field) do
     Enum.map(changeset.errors, fn {column, {error, validation}} ->
       extra = [row: index, column: column]
-      {field, {error, Keyword.merge(validation, extra)}}
+
+      {field, {"#{column} column" <> " " <> "#{error}", Keyword.merge(validation, extra)}}
     end)
   end
 
