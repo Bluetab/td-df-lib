@@ -17,6 +17,7 @@ defmodule TdDfLib.Validation do
     "user" => :string,
     "enriched_text" => :map,
     "table" => :map,
+    "dynamic_table" => :map,
     "integer" => :integer,
     "float" => :float,
     "system" => :map,
@@ -257,6 +258,37 @@ defmodule TdDfLib.Validation do
     else
       changeset
     end
+  end
+
+  defp add_require_validation(changeset, %{
+         "type" => "table",
+         "name" => name,
+         "values" => %{"table_columns" => columns}
+       }) do
+    field = String.to_atom(name)
+
+    mandatory_columns = columns |> Enum.filter(& &1["mandatory"]) |> Enum.map(& &1["name"])
+
+    changeset
+    |> Changeset.get_change(field, [])
+    |> Enum.with_index(&columns_with_errors(&2, &1, mandatory_columns))
+    |> List.flatten()
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> then(fn
+      errors = %{} when map_size(errors) > 0 ->
+        Enum.reduce(errors, changeset, fn {column_name, rows}, changeset ->
+          Changeset.add_error(
+            changeset,
+            field,
+            "#{column_name} can't be blank",
+            validation: :required,
+            rows: rows
+          )
+        end)
+
+      _errors ->
+        changeset
+    end)
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
@@ -524,7 +556,7 @@ defmodule TdDfLib.Validation do
 
   defp add_table_validation(
          changeset,
-         %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
+         %{"name" => name, "type" => "dynamic_table", "values" => %{"table_columns" => colums}},
          opts
        ) do
     field = String.to_atom(name)
@@ -537,6 +569,7 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_table_validation(changeset, _field_spec, _opts), do: changeset
+  def allowed_origins, do: @allowed_origins
 
   defp parse_row_errors({%{valid?: true}, _index}, _field), do: []
 
@@ -550,5 +583,9 @@ defmodule TdDfLib.Validation do
     end)
   end
 
-  def allowed_origins, do: @allowed_origins
+  defp columns_with_errors(row, value, mandatory_columns) do
+    mandatory_columns
+    |> Enum.filter(fn column -> Map.get(value, column) in [nil, ""] end)
+    |> Enum.map(fn column_name -> {column_name, row} end)
+  end
 end

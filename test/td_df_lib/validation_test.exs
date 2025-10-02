@@ -1178,33 +1178,9 @@ defmodule TdDfLib.ValidationTest do
                  "type" => "table",
                  "values" => %{
                    "table_columns" => [
-                     %{
-                       "cardinality" => "1",
-                       "default" => %{"value" => "", "origin" => "user"},
-                       "label" => "First Column",
-                       "name" => "First Column",
-                       "type" => "string",
-                       "values" => nil,
-                       "widget" => "dropdown"
-                     },
-                     %{
-                       "cardinality" => "?",
-                       "default" => %{"origin" => "default", "value" => ""},
-                       "label" => "Second Column",
-                       "name" => "Second Column",
-                       "type" => "string",
-                       "values" => nil,
-                       "widget" => "string"
-                     },
-                     %{
-                       "cardinality" => "1",
-                       "default" => %{"value" => "", "origin" => "user"},
-                       "label" => "Third Column",
-                       "name" => "Third Column",
-                       "type" => "string",
-                       "values" => nil,
-                       "widget" => "dropdown"
-                     }
+                     %{"mandatory" => true, "name" => "First Column"},
+                     %{"mandatory" => false, "name" => "Second Column"},
+                     %{"mandatory" => true, "name" => "Third Column"}
                    ]
                  },
                  "widget" => "table"
@@ -1220,19 +1196,10 @@ defmodule TdDfLib.ValidationTest do
         "table_field" => %{
           "origin" => "user",
           "value" => [
-            %{
-              "First Column" => %{"value" => nil, "origin" => "default"},
-              "Second Column" => %{"value" => "Bar", "origin" => "default"}
-            },
-            %{
-              "First Column" => %{"value" => "Foo", "origin" => "default"},
-              "Second Column" => %{"value" => "Bar", "origin" => "default"}
-            },
-            %{"Second Column" => %{"value" => "Bar", "origin" => "default"}},
-            %{
-              "First Column" => %{"value" => "", "origin" => "default"},
-              "Second Column" => %{"value" => "Bar", "origin" => "default"}
-            }
+            %{"First Column" => nil, "Second Column" => "Bar"},
+            %{"First Column" => "Foo", "Second Column" => "Bar"},
+            %{"Second Column" => "Bar"},
+            %{"First Column" => "", "Second Column" => "Bar"}
           ]
         }
       }
@@ -1240,22 +1207,17 @@ defmodule TdDfLib.ValidationTest do
       assert %Ecto.Changeset{valid?: false, errors: errors} =
                Validation.build_changeset(content, schema)
 
-      assert Enum.count(errors) == 7
+      assert Enum.count(errors) == 2
 
       for {:table_field, error} <- errors do
         {message, validation} = error
 
-        assert message ==
-                 "#{validation[:column]} column in table row #{validation[:row]} can't be blank"
+        case message do
+          "First Column can't be blank" ->
+            assert validation == [validation: :required, rows: [0, 2, 3]]
 
-        assert validation[:validation] == :required
-
-        case validation[:column] do
-          :"First Column" ->
-            assert validation[:row] in [0, 2, 3]
-
-          :"Third Column" ->
-            assert validation[:row] in [0, 1, 2, 3]
+          "Third Column can't be blank" ->
+            assert validation == [validation: :required, rows: [0, 1, 2, 3]]
         end
       end
 
@@ -1264,11 +1226,7 @@ defmodule TdDfLib.ValidationTest do
         "table_field" => %{
           "origin" => "user",
           "value" => [
-            %{
-              "First Column" => %{"value" => "Foo", "origin" => "default"},
-              "Second Column" => %{"value" => "Bar", "origin" => "default"},
-              "Third Column" => %{"value" => "Baz", "origin" => "default"}
-            }
+            %{"First Column" => "Foo", "Second Column" => "Bar", "Third Column" => "Baz"}
           ]
         }
       }
@@ -1278,11 +1236,7 @@ defmodule TdDfLib.ValidationTest do
 
       assert data == %{
                "table_field" => [
-                 %{
-                   "First Column" => %{"value" => "Foo", "origin" => "default"},
-                   "Second Column" => %{"value" => "Bar", "origin" => "default"},
-                   "Third Column" => %{"value" => "Baz", "origin" => "default"}
-                 }
+                 %{"First Column" => "Foo", "Second Column" => "Bar", "Third Column" => "Baz"}
                ]
              }
 
@@ -1439,7 +1393,7 @@ defmodule TdDfLib.ValidationTest do
     end
   end
 
-  @tabe_content [
+  @dynamic_table_content [
     %{
       "name" => "group",
       "fields" => [
@@ -1448,7 +1402,7 @@ defmodule TdDfLib.ValidationTest do
           "default" => %{"value" => "", "origin" => "user"},
           "label" => "Table",
           "name" => "table_field",
-          "type" => "table",
+          "type" => "dynamic_table",
           "values" => %{
             "table_columns" => [
               %{
@@ -1471,15 +1425,15 @@ defmodule TdDfLib.ValidationTest do
               }
             ]
           },
-          "widget" => "table"
+          "widget" => "dynamic_table"
         }
       ]
     }
   ]
 
-  describe "build_changeset/2 table" do
+  describe "build_changeset/2 dynamic table" do
     setup do
-      %{id: template_id} = template = build(:template, content: @tabe_content)
+      %{id: template_id} = template = build(:template, content: @dynamic_table_content)
       TemplateCache.put(template)
       domain = CacheHelpers.put_domain()
       user = CacheHelpers.insert_user()

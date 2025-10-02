@@ -293,7 +293,7 @@ defmodule TdDfLib.Format do
         content,
         %{
           "name" => name,
-          "type" => "table",
+          "type" => "dynamic_table",
           "values" => %{"table_columns" => columns}
         },
         opts
@@ -474,6 +474,24 @@ defmodule TdDfLib.Format do
   end
 
   def format_field(%{"content" => content, "type" => "table"}) when is_binary(content) do
+    content
+    |> Parser.Table.parse_string(skip_headers: false)
+    |> then(fn
+      [headers | rows] ->
+        rows
+        |> Enum.reject(&(&1 == [""]))
+        |> Enum.map(fn row ->
+          headers
+          |> Enum.zip(row)
+          |> Map.new()
+        end)
+
+      _ ->
+        []
+    end)
+  end
+
+  def format_field(%{"content" => content, "type" => "dynamic_table"}) when is_binary(content) do
     content
     |> Parser.Table.parse_string(skip_headers: false)
     |> then(fn

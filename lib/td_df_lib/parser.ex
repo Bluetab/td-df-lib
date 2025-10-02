@@ -11,6 +11,8 @@ defmodule TdDfLib.Parser do
 
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
+  @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
+  @multiple_cardinality_schema_types ~w(string user user_group)
   def append_parsed_fields(acc, fields, content, opts \\ []) do
     opts =
       opts
@@ -42,8 +44,8 @@ defmodule TdDfLib.Parser do
 
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
-      schema_type in ["url", "enriched_text", "integer", "float", "domain", "hierarchy", "table"] or
-        (schema_type in ["string", "user", "user_group"] and cardinality in ["*", "+"]) or
+      schema_type in @schema_types or
+        (schema_type in @multiple_cardinality_schema_types and cardinality in ["*", "+"]) or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
     end)
@@ -127,6 +129,32 @@ defmodule TdDfLib.Parser do
 
   defp field_to_string(
          %{"name" => name, "type" => "table", "values" => %{"table_columns" => colums}},
+         content,
+         _domain_map,
+         opts
+       ) do
+    colums = Enum.map(colums, &Map.get(&1, "name"))
+    xlsx = Keyword.get(opts, :xlsx, false)
+
+    content
+    |> get_field_value(name)
+    |> value_to_list()
+    |> Enum.map(fn row -> Enum.map(colums, &Map.get(row, &1, "")) end)
+    |> case do
+      [] ->
+        {:plain, ""}
+
+      [_ | _] = rows ->
+        [colums | rows]
+        |> Parser.Table.dump_to_iodata()
+        |> IO.iodata_to_binary()
+        |> String.replace_trailing("\n", "")
+        |> then(&if xlsx, do: {:formatted, [&1, align_vertical: :top]}, else: {:plain, &1})
+    end
+  end
+
+  defp field_to_string(
+         %{"name" => name, "type" => "dynamic_table", "values" => %{"table_columns" => colums}},
          content,
          context,
          opts
