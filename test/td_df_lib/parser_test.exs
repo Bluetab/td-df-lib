@@ -854,7 +854,10 @@ defmodule TdDfLib.ParserTest do
         "table_name" => %{
           "origin" => "file",
           "value" => [
-            %{"col1" => %{"value" => "First Field"}},
+            %{
+              "col1" => %{"value" => "First Field"},
+              "col4" => %{"value" => ["Fourth Field", "Fith Field"]}
+            },
             %{"col2" => %{"value" => "Second Field"}, "col3" => %{"value" => "Third Field"}}
           ]
         }
@@ -892,6 +895,15 @@ defmodule TdDfLib.ParserTest do
                 "type" => "string",
                 "values" => nil,
                 "widget" => "string"
+              },
+              %{
+                "cardinality" => "+",
+                "default" => %{"origin" => "default", "value" => [""]},
+                "label" => "col4",
+                "name" => "col4",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
               }
             ]
           }
@@ -900,7 +912,7 @@ defmodule TdDfLib.ParserTest do
 
       assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
                [
-                 "col1;col2;col3\nFirst Field;;\n;Second Field;Third Field",
+                 "col1;col2;col3;col4\nFirst Field;;;Fourth Field|Fith Field\n;Second Field;Third Field;",
                  {:align_vertical, :top}
                ]
              ]
@@ -1048,9 +1060,9 @@ defmodule TdDfLib.ParserTest do
           "name" => "table_name",
           "values" => %{
             "table_columns" => [
-              %{"name" => "col1", "mandatory" => true},
-              %{"name" => "col2", "mandatory" => true},
-              %{"name" => "col3", "mandatory" => true}
+              %{"name" => "col1"},
+              %{"name" => "col2"},
+              %{"name" => "col3"}
             ]
           }
         }
