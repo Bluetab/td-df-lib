@@ -506,7 +506,7 @@ defmodule TdDfLib.Format do
       [headers | rows] ->
         rows
         |> Enum.reject(&(&1 == [""]))
-        |> Enum.map(&format_table_row(&1, headers, schema))
+        |> Enum.map(&format_table_row(&1, headers, schema, field["lang"]))
 
       _ ->
         []
@@ -515,14 +515,14 @@ defmodule TdDfLib.Format do
 
   def format_field(%{"content" => content}), do: content
 
-  defp format_table_row(row, headers, schema) do
+  defp format_table_row(row, headers, schema, lang) do
     nested_content =
       headers
       |> Enum.zip(row)
       |> Map.new()
 
     nested_content
-    |> LibParser.format_fields(schema, field["lang"])
+    |> LibParser.format_fields(schema, lang)
     |> Map.new(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
   end
 
