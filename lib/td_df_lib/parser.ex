@@ -40,8 +40,15 @@ defmodule TdDfLib.Parser do
     template_content =
       Format.apply_template(params_content, content_schema, domain_ids: domain_ids)
 
-    content = get_from_content(template_content, "value")
+    template_content
+    |> get_from_content("value")
+    |> format_fields(content_schema, lang)
+    |> merge_with_content(template_content)
+  end
 
+  def format_content(_params), do: nil
+
+  def format_fields(content, content_schema, lang) do
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
       schema_type in @schema_types or
@@ -55,10 +62,7 @@ defmodule TdDfLib.Parser do
       not is_nil(field_content) and is_binary(field_content)
     end)
     |> Enum.into(content, &format_field(&1, content, lang))
-    |> merge_with_content(template_content)
   end
-
-  def format_content(_params), do: nil
 
   defp format_field(schema, content, lang) do
     content =

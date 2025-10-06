@@ -1113,7 +1113,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\n",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
 
       assert [
@@ -1125,7 +1131,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1\n",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
 
       assert [
@@ -1137,7 +1149,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
 
       assert [
@@ -1153,7 +1171,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1\nCell A2; Cell B2",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
     end
 
@@ -1162,7 +1186,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\n\n",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
 
       assert [
@@ -1174,7 +1204,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\nCell A1; Cell B1\n\n",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
 
       assert [
@@ -1186,7 +1222,13 @@ defmodule TdDfLib.FormatTest do
                Format.format_field(%{
                  "content" => "Col A;Col B\n\nCell A1; Cell B1\n\n",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
                })
     end
 
@@ -1250,18 +1292,23 @@ defmodule TdDfLib.FormatTest do
       assert [
                %{
                  "Col A" => %{"origin" => "file", "value" => ["Cell A1", "Cell A1.1"]},
-                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+                 "Col B" => %{"origin" => "file", "value" => ["Cell B1"]}
                },
                %{
                  "Col A" => %{"origin" => "file", "value" => ["Cell A2", "Cell A2.1"]},
-                 "Col B" => %{"origin" => "file", "value" => " Cell B2"}
+                 "Col B" => %{"origin" => "file", "value" => ["Cell B2"]}
                }
              ] ==
                Format.format_field(%{
-                 "content" =>
-                   "Col A;Col B\nCell A1|Cell A1.1; Cell B1\nCell A2|Cell A2.1; Cell B2",
+                 "content" => "Col A;Col B\nCell A1|Cell A1.1;Cell B1\nCell A2|Cell A2.1;Cell B2",
                  "type" => "dynamic_table",
-                 "cardinality" => "*"
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "+", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "+", "type" => "string"}
+                   ]
+                 }
                })
     end
   end

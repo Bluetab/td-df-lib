@@ -9,6 +9,7 @@ defmodule TdDfLib.Format do
   alias TdCache.TaxonomyCache
   alias TdDfLib.RichText
   alias TdDfLib.Templates
+  alias TdDfLib.Parser, as: LibParser
 
   def apply_template(content, fields, opts \\ [])
 
@@ -491,7 +492,14 @@ defmodule TdDfLib.Format do
     end)
   end
 
-  def format_field(%{"content" => content, "type" => "dynamic_table"}) when is_binary(content) do
+  def format_field(
+        %{
+          "content" => content,
+          "type" => "dynamic_table",
+          "values" => %{"table_columns" => schema}
+        } = field
+      )
+      when is_binary(content) do
     content
     |> Parser.Table.parse_string(skip_headers: false)
     |> then(fn
@@ -499,11 +507,14 @@ defmodule TdDfLib.Format do
         rows
         |> Enum.reject(&(&1 == [""]))
         |> Enum.map(fn row ->
-          values = Enum.map(row, &format_table_row_value/1)
+          nested_content =
+            headers
+            |> Enum.zip(row)
+            |> Map.new()
 
-          headers
-          |> Enum.zip(values)
-          |> Map.new()
+          nested_content
+          |> LibParser.format_fields(schema, field["lang"])
+          |> Map.new(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
         end)
 
       _ ->
@@ -512,13 +523,6 @@ defmodule TdDfLib.Format do
   end
 
   def format_field(%{"content" => content}), do: content
-
-  defp format_table_row_value(value) do
-    case String.split(value, "|") do
-      [value] -> %{"value" => value, "origin" => "file"}
-      [_ | _] = values -> %{"value" => values, "origin" => "file"}
-    end
-  end
 
   defp match_node(%{"key" => key} = node, content) do
     case {String.starts_with?(content, "/"), String.ends_with?(node["path"], content)} do
