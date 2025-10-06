@@ -1245,6 +1245,25 @@ defmodule TdDfLib.FormatTest do
                  "cardinality" => "*"
                })
     end
+
+    test "format_field for dynamic_table for multiple cardinality text" do
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => ["Cell A1", "Cell A1.1"]},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               },
+               %{
+                 "Col A" => %{"origin" => "file", "value" => ["Cell A2", "Cell A2.1"]},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B2"}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" =>
+                   "Col A;Col B\nCell A1|Cell A1.1; Cell B1\nCell A2|Cell A2.1; Cell B2",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*"
+               })
+    end
   end
 
   describe "flatten_content_fields" do

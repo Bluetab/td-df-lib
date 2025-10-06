@@ -371,8 +371,8 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
-  def format_field(%{"content" => content, "cardinality" => cardinality} = schema)
-      when cardinality in ["+", "*"] and is_binary(content) do
+  def format_field(%{"content" => content, "cardinality" => cardinality, "type" => type} = schema)
+      when cardinality in ["+", "*"] and is_binary(content) and type != "dynamic_table" do
     content
     |> String.split("|", trim: true)
     |> Enum.map(fn c ->
@@ -499,7 +499,7 @@ defmodule TdDfLib.Format do
         rows
         |> Enum.reject(&(&1 == [""]))
         |> Enum.map(fn row ->
-          values = Enum.map(row, &%{"value" => &1, "origin" => "file"})
+          values = Enum.map(row, &format_table_row_value/1)
 
           headers
           |> Enum.zip(values)
@@ -512,6 +512,13 @@ defmodule TdDfLib.Format do
   end
 
   def format_field(%{"content" => content}), do: content
+
+  defp format_table_row_value(value) do
+    case String.split(value, "|") do
+      [value] -> %{"value" => value, "origin" => "file"}
+      [_ | _] = values -> %{"value" => values, "origin" => "file"}
+    end
+  end
 
   defp match_node(%{"key" => key} = node, content) do
     case {String.starts_with?(content, "/"), String.ends_with?(node["path"], content)} do
