@@ -7,9 +7,9 @@ defmodule TdDfLib.Format do
   alias TdCache.I18nCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
+  alias TdDfLib.Parser, as: LibParser
   alias TdDfLib.RichText
   alias TdDfLib.Templates
-  alias TdDfLib.Parser, as: LibParser
 
   def apply_template(content, fields, opts \\ [])
 
@@ -506,16 +506,7 @@ defmodule TdDfLib.Format do
       [headers | rows] ->
         rows
         |> Enum.reject(&(&1 == [""]))
-        |> Enum.map(fn row ->
-          nested_content =
-            headers
-            |> Enum.zip(row)
-            |> Map.new()
-
-          nested_content
-          |> LibParser.format_fields(schema, field["lang"])
-          |> Map.new(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
-        end)
+        |> Enum.map(&format_table_row(&1, headers, schema))
 
       _ ->
         []
@@ -523,6 +514,17 @@ defmodule TdDfLib.Format do
   end
 
   def format_field(%{"content" => content}), do: content
+
+  defp format_table_row(row, headers, schema) do
+    nested_content =
+      headers
+      |> Enum.zip(row)
+      |> Map.new()
+
+    nested_content
+    |> LibParser.format_fields(schema, field["lang"])
+    |> Map.new(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
+  end
 
   defp match_node(%{"key" => key} = node, content) do
     case {String.starts_with?(content, "/"), String.ends_with?(node["path"], content)} do
