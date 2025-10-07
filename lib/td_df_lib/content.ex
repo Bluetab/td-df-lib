@@ -59,23 +59,23 @@ defmodule TdDfLib.Content do
     |> Map.put(new_content_key, dynamic_content)
   end
 
-  defp to_legacy({key, %{"value" => value}}) when is_list(value) do
+  def to_legacy({key, %{"value" => value}}) when is_list(value) do
     {key, Enum.map(value, &to_legacy/1)}
   end
 
-  defp to_legacy({key, %{"value" => value}}) do
+  def to_legacy({key, %{"value" => value}}) do
     {key, value}
   end
 
-  defp to_legacy({key, value}) do
+  def to_legacy({key, value}) do
     {key, value}
   end
 
-  defp to_legacy(%{} = map) do
+  def to_legacy(%{} = map) do
     Map.new(map, &to_legacy/1)
   end
 
-  defp to_legacy(other) do
+  def to_legacy(other) do
     other
   end
 
