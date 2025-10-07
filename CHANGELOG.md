@@ -1,5 +1,11 @@
 # Changelog
 
+## [7.11.1] 2025-09-30
+
+### Added
+
+- [TD-7401] Update td-cache lib to add maxlen limit in streams
+
 ## [7.11.0] 2025-09-24
 
 ### Added
