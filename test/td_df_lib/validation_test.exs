@@ -1393,6 +1393,126 @@ defmodule TdDfLib.ValidationTest do
     end
   end
 
+  @dynamic_table_content [
+    %{
+      "name" => "group",
+      "fields" => [
+        %{
+          "cardinality" => "*",
+          "default" => %{"value" => "", "origin" => "user"},
+          "label" => "Table",
+          "name" => "table_field",
+          "type" => "dynamic_table",
+          "values" => %{
+            "table_columns" => [
+              %{
+                "cardinality" => "?",
+                "default" => %{"value" => "", "origin" => "user"},
+                "label" => "List of users/groups",
+                "name" => "data_owner",
+                "type" => "user_group",
+                "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+                "widget" => "dropdown"
+              },
+              %{
+                "cardinality" => "1",
+                "default" => %{"origin" => "default", "value" => ""},
+                "label" => "New string",
+                "name" => "string_field",
+                "type" => "string",
+                "values" => nil,
+                "widget" => "string"
+              }
+            ]
+          },
+          "widget" => "dynamic_table"
+        }
+      ]
+    }
+  ]
+
+  describe "build_changeset/2 dynamic table" do
+    setup do
+      %{id: template_id} = template = build(:template, content: @dynamic_table_content)
+      TemplateCache.put(template)
+      domain = CacheHelpers.put_domain()
+      user = CacheHelpers.insert_user()
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      on_exit(fn -> TemplateCache.delete(template_id) end)
+
+      [template: template, domain: domain, user: user]
+    end
+
+    test "validates table field", %{template: template, user: user, domain: domain} do
+      schema = Enum.flat_map(template.content, & &1["fields"])
+
+      content = %{
+        "table_field" => %{
+          "origin" => "user",
+          "value" => [
+            %{
+              "data_owner" => %{"origin" => "default", "value" => "user:#{user.full_name}"},
+              "string_field" => %{"origin" => "default", "value" => "Text"}
+            }
+          ]
+        }
+      }
+
+      assert %Ecto.Changeset{valid?: true} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
+    end
+
+    test "validates required fields", %{template: template, user: user, domain: domain} do
+      schema = Enum.flat_map(template.content, & &1["fields"])
+
+      content = %{
+        "table_field" => %{
+          "origin" => "user",
+          "value" => [
+            %{
+              "data_owner" => %{"origin" => "default", "value" => "user:#{user.full_name}"}
+            }
+          ]
+        }
+      }
+
+      assert %Ecto.Changeset{valid?: false, errors: errors} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert errors[:table_field] ==
+               {"string_field column in table row 0 can't be blank",
+                [validation: :required, row: 0, column: :string_field]}
+    end
+
+    test "validates user group fields", %{template: template, domain: domain, user: user} do
+      schema = Enum.flat_map(template.content, & &1["fields"])
+
+      content = %{
+        "table_field" => %{
+          "origin" => "user",
+          "value" => [
+            %{
+              "data_owner" => %{"origin" => "default", "value" => "user:foo"},
+              "string_field" => %{"origin" => "default", "value" => "Text"}
+            }
+          ]
+        }
+      }
+
+      assert %Ecto.Changeset{valid?: false, errors: errors} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert errors[:table_field] ==
+               {"data_owner column in table row 0 is invalid",
+                [
+                  validation: :inclusion,
+                  enum: ["user:#{user.full_name}"],
+                  row: 0,
+                  column: :data_owner
+                ]}
+    end
+  end
+
   defp get_changeset_for(field_type, field_value, cardinality, template) do
     template
     |> Map.put(:content, [

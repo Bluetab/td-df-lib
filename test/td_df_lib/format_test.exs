@@ -534,6 +534,77 @@ defmodule TdDfLib.FormatTest do
              }
     end
 
+    test "sets default values for dynamic table field" do
+      columns = [
+        %{
+          "name" => "foo",
+          "cardinality" => "1",
+          "values" => [],
+          "default" => %{"value" => "foo", "origin" => "default"}
+        }
+      ]
+
+      fields = [
+        %{
+          "type" => "dynamic_table",
+          "name" => "table_name",
+          "values" => %{"table_columns" => columns}
+        }
+      ]
+
+      assert Format.apply_template(%{"table_name" => %{"value" => [%{}]}}, fields) == %{
+               "table_name" => %{
+                 "value" => [%{"foo" => %{"origin" => "default", "value" => "foo"}}]
+               }
+             }
+
+      assert Format.apply_template(%{"table_name" => []}, fields) == %{"table_name" => []}
+      assert Format.apply_template(%{}, fields) == %{}
+    end
+
+    test "sets default values of dynamic table dependent field" do
+      columns = [
+        %{
+          "name" => "foo",
+          "cardinality" => "1",
+          "values" => [],
+          "default" => %{"value" => "foo", "origin" => "default"}
+        }
+      ]
+
+      fields = [
+        %{"name" => "bar", "cardinality" => "?", "values" => %{"fixed" => ["1", "2", "3"]}},
+        %{
+          "type" => "dynamic_table",
+          "name" => "table_name",
+          "values" => %{"table_columns" => columns},
+          "depends" => %{"on" => "bar", "to_be" => ["1", "2"]}
+        }
+      ]
+
+      content = %{
+        "bar" => %{"value" => "3", "origin" => "default"},
+        "table_name" => %{"value" => [%{}]}
+      }
+
+      assert Format.apply_template(content, fields) == %{
+               "bar" => %{"value" => "3", "origin" => "default"},
+               "table_name" => %{"value" => [%{}]}
+             }
+
+      content = %{
+        "bar" => %{"value" => "1", "origin" => "default"},
+        "table_name" => %{"value" => [%{}]}
+      }
+
+      assert Format.apply_template(content, fields) == %{
+               "bar" => %{"value" => "1", "origin" => "default"},
+               "table_name" => %{
+                 "value" => [%{"foo" => %{"origin" => "default", "value" => "foo"}}]
+               }
+             }
+    end
+
     test "return node correctly when template and node exist" do
       create_hierarchy(nil)
       content = %{"hierarchy_field" => %{"value" => 51, "origin" => "user"}}
@@ -1037,6 +1108,130 @@ defmodule TdDfLib.FormatTest do
                })
     end
 
+    test "format_field for dynamic table field with \n in content" do
+      assert [] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\n",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1\n",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               },
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A2"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B2"}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1\nCell A2; Cell B2",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+    end
+
+    test "format_field for dynamic table field with \n\n in content" do
+      assert [] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\n\n",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1; Cell B1\n\n",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => "Cell A1"},
+                 "Col B" => %{"origin" => "file", "value" => " Cell B1"}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\n\nCell A1; Cell B1\n\n",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "?", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "?", "type" => "string"}
+                   ]
+                 }
+               })
+    end
+
     test "format_field for table field with \n in content" do
       assert [] ==
                Format.format_field(%{
@@ -1090,6 +1285,30 @@ defmodule TdDfLib.FormatTest do
                  "content" => "Col A;Col B\n\nCell A1; Cell B1\n\n",
                  "type" => "table",
                  "cardinality" => "*"
+               })
+    end
+
+    test "format_field for dynamic_table for multiple cardinality text" do
+      assert [
+               %{
+                 "Col A" => %{"origin" => "file", "value" => ["Cell A1", "Cell A1.1"]},
+                 "Col B" => %{"origin" => "file", "value" => ["Cell B1"]}
+               },
+               %{
+                 "Col A" => %{"origin" => "file", "value" => ["Cell A2", "Cell A2.1"]},
+                 "Col B" => %{"origin" => "file", "value" => ["Cell B2"]}
+               }
+             ] ==
+               Format.format_field(%{
+                 "content" => "Col A;Col B\nCell A1|Cell A1.1;Cell B1\nCell A2|Cell A2.1;Cell B2",
+                 "type" => "dynamic_table",
+                 "cardinality" => "*",
+                 "values" => %{
+                   "table_columns" => [
+                     %{"name" => "Col A", "cardinality" => "+", "type" => "string"},
+                     %{"name" => "Col B", "cardinality" => "+", "type" => "string"}
+                   ]
+                 }
                })
     end
   end

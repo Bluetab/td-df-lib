@@ -7,6 +7,7 @@ defmodule TdDfLib.Format do
   alias TdCache.I18nCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
+  alias TdDfLib.Parser, as: LibParser
   alias TdDfLib.RichText
   alias TdDfLib.Templates
 
@@ -291,6 +292,31 @@ defmodule TdDfLib.Format do
 
   def set_default_value(
         content,
+        %{
+          "name" => name,
+          "type" => "dynamic_table",
+          "values" => %{"table_columns" => columns}
+        },
+        opts
+      ) do
+    case Map.get(content, name, %{"value" => []}) do
+      %{"value" => []} ->
+        content
+
+      %{"value" => [_ | _] = rows} ->
+        put_in(
+          content,
+          [name, "value"],
+          Enum.map(rows, fn row -> default_values(row, columns, opts) end)
+        )
+
+      _other ->
+        content
+    end
+  end
+
+  def set_default_value(
+        content,
         %{"name" => name, "cardinality" => "*", "values" => values},
         _opts
       )
@@ -346,8 +372,8 @@ defmodule TdDfLib.Format do
     [new_content]
   end
 
-  def format_field(%{"content" => content, "cardinality" => cardinality} = schema)
-      when cardinality in ["+", "*"] and is_binary(content) do
+  def format_field(%{"content" => content, "cardinality" => cardinality, "type" => type} = schema)
+      when cardinality in ["+", "*"] and is_binary(content) and type != "dynamic_table" do
     content
     |> String.split("|", trim: true)
     |> Enum.map(fn c ->
@@ -466,7 +492,39 @@ defmodule TdDfLib.Format do
     end)
   end
 
+  def format_field(
+        %{
+          "content" => content,
+          "type" => "dynamic_table",
+          "values" => %{"table_columns" => schema}
+        } = field
+      )
+      when is_binary(content) do
+    content
+    |> Parser.Table.parse_string(skip_headers: false)
+    |> then(fn
+      [headers | rows] ->
+        rows
+        |> Enum.reject(&(&1 == [""]))
+        |> Enum.map(&format_table_row(&1, headers, schema, field["lang"]))
+
+      _ ->
+        []
+    end)
+  end
+
   def format_field(%{"content" => content}), do: content
+
+  defp format_table_row(row, headers, schema, lang) do
+    nested_content =
+      headers
+      |> Enum.zip(row)
+      |> Map.new()
+
+    nested_content
+    |> LibParser.format_fields(schema, lang)
+    |> Map.new(fn {key, value} -> {key, %{"value" => value, "origin" => "file"}} end)
+  end
 
   defp match_node(%{"key" => key} = node, content) do
     case {String.starts_with?(content, "/"), String.ends_with?(node["path"], content)} do

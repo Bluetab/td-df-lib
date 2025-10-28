@@ -17,6 +17,7 @@ defmodule TdDfLib.Validation do
     "user" => :string,
     "enriched_text" => :map,
     "table" => :map,
+    "dynamic_table" => :map,
     "integer" => :integer,
     "float" => :float,
     "system" => :map,
@@ -102,6 +103,7 @@ defmodule TdDfLib.Validation do
     |> add_url_validation(field_spec)
     |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
+    |> add_table_validation(field_spec, opts)
   end
 
   defp add_content_validation(changeset, [], _opts), do: changeset
@@ -290,12 +292,6 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
-
-  defp columns_with_errors(row, value, mandatory_columns) do
-    mandatory_columns
-    |> Enum.filter(fn column -> Map.get(value, column) in [nil, ""] end)
-    |> Enum.map(fn column_name -> {column_name, row} end)
-  end
 
   defp add_inclusion_validation(
          changeset,
@@ -521,15 +517,13 @@ defmodule TdDfLib.Validation do
 
   def validate_safe(field, value) when is_map(value) do
     formated_value =
-      value
-      |> Enum.map(fn
+      Map.new(value, fn
         {f, {:error, v}} ->
           {f, %{error: v}}
 
         v ->
           v
       end)
-      |> Map.new()
 
     validate_safe(field, Jason.encode!(formated_value))
   end
@@ -560,5 +554,38 @@ defmodule TdDfLib.Validation do
     end)
   end
 
+  defp add_table_validation(
+         changeset,
+         %{"name" => name, "type" => "dynamic_table", "values" => %{"table_columns" => colums}},
+         opts
+       ) do
+    field = String.to_atom(name)
+
+    Changeset.validate_change(changeset, field, fn ^field, table_content_rows ->
+      table_content_rows
+      |> Enum.with_index(fn element, index -> {build_changeset(element, colums, opts), index} end)
+      |> Enum.flat_map(&parse_row_errors(&1, field))
+    end)
+  end
+
+  defp add_table_validation(changeset, _field_spec, _opts), do: changeset
   def allowed_origins, do: @allowed_origins
+
+  defp parse_row_errors({%{valid?: true}, _index}, _field), do: []
+
+  defp parse_row_errors({changeset, index}, field) do
+    Enum.map(changeset.errors, fn {column, {error, validation}} ->
+      extra = [row: index, column: column]
+
+      {field,
+       {"#{column} column in table row #{index}" <> " " <> "#{error}",
+        Keyword.merge(validation, extra)}}
+    end)
+  end
+
+  defp columns_with_errors(row, value, mandatory_columns) do
+    mandatory_columns
+    |> Enum.filter(fn column -> Map.get(value, column) in [nil, ""] end)
+    |> Enum.map(fn column_name -> {column_name, row} end)
+  end
 end

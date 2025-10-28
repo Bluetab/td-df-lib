@@ -23,3 +23,5 @@ erl_crash.dump
 td_df_lib-*.tar
 .elixir_ls
 .tool-versions
+
+*.DS_Store
