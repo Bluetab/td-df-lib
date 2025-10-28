@@ -1,10 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [7.12.0] 2025-10-28
 
 ### Added
 
-- [TD-7340]: 
+- [TD-7340]:
   - Template validations for `dynamic_table` fields
   - Apply template to entity content for `dynamic_table` fields
   - Format `dynamic_table` fields content for file upload and download
