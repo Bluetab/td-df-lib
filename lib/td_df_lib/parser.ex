@@ -13,6 +13,7 @@ defmodule TdDfLib.Parser do
 
   @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
   @multiple_cardinality_schema_types ~w(string user user_group)
+  @date_types ~w(date datetime)
   def append_parsed_fields(acc, fields, content, opts \\ []) do
     opts =
       opts
@@ -51,15 +52,15 @@ defmodule TdDfLib.Parser do
   def format_fields(content, content_schema, lang) do
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
-      schema_type in @schema_types or
+      schema_type in @schema_types or schema_type in @date_types or
         (schema_type in @multiple_cardinality_schema_types and cardinality in ["*", "+"]) or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
     end)
     # credo:disable-for-next-line
-    |> Enum.filter(fn %{"name" => name} ->
+    |> Enum.filter(fn %{"name" => name, "type" => type} ->
       field_content = Map.get(content, name)
-      not is_nil(field_content) and is_binary(field_content)
+      not is_nil(field_content) and (is_binary(field_content) or type in @date_types)
     end)
     |> Enum.into(content, &format_field(&1, content, lang))
   end
