@@ -7,6 +7,7 @@ defmodule TdDfLib.Parser do
   alias TdCache.HierarchyCache
   alias TdCache.I18nCache
   alias TdDfLib.Format
+  alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.I18n
 
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
@@ -184,19 +185,35 @@ defmodule TdDfLib.Parser do
     end)
   end
 
-  defp field_to_string(field, content, domain_map, opts) do
+  defp field_to_string(%{"name" => field_name} = field, content, domain_map, opts) do
     translatable = I18n.is_translatable_field?(field)
     translations = Keyword.get(opts, :translations, false)
 
-    if translatable and translations do
-      string_fields =
-        opts
-        |> Keyword.get(:locales)
-        |> Enum.map(&maybe_translatable_field_to_string(field, content, domain_map, &1, opts))
+    cond do
+      field["type"] == "date" and opts[:xlsx] ->
+        {:formatted,
+         [
+           FormatDateTime.get_unix_timestamp(content, field_name, :date),
+           {:num_format, "dd-mm-yyyy"}
+         ]}
 
-      {:plain, string_fields}
-    else
-      {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
+      field["type"] == "datetime" and opts[:xlsx] ->
+        {:formatted,
+         [
+           FormatDateTime.get_unix_timestamp(content, field_name, :datetime),
+           {:num_format, "dd-mm-yyyy hh:MM:ss"}
+         ]}
+
+      translatable and translations ->
+        string_fields =
+          opts
+          |> Keyword.get(:locales)
+          |> Enum.map(&maybe_translatable_field_to_string(field, content, domain_map, &1, opts))
+
+        {:plain, string_fields}
+
+      true ->
+        {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
     end
   end
 

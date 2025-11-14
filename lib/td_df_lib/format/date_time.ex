@@ -46,6 +46,20 @@ defmodule TdDfLib.Format.DateTime do
 
   def convert_to_iso8601(_, _), do: :error
 
+  def get_unix_timestamp(content, field_name, :date) do
+    content
+    |> Map.get(field_name)
+    |> parse_iso_date()
+    |> maybe_to_unix()
+  end
+
+  def get_unix_timestamp(content, field_name, :datetime) do
+    content
+    |> Map.get(field_name)
+    |> parse_iso_datetime()
+    |> maybe_to_unix()
+  end
+
   defp convert_numeric_to_iso8601(value, "date") do
     with {:ok, date} <- serial_to_date(trunc(value)) do
       {:ok, Date.to_iso8601(date)}
@@ -216,4 +230,61 @@ defmodule TdDfLib.Format.DateTime do
       String.replace(value, " ", "T")
     end
   end
+
+  defp parse_iso_date(nil), do: nil
+  defp parse_iso_date(""), do: nil
+
+  defp parse_iso_date(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> date
+      _ -> nil
+    end
+  end
+
+  defp parse_iso_datetime(nil), do: nil
+  defp parse_iso_datetime(""), do: nil
+
+  defp parse_iso_datetime(value) do
+    value
+    |> parse_naive_datetime()
+    |> case do
+      {:ok, naive} -> DateTime.from_naive!(naive, "Etc/UTC")
+      _ -> nil
+    end
+  end
+
+  defp maybe_to_unix(nil), do: nil
+
+  defp maybe_to_unix(%Date{} = date) do
+    date
+    |> NaiveDateTime.new!(~T[00:00:00])
+    |> DateTime.from_naive!("Etc/UTC")
+    |> DateTime.to_unix()
+  end
+
+  defp maybe_to_unix(%DateTime{} = datetime), do: DateTime.to_unix(datetime)
+
+  defp parse_naive_datetime(value) do
+    case NaiveDateTime.from_iso8601(value) do
+      {:ok, _} = result ->
+        result
+
+      _ ->
+        value
+        |> append_missing_seconds()
+        |> case do
+          {:ok, completed} -> NaiveDateTime.from_iso8601(completed)
+          _ -> :error
+        end
+    end
+  end
+
+  defp append_missing_seconds(<<date::binary-size(10), "T", time::binary-size(5)>>) do
+    case String.split(time, ":", parts: 2) do
+      [hour, minute] -> {:ok, <<date::binary, "T", hour::binary, ":", minute::binary, ":00">>}
+      _ -> :error
+    end
+  end
+
+  defp append_missing_seconds(_), do: :error
 end

@@ -1148,5 +1148,59 @@ defmodule TdDfLib.ParserTest do
                default_locale: "en"
              ) == ["Text English"]
     end
+
+    test "formats date field for output using unix timestamp" do
+      fields = [
+        %{
+          "type" => "date",
+          "name" => "date field",
+          "label" => "date field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"date field" => "2025-12-31"}
+
+      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
+               [1_767_139_200, {:num_format, "dd-mm-yyyy"}]
+             ]
+    end
+
+    test "formats datetime field without seconds for output using unix timestamp" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => "2025-12-31T22:55"}
+
+      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
+               [1_767_221_700, {:num_format, "dd-mm-yyyy hh:MM:ss"}]
+             ]
+    end
+
+    test "formats datetime field with seconds for output using unix timestamp" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => "2025-12-31T22:55:30"}
+
+      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
+               [1_767_221_730, {:num_format, "dd-mm-yyyy hh:MM:ss"}]
+             ]
+    end
   end
 end

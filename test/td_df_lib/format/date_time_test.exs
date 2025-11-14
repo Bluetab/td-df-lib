@@ -116,4 +116,47 @@ defmodule TdDfLib.Format.DateTimeTest do
       assert FormatDateTime.convert_to_iso8601(123, "other_type") == {:ok, 123}
     end
   end
+
+  describe "get_unix_timestamp/3" do
+    test "returns unix timestamp for date fields" do
+      content = %{"date_field" => "2025-12-31"}
+
+      expected =
+        ~D[2025-12-31]
+        |> NaiveDateTime.new!(~T[00:00:00])
+        |> DateTime.from_naive!("Etc/UTC")
+        |> DateTime.to_unix()
+
+      assert FormatDateTime.get_unix_timestamp(content, "date_field", :date) == expected
+    end
+
+    test "returns unix timestamp for datetime fields" do
+      content = %{"datetime_field" => "2025-12-31T22:55:30"}
+
+      expected =
+        ~N[2025-12-31 22:55:30]
+        |> DateTime.from_naive!("Etc/UTC")
+        |> DateTime.to_unix()
+
+      assert FormatDateTime.get_unix_timestamp(content, "datetime_field", :datetime) == expected
+    end
+
+    test "completes datetime values without seconds" do
+      content = %{"datetime_field" => "2025-12-31T22:55"}
+
+      expected =
+        ~N[2025-12-31 22:55:00]
+        |> DateTime.from_naive!("Etc/UTC")
+        |> DateTime.to_unix()
+
+      assert FormatDateTime.get_unix_timestamp(content, "datetime_field", :datetime) == expected
+    end
+
+    test "returns nil for invalid values" do
+      content = %{"date_field" => "invalid", "datetime_field" => "also-invalid"}
+
+      assert FormatDateTime.get_unix_timestamp(content, "date_field", :date) == nil
+      assert FormatDateTime.get_unix_timestamp(content, "datetime_field", :datetime) == nil
+    end
+  end
 end
