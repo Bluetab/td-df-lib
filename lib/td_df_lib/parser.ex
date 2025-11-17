@@ -191,22 +191,10 @@ defmodule TdDfLib.Parser do
 
     cond do
       field["type"] == "date" and opts[:xlsx] ->
-        serial = FormatDateTime.get_excel_serial(content, field_name, :date)
-
-        {:formatted,
-         [
-           {:excelts, serial},
-           {:num_format, "dd-mm-yyyy"}
-         ]}
+        format_date_field(field, content, field_name, domain_map, opts)
 
       field["type"] == "datetime" and opts[:xlsx] ->
-        serial = FormatDateTime.get_excel_serial(content, field_name, :datetime)
-
-        {:formatted,
-         [
-           {:excelts, serial},
-           {:num_format, "dd-mm-yyyy hh:MM:ss"}
-         ]}
+        format_datetime_field(field, content, field_name, domain_map, opts)
 
       translatable and translations ->
         string_fields =
@@ -218,6 +206,34 @@ defmodule TdDfLib.Parser do
 
       true ->
         {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
+    end
+  end
+
+  defp format_date_field(field, content, field_name, domain_map, opts) do
+    serial = FormatDateTime.get_excel_serial(content, field_name, :date)
+
+    if serial do
+      {:formatted,
+       [
+         {:excelts, serial},
+         {:num_format, "dd-mm-yyyy"}
+       ]}
+    else
+      {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
+    end
+  end
+
+  defp format_datetime_field(field, content, field_name, domain_map, opts) do
+    serial = FormatDateTime.get_excel_serial(content, field_name, :datetime)
+
+    if serial do
+      {:formatted,
+       [
+         {:excelts, serial},
+         {:num_format, "dd-mm-yyyy hh:MM:ss"}
+       ]}
+    else
+      {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
     end
   end
 

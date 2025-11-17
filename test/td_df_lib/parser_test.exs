@@ -1206,5 +1206,73 @@ defmodule TdDfLib.ParserTest do
       assert format == "dd-mm-yyyy hh:MM:ss"
       assert serial == 46_022.955208333333
     end
+
+    test "returns plain value when date field cannot be transformed to excel serial" do
+      fields = [
+        %{
+          "type" => "date",
+          "name" => "date field",
+          "label" => "date field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"date field" => "invalid-date"}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == "invalid-date"
+    end
+
+    test "returns plain value when datetime field cannot be transformed to excel serial" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => "invalid-datetime"}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == "invalid-datetime"
+    end
+
+    test "returns plain value when date field is nil" do
+      fields = [
+        %{
+          "type" => "date",
+          "name" => "date field",
+          "label" => "date field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"date field" => nil}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == ""
+    end
+
+    test "returns plain value when datetime field is empty string" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => ""}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == ""
+    end
   end
 end
