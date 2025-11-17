@@ -1149,7 +1149,7 @@ defmodule TdDfLib.ParserTest do
              ) == ["Text English"]
     end
 
-    test "formats date field for output using unix timestamp" do
+    test "formats date field for output using excel serial number" do
       fields = [
         %{
           "type" => "date",
@@ -1163,11 +1163,11 @@ defmodule TdDfLib.ParserTest do
       content = %{"date field" => "2025-12-31"}
 
       assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
-               [1_767_139_200, {:num_format, "dd-mm-yyyy"}]
+               [{:excelts, 46_022}, {:num_format, "dd-mm-yyyy"}]
              ]
     end
 
-    test "formats datetime field without seconds for output using unix timestamp" do
+    test "formats datetime field without seconds for output using excel serial number" do
       fields = [
         %{
           "type" => "datetime",
@@ -1180,12 +1180,14 @@ defmodule TdDfLib.ParserTest do
 
       content = %{"datetime field" => "2025-12-31T22:55"}
 
-      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
-               [1_767_221_700, {:num_format, "dd-mm-yyyy hh:MM:ss"}]
-             ]
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      [{:excelts, serial}, {:num_format, format}] = List.first(result)
+
+      assert format == "dd-mm-yyyy hh:MM:ss"
+      assert serial == 46_022.954861111111
     end
 
-    test "formats datetime field with seconds for output using unix timestamp" do
+    test "formats datetime field with seconds for output using excel serial number" do
       fields = [
         %{
           "type" => "datetime",
@@ -1198,9 +1200,11 @@ defmodule TdDfLib.ParserTest do
 
       content = %{"datetime field" => "2025-12-31T22:55:30"}
 
-      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
-               [1_767_221_730, {:num_format, "dd-mm-yyyy hh:MM:ss"}]
-             ]
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      [{:excelts, serial}, {:num_format, format}] = List.first(result)
+
+      assert format == "dd-mm-yyyy hh:MM:ss"
+      assert serial == 46_022.955208333333
     end
   end
 end

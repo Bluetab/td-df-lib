@@ -3,7 +3,7 @@ defmodule TdDfLib.Format.DateTime do
   Manages date and time formatting
   """
 
-  @numeric_base_date ~D[1900-01-26]
+  @excel_base_date ~D[1900-01-01]
 
   def convert_to_iso8601(nil, _type), do: {:ok, nil}
   def convert_to_iso8601("", _type), do: {:ok, ""}
@@ -46,18 +46,18 @@ defmodule TdDfLib.Format.DateTime do
 
   def convert_to_iso8601(_, _), do: :error
 
-  def get_unix_timestamp(content, field_name, :date) do
+  def get_excel_serial(content, field_name, :date) do
     content
     |> Map.get(field_name)
     |> parse_iso_date()
-    |> maybe_to_unix()
+    |> maybe_to_excel_serial()
   end
 
-  def get_unix_timestamp(content, field_name, :datetime) do
+  def get_excel_serial(content, field_name, :datetime) do
     content
     |> Map.get(field_name)
     |> parse_iso_datetime()
-    |> maybe_to_unix()
+    |> maybe_to_excel_serial()
   end
 
   defp convert_numeric_to_iso8601(value, "date") do
@@ -107,7 +107,7 @@ defmodule TdDfLib.Format.DateTime do
   end
 
   defp serial_to_date(serial) do
-    {:ok, Date.add(@numeric_base_date, serial)}
+    {:ok, Date.add(@excel_base_date, serial - 2)}
   rescue
     ArgumentError -> :error
   end
@@ -253,16 +253,24 @@ defmodule TdDfLib.Format.DateTime do
     end
   end
 
-  defp maybe_to_unix(nil), do: nil
+  defp maybe_to_excel_serial(nil), do: nil
 
-  defp maybe_to_unix(%Date{} = date) do
+  defp maybe_to_excel_serial(%Date{} = date) do
     date
-    |> NaiveDateTime.new!(~T[00:00:00])
-    |> DateTime.from_naive!("Etc/UTC")
-    |> DateTime.to_unix()
+    |> Date.diff(@excel_base_date)
+    |> then(&(&1 + 2))
   end
 
-  defp maybe_to_unix(%DateTime{} = datetime), do: DateTime.to_unix(datetime)
+  defp maybe_to_excel_serial(%DateTime{} = datetime) do
+    date = DateTime.to_date(datetime)
+    days = Date.diff(date, @excel_base_date) + 2
+
+    time = DateTime.to_time(datetime)
+    {seconds, _microseconds} = Time.to_seconds_after_midnight(time)
+    fraction = seconds / 86_400
+
+    days + fraction
+  end
 
   defp parse_naive_datetime(value) do
     case NaiveDateTime.from_iso8601(value) do

@@ -191,16 +191,20 @@ defmodule TdDfLib.Parser do
 
     cond do
       field["type"] == "date" and opts[:xlsx] ->
+        serial = FormatDateTime.get_excel_serial(content, field_name, :date)
+
         {:formatted,
          [
-           FormatDateTime.get_unix_timestamp(content, field_name, :date),
+           {:excelts, serial},
            {:num_format, "dd-mm-yyyy"}
          ]}
 
       field["type"] == "datetime" and opts[:xlsx] ->
+        serial = FormatDateTime.get_excel_serial(content, field_name, :datetime)
+
         {:formatted,
          [
-           FormatDateTime.get_unix_timestamp(content, field_name, :datetime),
+           {:excelts, serial},
            {:num_format, "dd-mm-yyyy hh:MM:ss"}
          ]}
 

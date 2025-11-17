@@ -42,27 +42,27 @@ defmodule TdDfLib.Format.DateTimeTest do
     end
 
     test "converts integer date and datetime to iso8601 string" do
-      value = 45_995
+      value = 46_022
       assert FormatDateTime.convert_to_iso8601(value, "date") == {:ok, "2025-12-31"}
 
-      value = "45995"
+      value = "46022"
       assert FormatDateTime.convert_to_iso8601(value, "date") == {:ok, "2025-12-31"}
 
-      value = 45_995
+      value = 46_022
       assert FormatDateTime.convert_to_iso8601(value, "datetime") == {:ok, "2025-12-31T00:00:00"}
-      value = "45995"
+      value = "46022"
       assert FormatDateTime.convert_to_iso8601(value, "datetime") == {:ok, "2025-12-31T00:00:00"}
     end
 
     test "converts float date and datetime to iso8601 string" do
-      value = 45_995.9552083333
+      value = 46_022.955208333333
       assert FormatDateTime.convert_to_iso8601(value, "date") == {:ok, "2025-12-31"}
-      value = "45995.9552083333"
+      value = "46022.955208333333"
       assert FormatDateTime.convert_to_iso8601(value, "date") == {:ok, "2025-12-31"}
 
-      value = 45_995.9552083333
+      value = 46_022.955208333333
       assert FormatDateTime.convert_to_iso8601(value, "datetime") == {:ok, "2025-12-31T22:55:30"}
-      value = "45995.9552083333"
+      value = "46022.955208333333"
       assert FormatDateTime.convert_to_iso8601(value, "datetime") == {:ok, "2025-12-31T22:55:30"}
     end
 
@@ -117,46 +117,34 @@ defmodule TdDfLib.Format.DateTimeTest do
     end
   end
 
-  describe "get_unix_timestamp/3" do
-    test "returns unix timestamp for date fields" do
+  describe "get_excel_serial/3" do
+    test "returns excel serial for date fields" do
       content = %{"date_field" => "2025-12-31"}
 
-      expected =
-        ~D[2025-12-31]
-        |> NaiveDateTime.new!(~T[00:00:00])
-        |> DateTime.from_naive!("Etc/UTC")
-        |> DateTime.to_unix()
+      expected = 46_022
 
-      assert FormatDateTime.get_unix_timestamp(content, "date_field", :date) == expected
+      assert FormatDateTime.get_excel_serial(content, "date_field", :date) == expected
     end
 
-    test "returns unix timestamp for datetime fields" do
+    test "returns excel serial for datetime fields" do
       content = %{"datetime_field" => "2025-12-31T22:55:30"}
 
-      expected =
-        ~N[2025-12-31 22:55:30]
-        |> DateTime.from_naive!("Etc/UTC")
-        |> DateTime.to_unix()
-
-      assert FormatDateTime.get_unix_timestamp(content, "datetime_field", :datetime) == expected
+      assert FormatDateTime.get_excel_serial(content, "datetime_field", :datetime) ==
+               46_022.955208333333
     end
 
     test "completes datetime values without seconds" do
       content = %{"datetime_field" => "2025-12-31T22:55"}
 
-      expected =
-        ~N[2025-12-31 22:55:00]
-        |> DateTime.from_naive!("Etc/UTC")
-        |> DateTime.to_unix()
-
-      assert FormatDateTime.get_unix_timestamp(content, "datetime_field", :datetime) == expected
+      assert FormatDateTime.get_excel_serial(content, "datetime_field", :datetime) ==
+               46_022.954861111111
     end
 
     test "returns nil for invalid values" do
       content = %{"date_field" => "invalid", "datetime_field" => "also-invalid"}
 
-      assert FormatDateTime.get_unix_timestamp(content, "date_field", :date) == nil
-      assert FormatDateTime.get_unix_timestamp(content, "datetime_field", :datetime) == nil
+      assert FormatDateTime.get_excel_serial(content, "date_field", :date) == nil
+      assert FormatDateTime.get_excel_serial(content, "datetime_field", :datetime) == nil
     end
   end
 end
