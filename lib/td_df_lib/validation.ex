@@ -220,6 +220,17 @@ defmodule TdDfLib.Validation do
     insert_error_in_changeset(changeset, error, name)
   end
 
+  defp add_content_error(changeset, %{"name" => name, "label" => label}, :invalid_format) do
+    field_label = get_field_label_for_error(label, name)
+    error = {"#{field_label} is invalid", []}
+    insert_error_in_changeset(changeset, error, name)
+  end
+
+  defp add_content_error(changeset, %{"name" => name}, :invalid_format) do
+    error = {"#{name} is invalid", []}
+    insert_error_in_changeset(changeset, error, name)
+  end
+
   defp add_content_error(changeset, %{"name" => name}, error),
     do: insert_error_in_changeset(changeset, error, name)
 
@@ -538,9 +549,23 @@ defmodule TdDfLib.Validation do
   defp format_validator_errors({field, :no_translation_found}),
     do: "#{field}: translation not found"
 
-  defp format_validator_errors({field, {msg, _}}) when is_binary(msg), do: "#{field}: #{msg}"
+  defp format_validator_errors({field, {msg, _}}) when is_binary(msg) do
+    if String.contains?(msg, " is invalid") do
+      msg
+    else
+      "#{field}: #{msg}"
+    end
+  end
 
   defp format_validator_errors(_), do: "invalid content"
+
+  defp get_field_label_for_error(label, name) do
+    if label && label != "" do
+      label
+    else
+      name
+    end
+  end
 
   defp add_origin_validations(changeset, origins) do
     origins
