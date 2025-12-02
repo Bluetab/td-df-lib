@@ -13,16 +13,34 @@ defmodule TdDfLib.Parser do
 
   @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
   @multiple_cardinality_schema_types ~w(string user user_group)
-  def append_parsed_fields(acc, fields, content, opts \\ []) do
-    opts =
-      opts
-      |> Keyword.put_new(:translations, false)
-      |> Keyword.put_new(:locales, I18nCache.get_active_locales!())
+
+  @doc """
+  Parses field values from content and appends them to the accumulator.
+
+  ## Parameters
+  - `acc` - Accumulator list to append results to
+  - `fields` - List of field definitions
+  - `content` - Map containing field values
+  - `opts` - Options keyword list (domain_type, lang, translations, locales, xlsx)
+  - `context` - Optional pre-built context map. If not provided, context will be built internally.
+
+  ## Examples
+
+      # Without pre-built context (backward compatible)
+      append_parsed_fields([], fields, content, [lang: "en", domain_type: :with_domain_external_id])
+
+      # With pre-built context (optimized)
+      context = context_for_fields(fields, :with_domain_external_id) |> Map.put("lang", "en")
+      append_parsed_fields([], fields, content, [lang: "en"], context)
+  """
+  def append_parsed_fields(acc, fields, content, opts \\ [], context \\ nil) do
+    opts = normalize_opts(opts)
 
     ctx =
-      fields
-      |> context_for_fields(Keyword.get(opts, :domain_type, :with_domain_external_id))
-      |> Map.put("lang", Keyword.get(opts, :lang))
+      context ||
+        (fields
+         |> context_for_fields(Keyword.get(opts, :domain_type, :with_domain_external_id))
+         |> Map.put("lang", Keyword.get(opts, :lang)))
 
     fields_to_string(acc, fields, content, ctx, opts)
   end
@@ -89,7 +107,30 @@ defmodule TdDfLib.Parser do
 
   defp format_content_errors(content_value), do: content_value
 
-  defp context_for_fields(fields, domain_type) do
+  @doc """
+  Builds a context map for field parsing by analyzing field types and loading necessary cache data.
+
+  This function examines the fields list and pre-loads cache data needed for parsing:
+  - Domain fields: Loads domain ID to external_id/name mapping
+  - Hierarchy fields: Loads hierarchy nodes by hierarchy ID
+
+  ## Parameters
+  - `fields` - List of field definitions
+  - `domain_type` - Atom indicating domain mapping type (`:with_domain_external_id` or `:with_domain_name`)
+
+  ## Returns
+  A context map containing:
+  - `:domains` - Map of domain ID to external_id/name (if domain fields present)
+  - `:hierarchy` - Map of hierarchy_id to nodes (if hierarchy fields present)
+
+  ## Examples
+
+      context = context_for_fields(fields, :with_domain_external_id)
+      # %{domains: %{1 => "domain_ext_id", 2 => "another_ext_id"}}
+
+      context_with_lang = context |> Map.put("lang", "en")
+  """
+  def context_for_fields(fields, domain_type) do
     Enum.reduce(fields, %{}, fn
       %{"type" => "domain"}, %{domains: %{}} = ctx ->
         ctx
@@ -128,6 +169,12 @@ defmodule TdDfLib.Parser do
 
   defp domain_content(:with_domain_name), do: DomainCache.id_to_name_map()
   defp domain_content(:with_domain_external_id), do: DomainCache.id_to_external_id_map()
+
+  defp normalize_opts(opts) do
+    opts
+    |> Keyword.put_new(:translations, false)
+    |> Keyword.put_new(:locales, I18nCache.get_active_locales!())
+  end
 
   defp field_to_string(_field, nil, _ctx, _opts), do: {:plain, ""}
 
