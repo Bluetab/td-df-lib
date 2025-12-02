@@ -38,9 +38,9 @@ defmodule TdDfLib.Parser do
 
     ctx =
       context ||
-        (fields
-         |> context_for_fields(Keyword.get(opts, :domain_type, :with_domain_external_id))
-         |> Map.put("lang", Keyword.get(opts, :lang)))
+        fields
+        |> context_for_fields(Keyword.get(opts, :domain_type, :with_domain_external_id))
+        |> Map.put("lang", Keyword.get(opts, :lang))
 
     fields_to_string(acc, fields, content, ctx, opts)
   end
@@ -173,7 +173,7 @@ defmodule TdDfLib.Parser do
   defp normalize_opts(opts) do
     opts
     |> Keyword.put_new(:translations, false)
-    |> Keyword.put_new(:locales, I18nCache.get_active_locales!())
+    |> Keyword.put_new_lazy(:locales, fn -> I18nCache.get_active_locales!() end)
   end
 
   defp field_to_string(_field, nil, _ctx, _opts), do: {:plain, ""}
