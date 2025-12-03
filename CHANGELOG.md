@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.12.1] 2025-12-03
+
+## Changed
+
+- [TD-7746] Add optional context parameter to `append_parsed_fields/4`
+ and expose `context_for_fields/2` to enable context reuse and reduce redundant cache lookups
+
 ## [7.12.0] 2025-10-28
 
 ### Added
