@@ -1148,5 +1148,131 @@ defmodule TdDfLib.ParserTest do
                default_locale: "en"
              ) == ["Text English"]
     end
+
+    test "formats date field for output using excel serial number" do
+      fields = [
+        %{
+          "type" => "date",
+          "name" => "date field",
+          "label" => "date field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"date field" => "2025-12-31"}
+
+      assert Parser.append_parsed_fields([], fields, content, xlsx: true) == [
+               [{:excelts, 46_022}, {:num_format, "dd-mm-yyyy"}]
+             ]
+    end
+
+    test "formats datetime field without seconds for output using excel serial number" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => "2025-12-31T22:55"}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      [{:excelts, serial}, {:num_format, format}] = List.first(result)
+
+      assert format == "dd-mm-yyyy hh:MM:ss"
+      assert serial == 46_022.954861111111
+    end
+
+    test "formats datetime field with seconds for output using excel serial number" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => "2025-12-31T22:55:30"}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      [{:excelts, serial}, {:num_format, format}] = List.first(result)
+
+      assert format == "dd-mm-yyyy hh:MM:ss"
+      assert serial == 46_022.955208333333
+    end
+
+    test "returns plain value when date field cannot be transformed to excel serial" do
+      fields = [
+        %{
+          "type" => "date",
+          "name" => "date field",
+          "label" => "date field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"date field" => "invalid-date"}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == "invalid-date"
+    end
+
+    test "returns plain value when datetime field cannot be transformed to excel serial" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => "invalid-datetime"}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == "invalid-datetime"
+    end
+
+    test "returns plain value when date field is nil" do
+      fields = [
+        %{
+          "type" => "date",
+          "name" => "date field",
+          "label" => "date field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"date field" => nil}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == ""
+    end
+
+    test "returns plain value when datetime field is empty string" do
+      fields = [
+        %{
+          "type" => "datetime",
+          "name" => "datetime field",
+          "label" => "datetime field",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ]
+
+      content = %{"datetime field" => ""}
+
+      result = Parser.append_parsed_fields([], fields, content, xlsx: true)
+      assert List.first(result) == ""
+    end
   end
 end

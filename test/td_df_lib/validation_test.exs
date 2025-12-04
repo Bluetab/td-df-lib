@@ -1564,4 +1564,249 @@ defmodule TdDfLib.ValidationTest do
       ]
     )
   end
+
+  describe "date and datetime field error messages" do
+    setup do
+      %{id: template_id} = template = build(:template)
+      hierarchy = create_hierarchy(234)
+
+      on_exit(fn -> TemplateCache.delete(template_id) end)
+
+      [template: template, hierarchy: hierarchy]
+    end
+
+    test "date field error includes label when available", %{template: template} do
+      template
+      |> Map.put(:content, [
+        %{
+          "name" => "test_date_field",
+          "label" => "Test Date Field",
+          "type" => "date",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ])
+      |> TemplateCache.put()
+
+      content = %{
+        "test_date_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+      assert {error_msg, _} = errors[:test_date_field]
+      assert error_msg == "Test Date Field is invalid"
+    end
+
+    test "date field error uses name when label is not available", %{template: template} do
+      template
+      |> Map.put(:content, [
+        %{
+          "name" => "test_date_field",
+          "type" => "date",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ])
+      |> TemplateCache.put()
+
+      content = %{
+        "test_date_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+      assert {error_msg, _} = errors[:test_date_field]
+      assert error_msg == "test_date_field is invalid"
+    end
+
+    test "date field error uses name when label is empty string", %{template: template} do
+      template
+      |> Map.put(:content, [
+        %{
+          "name" => "test_date_field",
+          "label" => "",
+          "type" => "date",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ])
+      |> TemplateCache.put()
+
+      content = %{
+        "test_date_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+      assert {error_msg, _} = errors[:test_date_field]
+      assert error_msg == "test_date_field is invalid"
+    end
+
+    test "datetime field error includes label when available", %{template: template} do
+      template
+      |> Map.put(:content, [
+        %{
+          "name" => "test_datetime_field",
+          "label" => "Test Datetime Field",
+          "type" => "datetime",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ])
+      |> TemplateCache.put()
+
+      content = %{
+        "test_datetime_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+      assert {error_msg, _} = errors[:test_datetime_field]
+      assert error_msg == "Test Datetime Field is invalid"
+    end
+
+    test "datetime field error uses name when label is not available", %{template: template} do
+      template
+      |> Map.put(:content, [
+        %{
+          "name" => "test_datetime_field",
+          "type" => "datetime",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ])
+      |> TemplateCache.put()
+
+      content = %{
+        "test_datetime_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+      assert {error_msg, _} = errors[:test_datetime_field]
+      assert error_msg == "test_datetime_field is invalid"
+    end
+
+    test "multiple date and datetime field errors are combined with separator", %{
+      template: template
+    } do
+      template
+      |> Map.put(:content, [
+        %{
+          "name" => "date_field",
+          "label" => "Test Date Field",
+          "type" => "date",
+          "cardinality" => "?",
+          "values" => nil
+        },
+        %{
+          "name" => "datetime_field",
+          "label" => "",
+          "type" => "datetime",
+          "cardinality" => "?",
+          "values" => nil
+        }
+      ])
+      |> TemplateCache.put()
+
+      content = %{
+        "date_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"},
+        "datetime_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+
+      assert %{valid?: false, errors: errors} = changeset
+      assert {date_error, _} = errors[:date_field]
+      assert {datetime_error, _} = errors[:datetime_field]
+      assert date_error == "Test Date Field is invalid"
+      assert datetime_error == "datetime_field is invalid"
+    end
+
+    test "validator function formats date field errors with label" do
+      template =
+        build(:template,
+          content: [
+            %{
+              "name" => "group",
+              "fields" => [
+                %{
+                  "name" => "date_field",
+                  "label" => "My Date Field",
+                  "type" => "date",
+                  "cardinality" => "?",
+                  "values" => nil
+                }
+              ]
+            }
+          ]
+        )
+
+      TemplateCache.put(template)
+
+      on_exit(fn -> TemplateCache.delete(template.id) end)
+
+      validator = Validation.validator(template.name)
+
+      assert [{:content, {error_msg, _errors}}] =
+               validator.(:content, %{
+                 "date_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+               })
+
+      assert error_msg == "My Date Field is invalid"
+    end
+
+    test "validator function formats multiple date/datetime errors correctly" do
+      template =
+        build(:template,
+          content: [
+            %{
+              "name" => "group",
+              "fields" => [
+                %{
+                  "name" => "date_field",
+                  "label" => "First Date Field",
+                  "type" => "date",
+                  "cardinality" => "?",
+                  "values" => nil
+                },
+                %{
+                  "name" => "datetime_field",
+                  "label" => "",
+                  "type" => "datetime",
+                  "cardinality" => "?",
+                  "values" => nil
+                }
+              ]
+            }
+          ]
+        )
+
+      TemplateCache.put(template)
+
+      on_exit(fn -> TemplateCache.delete(template.id) end)
+
+      validator = Validation.validator(template.name)
+
+      assert [{:content, {error_msg, _errors}}] =
+               validator.(:content, %{
+                 "date_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"},
+                 "datetime_field" => %{"value" => {:error, :invalid_format}, "origin" => "user"}
+               })
+
+      assert error_msg == "First Date Field is invalid - datetime_field is invalid"
+    end
+  end
 end

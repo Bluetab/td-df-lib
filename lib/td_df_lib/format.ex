@@ -7,6 +7,7 @@ defmodule TdDfLib.Format do
   alias TdCache.I18nCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
+  alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.Parser, as: LibParser
   alias TdDfLib.RichText
   alias TdDfLib.Templates
@@ -39,6 +40,15 @@ defmodule TdDfLib.Format do
   end
 
   def maybe_put_identifier(_, content, _), do: content
+
+  # def maybe_format_date_or_datetime(content, type) when type in @date_types do
+  #   case FormatDateTime.convert_to_iso8601(content, type) do
+  #     {:ok, formatted} -> formatted
+  #     :error -> content
+  #   end
+  # end
+
+  # def maybe_format_date_or_datetime(content, _type), do: content
 
   defp maybe_put_identifier_template(
          {:error, :template_not_found},
@@ -341,6 +351,20 @@ defmodule TdDfLib.Format do
   def set_default_value(content, %{}, _opts), do: content
 
   defp generate_default_return_map(value), do: %{"value" => value, "origin" => "default"}
+
+  def format_field(%{"content" => content, "type" => "date"}) do
+    case FormatDateTime.convert_to_iso8601(content, "date") do
+      {:ok, formatted} -> formatted
+      _ -> {:error, :invalid_format}
+    end
+  end
+
+  def format_field(%{"content" => content, "type" => "datetime"}) do
+    case FormatDateTime.convert_to_iso8601(content, "datetime") do
+      {:ok, formatted} -> formatted
+      _ -> {:error, :invalid_format}
+    end
+  end
 
   def format_field(%{"content" => "", "type" => "url"}),
     do: [%{"url_name" => "", "url_value" => ""}]

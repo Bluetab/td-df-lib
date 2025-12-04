@@ -1311,6 +1311,24 @@ defmodule TdDfLib.FormatTest do
                  }
                })
     end
+
+    test "returns iso string for date values" do
+      assert Format.format_field(%{"content" => "2025-01-08", "type" => "date"}) ==
+               "2025-01-08"
+    end
+
+    test "returns iso string for datetime values" do
+      assert Format.format_field(%{"content" => "2025-01-08 22:55:44", "type" => "datetime"}) ==
+               "2025-01-08T22:55:44"
+    end
+
+    test "returns error for invalid date" do
+      assert Format.format_field(%{"content" => "foo", "type" => "date"}) ==
+               {:error, :invalid_format}
+
+      assert Format.format_field(%{"content" => "foo", "type" => "datetime"}) ==
+               {:error, :invalid_format}
+    end
   end
 
   describe "flatten_content_fields" do

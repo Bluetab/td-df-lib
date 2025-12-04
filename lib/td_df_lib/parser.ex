@@ -7,12 +7,14 @@ defmodule TdDfLib.Parser do
   alias TdCache.HierarchyCache
   alias TdCache.I18nCache
   alias TdDfLib.Format
+  alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.I18n
 
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
   @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
   @multiple_cardinality_schema_types ~w(string user user_group)
+  @date_types ~w(date datetime)
 
   @doc """
   Parses field values from content and appends them to the accumulator.
@@ -69,15 +71,15 @@ defmodule TdDfLib.Parser do
   def format_fields(content, content_schema, lang) do
     content_schema
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
-      schema_type in @schema_types or
+      schema_type in @schema_types or schema_type in @date_types or
         (schema_type in @multiple_cardinality_schema_types and cardinality in ["*", "+"]) or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
     end)
     # credo:disable-for-next-line
-    |> Enum.filter(fn %{"name" => name} ->
+    |> Enum.filter(fn %{"name" => name, "type" => type} ->
       field_content = Map.get(content, name)
-      not is_nil(field_content) and is_binary(field_content)
+      not is_nil(field_content) and (is_binary(field_content) or type in @date_types)
     end)
     |> Enum.into(content, &format_field(&1, content, lang))
   end
@@ -230,17 +232,53 @@ defmodule TdDfLib.Parser do
     end)
   end
 
-  defp field_to_string(field, content, domain_map, opts) do
+  defp field_to_string(%{"name" => field_name} = field, content, domain_map, opts) do
     translatable = I18n.is_translatable_field?(field)
     translations = Keyword.get(opts, :translations, false)
 
-    if translatable and translations do
-      string_fields =
-        opts
-        |> Keyword.get(:locales)
-        |> Enum.map(&maybe_translatable_field_to_string(field, content, domain_map, &1, opts))
+    cond do
+      field["type"] == "date" and opts[:xlsx] ->
+        format_date_field(field, content, field_name, domain_map, opts)
 
-      {:plain, string_fields}
+      field["type"] == "datetime" and opts[:xlsx] ->
+        format_datetime_field(field, content, field_name, domain_map, opts)
+
+      translatable and translations ->
+        string_fields =
+          opts
+          |> Keyword.get(:locales)
+          |> Enum.map(&maybe_translatable_field_to_string(field, content, domain_map, &1, opts))
+
+        {:plain, string_fields}
+
+      true ->
+        {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
+    end
+  end
+
+  defp format_date_field(field, content, field_name, domain_map, opts) do
+    serial = FormatDateTime.get_excel_serial(content, field_name, :date)
+
+    if serial do
+      {:formatted,
+       [
+         {:excelts, serial},
+         {:num_format, "dd-mm-yyyy"}
+       ]}
+    else
+      {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
+    end
+  end
+
+  defp format_datetime_field(field, content, field_name, domain_map, opts) do
+    serial = FormatDateTime.get_excel_serial(content, field_name, :datetime)
+
+    if serial do
+      {:formatted,
+       [
+         {:excelts, serial},
+         {:num_format, "dd-mm-yyyy hh:MM:ss"}
+       ]}
     else
       {:plain, maybe_translatable_field_to_string(field, content, domain_map, nil, opts)}
     end
