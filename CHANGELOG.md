@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Changed
+
+- [TD-7676] Concept completeness must ignore dependent fields when their condition isn’t met.
+
 ## [7.14.0] 2025-12-04
 
 ### Fix
