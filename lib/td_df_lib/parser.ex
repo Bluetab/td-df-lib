@@ -10,6 +10,8 @@ defmodule TdDfLib.Parser do
   alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.I18n
 
+  require Logger
+
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
   @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
@@ -55,6 +57,10 @@ defmodule TdDfLib.Parser do
         } = params
       )
       when not is_nil(params_content) do
+    if is_nil(Map.get(params, :lang)) do
+      Logger.info("format_content params get default lang: #{Map.get(params, :lang)}")
+    end
+
     lang = Map.get(params, :lang, get_default_lang())
 
     template_content =
@@ -134,32 +140,39 @@ defmodule TdDfLib.Parser do
   """
 
   def context_for_fields(fields, domain_type) do
+    Logger.info("start context_for_fields wihout domains information")
     domains_name = DomainCache.id_to_name_map()
     domains_external_id = DomainCache.id_to_external_id_map()
     context_for_fields(fields, domain_type, domains_name, domains_external_id)
   end
 
   def context_for_fields(fields, domain_type, domains_name, domains_external_id) do
-    Enum.reduce(fields, %{}, fn
-      %{"type" => "domain"}, %{domains: %{}} = ctx ->
-        ctx
+    Logger.info("start context_for_fields with domains information")
 
-      %{"type" => "domain"}, ctx ->
-        {:ok, domains} = domain_content(domain_type, domains_name, domains_external_id)
+    result =
+      Enum.reduce(fields, %{}, fn
+        %{"type" => "domain"}, %{domains: %{}} = ctx ->
+          ctx
 
-        Map.put(ctx, :domains, domains)
+        %{"type" => "domain"}, ctx ->
+          {:ok, domains} = domain_content(domain_type, domains_name, domains_external_id)
 
-      %{
-        "type" => "hierarchy",
-        "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
-      },
-      ctx ->
-        {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
-        Map.update(ctx, :hierarchy, %{hierarchy_id => nodes}, &Map.put(&1, hierarchy_id, nodes))
+          Map.put(ctx, :domains, domains)
 
-      _, ctx ->
-        ctx
-    end)
+        %{
+          "type" => "hierarchy",
+          "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
+        },
+        ctx ->
+          {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
+          Map.update(ctx, :hierarchy, %{hierarchy_id => nodes}, &Map.put(&1, hierarchy_id, nodes))
+
+        _, ctx ->
+          ctx
+      end)
+
+    Logger.info("Finished context_for_fields")
+    result
   end
 
   def get_from_content(content, content_key) do
@@ -184,6 +197,7 @@ defmodule TdDfLib.Parser do
   defp normalize_opts(opts) do
     case Keyword.get(opts, :locales) do
       nil ->
+        Logger.info("normalize_opts get_active_locales-------->")
         Keyword.put_new_lazy(opts, :locales, fn -> I18nCache.get_active_locales!() end)
 
       _ ->
@@ -307,6 +321,13 @@ defmodule TdDfLib.Parser do
        ) do
     translatable = I18n.is_translatable_field?(field)
     translations = Keyword.get(opts, :translations, false)
+
+    if is_nil(Keyword.get(opts, :default_locale)) do
+      Logger.info(
+        "maybe_translatable_field_to_string opts: #{Keyword.get(opts, :default_locale)}"
+      )
+    end
+
     default_locale = Keyword.get(opts, :default_locale, I18nCache.get_default_locale())
     lang = Keyword.get(opts, :lang, default_locale)
 
@@ -442,6 +463,7 @@ defmodule TdDfLib.Parser do
   defp value_to_list(content), do: [content]
 
   def get_default_lang do
+    Logger.info("No dería de llamar a get_default_lang ------------------->")
     {:ok, lang} = I18nCache.get_default_locale()
     lang
   end
