@@ -10,8 +10,6 @@ defmodule TdDfLib.Parser do
   alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.I18n
 
-  require Logger
-
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
   @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
@@ -57,11 +55,7 @@ defmodule TdDfLib.Parser do
         } = params
       )
       when not is_nil(params_content) do
-    if is_nil(Map.get(params, :lang)) do
-      Logger.info("format_content params get default lang: #{Map.get(params, :lang)}")
-    end
-
-    lang = Map.get(params, :lang, get_default_lang())
+    lang = get_default_lang(Map.get(params, :lang))
 
     template_content =
       Format.apply_template(params_content, content_schema, domain_ids: domain_ids)
@@ -125,6 +119,8 @@ defmodule TdDfLib.Parser do
   ## Parameters
   - `fields` - List of field definitions
   - `domain_type` - Atom indicating domain mapping type (`:with_domain_external_id` or `:with_domain_name`)
+  - `domains_name` - Map of domain ID to name (optional, only for 4-arity version)
+  - `domains_external_id` - Map of domain ID to external_id (optional, only for 4-arity version)
 
   ## Returns
   A context map containing:
@@ -133,46 +129,45 @@ defmodule TdDfLib.Parser do
 
   ## Examples
 
+      # Using 2-arity version (loads cache internally)
       context = context_for_fields(fields, :with_domain_external_id)
       # %{domains: %{1 => "domain_ext_id", 2 => "another_ext_id"}}
+
+      # Using 4-arity version (with pre-loaded domain maps)
+      domains_name = DomainCache.id_to_name_map()
+      domains_external_id = DomainCache.id_to_external_id_map()
+      context = context_for_fields(fields, :with_domain_external_id, domains_name, domains_external_id)
 
       context_with_lang = context |> Map.put("lang", "en")
   """
 
   def context_for_fields(fields, domain_type) do
-    Logger.info("start context_for_fields wihout domains information")
     domains_name = DomainCache.id_to_name_map()
     domains_external_id = DomainCache.id_to_external_id_map()
     context_for_fields(fields, domain_type, domains_name, domains_external_id)
   end
 
   def context_for_fields(fields, domain_type, domains_name, domains_external_id) do
-    Logger.info("start context_for_fields with domains information")
+    Enum.reduce(fields, %{}, fn
+      %{"type" => "domain"}, %{domains: %{}} = ctx ->
+        ctx
 
-    result =
-      Enum.reduce(fields, %{}, fn
-        %{"type" => "domain"}, %{domains: %{}} = ctx ->
-          ctx
+      %{"type" => "domain"}, ctx ->
+        {:ok, domains} = domain_content(domain_type, domains_name, domains_external_id)
 
-        %{"type" => "domain"}, ctx ->
-          {:ok, domains} = domain_content(domain_type, domains_name, domains_external_id)
+        Map.put(ctx, :domains, domains)
 
-          Map.put(ctx, :domains, domains)
+      %{
+        "type" => "hierarchy",
+        "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
+      },
+      ctx ->
+        {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
+        Map.update(ctx, :hierarchy, %{hierarchy_id => nodes}, &Map.put(&1, hierarchy_id, nodes))
 
-        %{
-          "type" => "hierarchy",
-          "values" => %{"hierarchy" => %{"id" => hierarchy_id}}
-        },
-        ctx ->
-          {:ok, nodes} = HierarchyCache.get(hierarchy_id, :nodes)
-          Map.update(ctx, :hierarchy, %{hierarchy_id => nodes}, &Map.put(&1, hierarchy_id, nodes))
-
-        _, ctx ->
-          ctx
-      end)
-
-    Logger.info("Finished context_for_fields")
-    result
+      _, ctx ->
+        ctx
+    end)
   end
 
   def get_from_content(content, content_key) do
@@ -197,7 +192,6 @@ defmodule TdDfLib.Parser do
   defp normalize_opts(opts) do
     case Keyword.get(opts, :locales) do
       nil ->
-        Logger.info("normalize_opts get_active_locales-------->")
         Keyword.put_new_lazy(opts, :locales, fn -> I18nCache.get_active_locales!() end)
 
       _ ->
@@ -322,13 +316,7 @@ defmodule TdDfLib.Parser do
     translatable = I18n.is_translatable_field?(field)
     translations = Keyword.get(opts, :translations, false)
 
-    if is_nil(Keyword.get(opts, :default_locale)) do
-      Logger.info(
-        "maybe_translatable_field_to_string opts: #{Keyword.get(opts, :default_locale)}"
-      )
-    end
-
-    default_locale = Keyword.get(opts, :default_locale, I18nCache.get_default_locale())
+    default_locale = get_default_lang(Keyword.get(opts, :default_locale))
     lang = Keyword.get(opts, :lang, default_locale)
 
     name_with_locale =
@@ -462,9 +450,10 @@ defmodule TdDfLib.Parser do
   defp value_to_list(content) when is_list(content), do: content
   defp value_to_list(content), do: [content]
 
-  def get_default_lang do
-    Logger.info("No dería de llamar a get_default_lang ------------------->")
+  def get_default_lang(nil) do
     {:ok, lang} = I18nCache.get_default_locale()
     lang
   end
+
+  def get_default_lang(lang), do: lang
 end
