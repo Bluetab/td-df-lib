@@ -6,9 +6,16 @@
 
 - [TD-7676] Concept completeness must ignore dependent fields when their condition isn’t met.
 
+## [8.0.0] 2025-12-23
+
+## Changed
+
+- [TD-7760] Relocate cache calls for parser module
+
+
 ## [7.14.0] 2025-12-04
 
-### Fix
+### Fixed
 
 - [TD-7619] Fix date and datetime format and validation
 
