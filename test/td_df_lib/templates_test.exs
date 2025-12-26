@@ -63,7 +63,7 @@ defmodule TdDfLib.TemplatesTest do
 
   test "completeness/2 returns the completeness of some content", %{template_name: template_name} do
     content = %{"texto" => %{"value" => "foo", "origin" => "user"}}
-    assert Templates.completeness(content, template_name) == Float.round(100.0 * 1.0 / 17.0, 2)
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 1.0 / 15.0, 2)
   end
 
   test "completeness/2 returns the completeness of some content including hidden conditional fields",
@@ -91,6 +91,64 @@ defmodule TdDfLib.TemplatesTest do
     }
 
     assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 19.0, 2)
+  end
+
+  test "completeness/2 excludes mandatory conditional fields when condition is not met", %{
+    template_name: template_name
+  } do
+    content = %{
+      "demo.filter" => %{"value" => "b", "origin" => "user"},
+      "texto" => %{"value" => "foo", "origin" => "user"}
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 2.0 / 15.0, 2)
+  end
+
+  test "completeness/2 includes mandatory conditional fields when condition is met", %{
+    template_name: template_name
+  } do
+    content = %{
+      "demo.filter" => %{"value" => "a", "origin" => "user"},
+      "texto" => %{"value" => "foo", "origin" => "user"}
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 2.0 / 16.0, 2)
+  end
+
+  test "completeness/2 handles mandatory conditional fields with multiple values", %{
+    template_name: template_name
+  } do
+    content = %{
+      "independent_multiple" => %{"value" => ["foo"], "origin" => "user"},
+      "texto" => %{"value" => "foo", "origin" => "user"}
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 2.0 / 16.0, 2)
+  end
+
+  test "completeness/2 excludes mandatory conditional fields when multiple condition is not met",
+       %{
+         template_name: template_name
+       } do
+    content = %{
+      "independent_multiple" => %{"value" => ["bar"], "origin" => "user"},
+      "texto" => %{"value" => "foo", "origin" => "user"}
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 2.0 / 15.0, 2)
+  end
+
+  test "completeness/2 includes mandatory conditional fields when condition is met and field is completed",
+       %{
+         template_name: template_name
+       } do
+    content = %{
+      "demo.filter" => %{"value" => "a", "origin" => "user"},
+      "mandatory.dependent.on_single" => %{"value" => "b", "origin" => "user"},
+      "texto" => %{"value" => "foo", "origin" => "user"}
+    }
+
+    assert Templates.completeness(content, template_name) == Float.round(100.0 * 3.0 / 16.0, 2)
   end
 
   test "group_name/2 returns the group name of a field", %{template_name: template_name} do

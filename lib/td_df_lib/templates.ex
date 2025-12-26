@@ -194,9 +194,36 @@ defmodule TdDfLib.Templates do
 
   defp template_completeness(%{} = template, content) do
     template
-    |> visible_fields(content)
+    |> fields_for_completeness(content)
     |> field_completeness(content)
   end
+
+  defp fields_for_completeness(%{content: template_content} = _template, %{} = content) do
+    template_content
+    |> Enum.flat_map(&Map.get(&1, "fields", []))
+    |> Enum.filter(&visible?(&1, content))
+    |> Enum.reject(&excluded_from_completeness?(&1, content))
+    |> Enum.map(&Map.get(&1, "name"))
+  end
+
+  defp excluded_from_completeness?(
+         %{"mandatory" => %{"on" => on, "to_be" => target = [_ | _]}} = _field,
+         content
+       ) do
+    dependent_value =
+      content
+      |> Map.get(on)
+      |> get_field_value()
+
+    case dependent_value do
+      nil -> true
+      [] -> true
+      %{} when map_size(dependent_value) == 0 -> true
+      _ -> not meets_dependency?(dependent_value, target)
+    end
+  end
+
+  defp excluded_from_completeness?(_field, _content), do: false
 
   defp field_completeness([] = _visible_fields, _content), do: 100.0
 
