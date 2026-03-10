@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Changed
+
+- [TD-7718] Update td-cache to solve library conflicts in graph
+
 ## [8.0.1] 2025-12-26
 
 ## Changed
@@ -11,7 +17,6 @@
 ## Changed
 
 - [TD-7760] Relocate cache calls for parser module
-
 
 ## [7.14.0] 2025-12-04
 
