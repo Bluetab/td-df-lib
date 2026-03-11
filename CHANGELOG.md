@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.3.0] 2026-03-11
+
+## Added
+
+- [TD-5389] Hierarchy tests
+
 ## [8.0.1] 2025-12-26
 
 ## Changed
