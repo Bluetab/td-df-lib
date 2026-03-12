@@ -527,6 +527,95 @@ defmodule TdDfLib.ParserTest do
                }
              }
     end
+
+    test "format hierarchy values" do
+      schema = [
+        %{
+          "cardinality" => "?",
+          "default" => %{"origin" => "default", "value" => ""},
+          "definition" => "alias",
+          "group" => "",
+          "label" => "alias",
+          "name" => "alias",
+          "type" => "string",
+          "values" => nil,
+          "widget" => "string"
+        },
+        %{
+          "ai_suggestion" => false,
+          "cardinality" => "?",
+          "default" => %{"origin" => "default", "value" => ""},
+          "definition" => "Ontology",
+          "group" => "",
+          "label" => "Ontology",
+          "name" => "Ontology",
+          "subscribable" => false,
+          "type" => "hierarchy",
+          "values" => %{"hierarchy" => %{"id" => 1, "min_depth" => "1"}},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{
+        "Ontology" => %{"origin" => "file", "value" => "/Ont1/Ont 1.1"},
+        "alias" => %{"origin" => "file", "value" => "Alias of product 2"}
+      }
+
+      CacheHelpers.insert_hierarchy(
+        id: 1,
+        nodes: [
+          build(:node, %{
+            key: "8",
+            node_id: 8,
+            parent_id: nil,
+            name: "Ont 4",
+            path: "/Ont 4",
+            description: "asdfl, asflkj"
+          }),
+          build(:node, %{
+            key: "7_3",
+            node_id: 7,
+            parent_id: 3,
+            name: "Ont 3.1",
+            path: "/Ont 3/Ont 3.1"
+          }),
+          build(:node, %{key: "3", node_id: 3, parent_id: nil, name: "Ont 3", path: "/Ont 3"}),
+          build(:node, %{key: "2", node_id: 2, parent_id: nil, name: "Ont 2", path: "/Ont 2"}),
+          build(:node, %{
+            key: "6_5",
+            node_id: 6,
+            parent_id: 5,
+            name: "Ont 1.2.1",
+            path: "/Ont1/Ont 1.2/Ont 1.2.1"
+          }),
+          build(:node, %{
+            key: "5_1",
+            node_id: 5,
+            parent_id: 1,
+            name: "Ont 1.2",
+            path: "/Ont1/Ont 1.2"
+          }),
+          build(:node, %{
+            key: "4_1",
+            node_id: 4,
+            parent_id: 1,
+            name: "Ont 1.1",
+            path: "/Ont1/Ont 1.1"
+          }),
+          build(:node, %{key: "1", node_id: 1, parent_id: nil, name: "Ont1", path: "/Ont1"})
+        ]
+      )
+
+      assert %{
+               "Ontology" => %{"origin" => "file", "value" => "4_1"},
+               "alias" => %{"origin" => "file", "value" => "Alias of product 2"}
+             } ==
+               Parser.format_content(%{
+                 content: content,
+                 content_schema: schema,
+                 domain_ids: []
+               })
+    end
   end
 
   describe "get_from_content/2" do

@@ -1,10 +1,16 @@
 # Changelog
 
-## [8.3.0] 2026-03-12
+## [8.3.1] 2026-03-12
 
 ## Changed
 
 - [TD-7718] Update td-cache to solve library conflicts in graph
+
+## [8.3.0] 2026-03-11
+
+## Added
+
+- [TD-5389] Hierarchy tests
 
 ## [8.0.1] 2025-12-26
 
