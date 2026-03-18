@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7241] Add markdown field type
+
 ## [8.3.1] 2026-03-12
 
 ## Changed
