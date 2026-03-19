@@ -490,6 +490,28 @@ defmodule TdDfLib.Validation do
     |> Enum.map(& &1.name)
   end
 
+  def validate_content(content, content_schema, opts \\ []) do
+    fields = Keyword.get(opts, :fields, nil)
+
+    schema =
+      if fields do
+        Enum.filter(content_schema, fn %{"name" => name} -> name in fields end)
+      else
+        content_schema
+      end
+
+    case build_changeset(content, schema, opts) do
+      {:error, error} ->
+        {:error, [%{field: nil, message: "invalid_template", reason: error}]}
+
+      %{valid?: false, errors: errors} = changeset when errors != [] ->
+        {:error, changeset}
+
+      _ ->
+        :ok
+    end
+  end
+
   @doc """
   Returns a 2-arity validator function that can be used by
   `Ecto.Changeset.validate_change/3` on a dynamic content field. The argument
