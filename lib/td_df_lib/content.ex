@@ -4,6 +4,7 @@ defmodule TdDfLib.Content do
   """
 
   alias TdDfLib.Parser
+  alias TdDfLib.Validation
 
   @doc """
   Merges `current_content` into `content`, after first removing empty-valued
@@ -44,6 +45,47 @@ defmodule TdDfLib.Content do
     |> Enum.reject(&empty?/1)
     |> Map.new()
     |> Map.merge(current_content, fn _field, new_val, _current_val -> new_val end)
+  end
+
+  @doc """
+  Processes uploaded content: prepares/merges, validates and checks if unchanged.
+
+  `compare_content` is the content to compare against for the unchanged check.
+  Pass `:skip` to skip the unchanged check.
+
+  Returns:
+  - `{:ok, merged_content}` — valid and changed
+  - `{:validation, {:error, changeset_or_errors}}` — validation failed
+  - `{:unchanged, true}` — valid but unchanged
+  """
+  def process_upload_content(
+        new_content,
+        content_schema,
+        domain_ids,
+        lang,
+        existing_content,
+        compare_content
+      ) do
+    merged_content =
+      prepare_and_merge_upload_content(
+        new_content,
+        content_schema,
+        domain_ids,
+        lang,
+        existing_content
+      )
+
+    with {:validation, :ok} <-
+           {:validation,
+            Validation.validate_content(merged_content, content_schema,
+              fields: Map.keys(merged_content),
+              domain_ids: domain_ids
+            )},
+         {:unchanged, false} <-
+           {:unchanged,
+            compare_content != :skip and df_content_equal?(merged_content, compare_content)} do
+      {:ok, merged_content}
+    end
   end
 
   def prepare_and_merge_upload_content(
