@@ -533,13 +533,17 @@ defmodule TdDfLib.Validation do
   end
 
   def validator(schema, opts) when is_list(schema) do
-    fn field, value ->
-      case build_changeset(value, schema, opts) do
-        %{valid?: false, errors: errors} ->
-          [{field, {format_validator_errors(errors), errors}}]
+    if opts[:content_validated] do
+      &validate_safe/2
+    else
+      fn field, value ->
+        case build_changeset(value, schema, opts) do
+          %{valid?: false, errors: errors} ->
+            [{field, {format_validator_errors(errors), errors}}]
 
-        _ ->
-          validate_safe(field, value)
+          _ ->
+            validate_safe(field, value)
+        end
       end
     end
   end
