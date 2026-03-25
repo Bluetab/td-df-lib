@@ -198,4 +198,135 @@ defmodule TdDfLib.ContentTest do
       assert result == %{"other" => "x", "value" => nil}
     end
   end
+
+  describe "merge/2" do
+    test "returns nil when content is nil" do
+      assert Content.merge(nil, %{"a" => %{"value" => 1, "origin" => "user"}}) == nil
+    end
+
+    test "returns content when current_content is nil" do
+      content = %{"a" => %{"value" => 1, "origin" => "user"}}
+      assert Content.merge(content, nil) == content
+    end
+
+    test "drops empty values from new content before merging" do
+      content = %{
+        "a" => %{"value" => "", "origin" => "user"},
+        "b" => %{"value" => [], "origin" => "user"},
+        "c" => %{"value" => %{}, "origin" => "user"},
+        "d" => %{"value" => nil, "origin" => "user"},
+        "e" => %{"value" => "keep", "origin" => "user"}
+      }
+
+      current = %{"a" => %{"value" => "old", "origin" => "user"}, "z" => %{"value" => "z", "origin" => "user"}}
+
+      assert Content.merge(content, current) == %{
+               "a" => %{"value" => "old", "origin" => "user"},
+               "e" => %{"value" => "keep", "origin" => "user"},
+               "z" => %{"value" => "z", "origin" => "user"}
+             }
+    end
+
+    test "new content overrides current_content on key collisions" do
+      new_content = %{"a" => %{"value" => "new", "origin" => "user"}}
+      current = %{"a" => %{"value" => "old", "origin" => "user"}, "b" => %{"value" => "b", "origin" => "user"}}
+
+      assert Content.merge(new_content, current) == %{
+               "a" => %{"value" => "new", "origin" => "user"},
+               "b" => %{"value" => "b", "origin" => "user"}
+             }
+    end
+  end
+
+  describe "filter_and_normalize_upload_content/2" do
+    test "filters unknown fields and normalizes raw values and maps" do
+      new_content = %{
+        "a" => "text",
+        "b" => %{"value" => "wrapped", "origin" => "user"},
+        "c" => %{"value" => "", "origin" => "user"},
+        "d" => %{"some" => "map"},
+        "unknown" => "ignore"
+      }
+
+      {filtered, empty_fields} =
+        Content.filter_and_normalize_upload_content(new_content, ["a", "b", "c", "d"])
+
+      assert filtered == %{
+               "a" => %{"value" => "text", "origin" => "file"},
+               "b" => %{"value" => "wrapped", "origin" => "user"},
+               "d" => %{"some" => "map", "origin" => "file"}
+             }
+
+      assert Enum.sort(empty_fields) == ["c"]
+    end
+
+    test "treats nil and empty string as empty fields" do
+      new_content = %{"a" => nil, "b" => "", "c" => %{"value" => nil, "origin" => "user"}}
+      {filtered, empty_fields} = Content.filter_and_normalize_upload_content(new_content, ["a", "b", "c"])
+      assert filtered == %{}
+      assert Enum.sort(empty_fields) == ["a", "b", "c"]
+    end
+  end
+
+  describe "prepare_and_merge_upload_content/6" do
+    test "builds empty overrides when upload clears a previously non-empty field" do
+      content_schema = [
+        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"},
+        %{"name" => "b", "type" => "string", "cardinality" => "1", "label" => "b"}
+      ]
+
+      existing_content = %{
+        "a" => %{"value" => "old_a", "origin" => "user"},
+        "b" => %{"value" => "old_b", "origin" => "user"}
+      }
+
+      new_content = %{
+        "a" => %{"value" => "", "origin" => "user"},
+        "b" => "new_b"
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               new_content,
+               content_schema,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "a" => %{"value" => "", "origin" => "file"},
+               "b" => %{"value" => "new_b", "origin" => "file"}
+             }
+    end
+
+    test "does not create empty override when existing content is nil" do
+      content_schema = [
+        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
+      ]
+
+      new_content = %{"a" => %{"value" => "", "origin" => "user"}}
+
+      assert Content.prepare_and_merge_upload_content(new_content, content_schema, [], "en", nil) == %{}
+    end
+  end
+
+  describe "process_upload_content/7" do
+    test "returns {:ok, merged_content} when compare_content is :skip and validation passes" do
+      content_schema = [
+        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
+      ]
+
+      assert {:ok, %{"a" => %{"value" => "x", "origin" => "file"}}} =
+               Content.process_upload_content(%{"a" => "x"}, content_schema, [], "en", nil, :skip)
+    end
+
+    test "returns {:unchanged, true} when merged_content equals compare_content" do
+      content_schema = [
+        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
+      ]
+
+      merged = %{"a" => %{"value" => "x", "origin" => "file"}}
+
+      assert {:unchanged, true} =
+               Content.process_upload_content(%{"a" => "x"}, content_schema, [], "en", nil, merged)
+    end
+  end
 end

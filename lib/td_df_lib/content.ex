@@ -42,7 +42,7 @@ defmodule TdDfLib.Content do
 
   def merge(%{} = content, %{} = current_content) do
     content
-    |> Enum.reject(&empty?/1)
+    |> Enum.reject(&value_empty?/1)
     |> Map.new()
     |> Map.merge(current_content, fn _field, new_val, _current_val -> new_val end)
   end
@@ -108,6 +108,8 @@ defmodule TdDfLib.Content do
         lang: lang
       })
 
+    empty_overrides = build_empty_overrides(empty_fields, existing_content)
+
     cleaned_existing =
       if empty_fields != [] and existing_content do
         Map.drop(existing_content, empty_fields)
@@ -120,6 +122,7 @@ defmodule TdDfLib.Content do
     formatted_content
     |> merge(base_content)
     |> Map.drop(empty_fields)
+    |> Map.merge(empty_overrides)
   end
 
   def filter_and_normalize_upload_content(new_content, field_names) do
@@ -212,14 +215,26 @@ defmodule TdDfLib.Content do
   def normalize_value(v) when is_list(v), do: v |> Enum.map(&normalize_value/1) |> Enum.sort()
   def normalize_value(v), do: v
 
-  @spec empty?(term()) :: boolean()
-  defp empty?(term)
+  defp build_empty_overrides([], _existing_content), do: %{}
+  defp build_empty_overrides(_empty_fields, nil), do: %{}
 
-  defp empty?({_k, %{"value" => v}}), do: empty?(v)
-  defp empty?({_k, v}), do: empty?(v)
-  defp empty?(nil), do: true
-  defp empty?(""), do: true
-  defp empty?([]), do: true
-  defp empty?(%{} = v) when map_size(v) == 0, do: true
-  defp empty?(_not_empty), do: false
+  defp build_empty_overrides(empty_fields, existing_content) do
+    empty_fields
+    |> Enum.filter(fn field ->
+      case Map.get(existing_content, field) do
+        nil -> false
+        %{"value" => v} -> not value_empty?(v)
+        v -> not value_empty?(v)
+      end
+    end)
+    |> Map.new(fn field -> {field, %{"value" => "", "origin" => "file"}} end)
+  end
+
+  defp value_empty?({_k, %{"value" => v}}), do: value_empty?(v)
+  defp value_empty?({_k, v}), do: value_empty?(v)
+  defp value_empty?(nil), do: true
+  defp value_empty?(""), do: true
+  defp value_empty?([]), do: true
+  defp value_empty?(%{} = v) when map_size(v) == 0, do: true
+  defp value_empty?(_), do: false
 end
