@@ -218,7 +218,10 @@ defmodule TdDfLib.ContentTest do
         "e" => %{"value" => "keep", "origin" => "user"}
       }
 
-      current = %{"a" => %{"value" => "old", "origin" => "user"}, "z" => %{"value" => "z", "origin" => "user"}}
+      current = %{
+        "a" => %{"value" => "old", "origin" => "user"},
+        "z" => %{"value" => "z", "origin" => "user"}
+      }
 
       assert Content.merge(content, current) == %{
                "a" => %{"value" => "old", "origin" => "user"},
@@ -229,7 +232,11 @@ defmodule TdDfLib.ContentTest do
 
     test "new content overrides current_content on key collisions" do
       new_content = %{"a" => %{"value" => "new", "origin" => "user"}}
-      current = %{"a" => %{"value" => "old", "origin" => "user"}, "b" => %{"value" => "b", "origin" => "user"}}
+
+      current = %{
+        "a" => %{"value" => "old", "origin" => "user"},
+        "b" => %{"value" => "b", "origin" => "user"}
+      }
 
       assert Content.merge(new_content, current) == %{
                "a" => %{"value" => "new", "origin" => "user"},
@@ -262,7 +269,10 @@ defmodule TdDfLib.ContentTest do
 
     test "treats nil and empty string as empty fields" do
       new_content = %{"a" => nil, "b" => "", "c" => %{"value" => nil, "origin" => "user"}}
-      {filtered, empty_fields} = Content.filter_and_normalize_upload_content(new_content, ["a", "b", "c"])
+
+      {filtered, empty_fields} =
+        Content.filter_and_normalize_upload_content(new_content, ["a", "b", "c"])
+
       assert filtered == %{}
       assert Enum.sort(empty_fields) == ["a", "b", "c"]
     end
@@ -304,7 +314,8 @@ defmodule TdDfLib.ContentTest do
 
       new_content = %{"a" => %{"value" => "", "origin" => "user"}}
 
-      assert Content.prepare_and_merge_upload_content(new_content, content_schema, [], "en", nil) == %{}
+      assert Content.prepare_and_merge_upload_content(new_content, content_schema, [], "en", nil) ==
+               %{}
     end
   end
 
@@ -326,7 +337,52 @@ defmodule TdDfLib.ContentTest do
       merged = %{"a" => %{"value" => "x", "origin" => "file"}}
 
       assert {:unchanged, true} =
-               Content.process_upload_content(%{"a" => "x"}, content_schema, [], "en", nil, merged)
+               Content.process_upload_content(
+                 %{"a" => "x"},
+                 content_schema,
+                 [],
+                 "en",
+                 nil,
+                 merged
+               )
+    end
+
+    test "returns unchanged when upload sends empty values for fields already empty in existing content" do
+      content_schema = [
+        %{
+          "cardinality" => "?",
+          "default" => %{"origin" => "default", "value" => ""},
+          "label" => "foo",
+          "name" => "foo",
+          "type" => "string",
+          "values" => nil,
+          "widget" => "string"
+        },
+        %{
+          "cardinality" => "?",
+          "default" => %{"origin" => "default", "value" => ""},
+          "label" => "bar",
+          "name" => "bar",
+          "type" => "string",
+          "values" => %{"fixed" => ["1", "2", "3"]},
+          "widget" => "dropdown"
+        }
+      ]
+
+      existing_content = %{"foo" => %{"origin" => "file", "value" => ""}}
+
+      assert {:unchanged, true} =
+               Content.process_upload_content(
+                 %{
+                   "foo" => %{"origin" => "file", "value" => ""},
+                   "bar" => %{"origin" => "file", "value" => ""}
+                 },
+                 content_schema,
+                 [],
+                 "en",
+                 existing_content,
+                 existing_content
+               )
     end
   end
 end

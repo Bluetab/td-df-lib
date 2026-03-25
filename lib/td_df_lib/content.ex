@@ -220,13 +220,7 @@ defmodule TdDfLib.Content do
 
   defp build_empty_overrides(empty_fields, existing_content) do
     empty_fields
-    |> Enum.filter(fn field ->
-      case Map.get(existing_content, field) do
-        nil -> false
-        %{"value" => v} -> not value_empty?(v)
-        v -> not value_empty?(v)
-      end
-    end)
+    |> Enum.filter(&Map.has_key?(existing_content, &1))
     |> Map.new(fn field -> {field, %{"value" => "", "origin" => "file"}} end)
   end
 

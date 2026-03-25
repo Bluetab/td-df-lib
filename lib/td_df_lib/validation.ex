@@ -537,14 +537,18 @@ defmodule TdDfLib.Validation do
       &validate_safe/2
     else
       fn field, value ->
-        case build_changeset(value, schema, opts) do
-          %{valid?: false, errors: errors} ->
-            [{field, {format_validator_errors(errors), errors}}]
-
-          _ ->
-            validate_safe(field, value)
-        end
+        validate_with_schema(field, value, schema, opts)
       end
+    end
+  end
+
+  defp validate_with_schema(field, value, schema, opts) do
+    case build_changeset(value, schema, opts) do
+      %{valid?: false, errors: errors} ->
+        [{field, {format_validator_errors(errors), errors}}]
+
+      _ ->
+        validate_safe(field, value)
     end
   end
 
