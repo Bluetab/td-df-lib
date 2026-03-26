@@ -278,12 +278,15 @@ defmodule TdDfLib.ContentTest do
     end
   end
 
-  describe "prepare_and_merge_upload_content/6" do
+  describe "prepare_and_merge_upload_content/5" do
     test "builds empty overrides when upload clears a previously non-empty field" do
-      content_schema = [
-        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"},
-        %{"name" => "b", "type" => "string", "cardinality" => "1", "label" => "b"}
-      ]
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"},
+          %{"name" => "b", "type" => "string", "cardinality" => "1", "label" => "b"}
+        ]
+      }
 
       existing_content = %{
         "a" => %{"value" => "old_a", "origin" => "user"},
@@ -297,7 +300,7 @@ defmodule TdDfLib.ContentTest do
 
       assert Content.prepare_and_merge_upload_content(
                new_content,
-               content_schema,
+               template_data,
                [],
                "en",
                existing_content
@@ -308,38 +311,81 @@ defmodule TdDfLib.ContentTest do
     end
 
     test "does not create empty override when existing content is nil" do
-      content_schema = [
-        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
-      ]
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
+        ]
+      }
 
       new_content = %{"a" => %{"value" => "", "origin" => "user"}}
 
-      assert Content.prepare_and_merge_upload_content(new_content, content_schema, [], "en", nil) ==
-               %{}
+      assert Content.prepare_and_merge_upload_content(
+               new_content,
+               template_data,
+               [],
+               "en",
+               nil
+             ) == %{}
+    end
+
+    test "translates keys using translations map before filtering" do
+      template_data = %{
+        translations: %{"Campo A" => "field_a", "Campo B" => "field_b"},
+        content_schema: [
+          %{"name" => "field_a", "type" => "string", "cardinality" => "1", "label" => "Campo A"},
+          %{"name" => "field_b", "type" => "string", "cardinality" => "1", "label" => "Campo B"}
+        ]
+      }
+
+      new_content = %{
+        "Campo A" => "valor_a",
+        "Campo B" => "valor_b"
+      }
+
+      result =
+        Content.prepare_and_merge_upload_content(
+          new_content,
+          template_data,
+          [],
+          "en",
+          nil
+        )
+
+      assert %{
+               "field_a" => %{"value" => "valor_a", "origin" => "file"},
+               "field_b" => %{"value" => "valor_b", "origin" => "file"}
+             } = result
     end
   end
 
   describe "process_upload_content/7" do
     test "returns {:ok, merged_content} when compare_content is :skip and validation passes" do
-      content_schema = [
-        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
-      ]
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{"cardinality" => "1", "label" => "a", "name" => "a", "type" => "string"}
+        ]
+      }
 
       assert {:ok, %{"a" => %{"value" => "x", "origin" => "file"}}} =
-               Content.process_upload_content(%{"a" => "x"}, content_schema, [], "en", nil, :skip)
+               Content.process_upload_content(%{"a" => "x"}, template_data, [], "en", nil, :skip)
     end
 
     test "returns {:unchanged, true} when merged_content equals compare_content" do
-      content_schema = [
-        %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
-      ]
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
+        ]
+      }
 
       merged = %{"a" => %{"value" => "x", "origin" => "file"}}
 
       assert {:unchanged, true} =
                Content.process_upload_content(
                  %{"a" => "x"},
-                 content_schema,
+                 template_data,
                  [],
                  "en",
                  nil,
@@ -348,26 +394,29 @@ defmodule TdDfLib.ContentTest do
     end
 
     test "returns unchanged when upload sends empty values for fields already empty in existing content" do
-      content_schema = [
-        %{
-          "cardinality" => "?",
-          "default" => %{"origin" => "default", "value" => ""},
-          "label" => "foo",
-          "name" => "foo",
-          "type" => "string",
-          "values" => nil,
-          "widget" => "string"
-        },
-        %{
-          "cardinality" => "?",
-          "default" => %{"origin" => "default", "value" => ""},
-          "label" => "bar",
-          "name" => "bar",
-          "type" => "string",
-          "values" => %{"fixed" => ["1", "2", "3"]},
-          "widget" => "dropdown"
-        }
-      ]
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "cardinality" => "?",
+            "default" => %{"origin" => "default", "value" => ""},
+            "label" => "foo",
+            "name" => "foo",
+            "type" => "string",
+            "values" => nil,
+            "widget" => "string"
+          },
+          %{
+            "cardinality" => "?",
+            "default" => %{"origin" => "default", "value" => ""},
+            "label" => "bar",
+            "name" => "bar",
+            "type" => "string",
+            "values" => %{"fixed" => ["1", "2", "3"]},
+            "widget" => "dropdown"
+          }
+        ]
+      }
 
       existing_content = %{"foo" => %{"origin" => "file", "value" => ""}}
 
@@ -377,7 +426,7 @@ defmodule TdDfLib.ContentTest do
                    "foo" => %{"origin" => "file", "value" => ""},
                    "bar" => %{"origin" => "file", "value" => ""}
                  },
-                 content_schema,
+                 template_data,
                  [],
                  "en",
                  existing_content,

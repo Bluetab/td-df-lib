@@ -60,7 +60,7 @@ defmodule TdDfLib.Content do
   """
   def process_upload_content(
         new_content,
-        content_schema,
+        %{content_schema: content_schema} = template_data,
         domain_ids,
         lang,
         existing_content,
@@ -69,7 +69,7 @@ defmodule TdDfLib.Content do
     merged_content =
       prepare_and_merge_upload_content(
         new_content,
-        content_schema,
+        template_data,
         domain_ids,
         lang,
         existing_content
@@ -90,15 +90,20 @@ defmodule TdDfLib.Content do
 
   def prepare_and_merge_upload_content(
         new_content,
-        content_schema,
+        template_data,
         domain_ids,
         lang,
         existing_content
       ) do
+    %{content_schema: content_schema} = template_data
+    tft = Map.get(template_data, :translations, %{})
+
     field_names = Enum.map(content_schema, &Map.get(&1, "name"))
 
+    translated_content = normalize_translations(new_content, tft)
+
     {filtered_content, empty_fields} =
-      filter_and_normalize_upload_content(new_content, field_names)
+      filter_and_normalize_upload_content(translated_content, field_names)
 
     formatted_content =
       Parser.format_content(%{
@@ -157,6 +162,15 @@ defmodule TdDfLib.Content do
       {a, b} when is_map(a) and is_map(b) -> normalize_df_content(a) == normalize_df_content(b)
       _ -> false
     end
+  end
+
+  def normalize_translations(content, tft) do
+    Enum.reduce(content, %{}, fn {key, value}, acc ->
+      case tft[key] do
+        nil -> Map.put(acc, key, value)
+        t_key -> Map.put(acc, t_key, value)
+      end
+    end)
   end
 
   def legacy_content_support(content, legacy_content_key, new_content_key \\ :dynamic_content) do
