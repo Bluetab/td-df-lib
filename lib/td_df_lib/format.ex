@@ -177,7 +177,7 @@ defmodule TdDfLib.Format do
   defp format_search_values(content, fields) do
     fields
     |> Enum.filter(fn
-      %{"type" => type} -> type in ["enriched_text", "system", "url", "markdown"]
+      %{"type" => type} -> type in ["enriched_text", "system", "url"]
       _ -> false
     end)
     |> Enum.reduce(content, &set_search_value(&1, &2))
@@ -210,11 +210,6 @@ defmodule TdDfLib.Format do
   defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
     %{"value" => value} = field = Map.get(acc, name, @nil_content)
     Map.put(acc, name, %{field | "value" => RichText.to_plain_text(value)})
-  end
-
-  defp set_search_value(%{"name" => name, "type" => "markdown"}, acc) do
-    %{"value" => value} = field = Map.get(acc, name, @nil_content)
-    Map.put(acc, name, %{field | "value" => strip_markdown(value)})
   end
 
   defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
@@ -684,25 +679,4 @@ defmodule TdDfLib.Format do
   def to_string_format(id) when is_number(id), do: Integer.to_string(id)
 
   def to_string_format(id), do: id
-
-  defp strip_markdown(nil), do: nil
-  defp strip_markdown(""), do: ""
-
-  defp strip_markdown(text) do
-    text
-    # remove images
-    |> String.replace(~r/!\[.*?\]\(.*?\)/, "")
-    # convert links to text
-    |> String.replace(~r/\[(.*?)\]\(.*?\)/, "\\1")
-    # bold
-    |> String.replace(~r/(\*\*|__)(.*?)\1/, "\\2")
-    # italic
-    |> String.replace(~r/(\*|_)(.*?)\1/, "\\2")
-    # titles
-    |> String.replace(~r/#+\s/, "")
-    # code blocks
-    |> String.replace(~r/`{1,3}.*?`{1,3}/m, "")
-    # newlines
-    |> String.replace("\n", " ")
-  end
 end
