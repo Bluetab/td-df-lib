@@ -257,6 +257,41 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
+    test "image validation with nil value", %{template: template} do
+      template =
+        template
+        |> Map.put(
+          :content,
+          [
+            %{
+              "cardinality" => "?",
+              "default" => "",
+              "label" => "image_label",
+              "name" => "image_name",
+              "type" => "image",
+              "values" => nil,
+              "widget" => "image"
+            }
+          ]
+        )
+
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+
+      changeset =
+        Validation.build_changeset(
+          %{
+            "image_name" => %{
+              "value" => nil,
+              "origin" => "user"
+            }
+          },
+          schema
+        )
+
+      assert changeset.valid?
+    end
+
     test "depth validation on hierarchy node selection", %{
       template: template,
       hierarchy: %{id: hierarchy_id}
@@ -323,6 +358,8 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_hierarchy_depth(hierarchy, [], 3)
       assert Validation.validate_hierarchy_depth(hierarchy, [""], 3)
       assert Validation.validate_hierarchy_depth(hierarchy, nil, 89)
+
+      refute Validation.validate_hierarchy_depth(hierarchy, "invalid_key", 0)
     end
 
     test "fields with error return not valid changeset", %{template: template} do
@@ -799,6 +836,59 @@ defmodule TdDfLib.ValidationTest do
       content = %{
         "son" => %{"value" => "b12", "origin" => "user"},
         "father" => %{"value" => "b1", "origin" => "file"}
+      }
+
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      changeset = Validation.build_changeset(content, schema)
+      assert changeset.valid?
+    end
+
+    test "content with switch on value not in switch values returns valid changeset", %{
+      template: template
+    } do
+      template =
+        template
+        |> Map.put(:content, [
+          %{
+            "name" => "father",
+            "type" => "string",
+            "label" => "father",
+            "values" => %{"fixed" => ["a1", "a2", "b1", "b2"]},
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          },
+          %{
+            "name" => "son",
+            "type" => "string",
+            "label" => "son",
+            "values" => %{
+              "switch" => %{
+                "on" => "father",
+                "values" => %{
+                  "a1" => ["a11", "a12", "a13"],
+                  "a2" => ["a21", "a22", "a23"],
+                  "b1" => ["b11", "b12", "b13"]
+                }
+              }
+            },
+            "widget" => "dropdown",
+            "default" => %{"value" => "", "origin" => "default"},
+            "cardinality" => "?",
+            "subscribable" => false,
+            "ai_suggestion" => false
+          }
+        ])
+
+      {:ok, _} = TemplateCache.put(template)
+
+      content = %{
+        "string" => %{"value" => "valid", "origin" => "user"},
+        "list" => %{"value" => ["one"], "origin" => "user"},
+        "son" => %{"value" => "any", "origin" => "user"},
+        "father" => %{"value" => "b2", "origin" => "file"}
       }
 
       {:ok, schema} = TemplateCache.get(template.id, :content)
@@ -1312,6 +1402,17 @@ defmodule TdDfLib.ValidationTest do
                })
     end
 
+    test "returns a validator that skips validation when content_validated", %{
+      template: %{name: template_name}
+    } do
+      validator = Validation.validator(template_name, content_validated: true)
+      assert is_function(validator, 2)
+
+      assert validator.(:content, %{"string" => %{"value" => @unsafe, "origin" => "user"}}) == [
+               content: "invalid content"
+             ]
+    end
+
     test "returns valid changeset for permitted origins" do
       allowed_origins = Validation.allowed_origins()
 
@@ -1807,6 +1908,23 @@ defmodule TdDfLib.ValidationTest do
                })
 
       assert error_msg == "First Date Field is invalid - datetime_field is invalid"
+    end
+  end
+
+  describe "validate_content/3" do
+    setup do
+      %{id: template_id} = template = build(:template)
+      TemplateCache.put(template, publish: false)
+
+      on_exit(fn -> TemplateCache.delete(template_id) end)
+
+      [template: template]
+    end
+
+    test "validate_content without opts", %{template: template} do
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      content = %{"string" => %{"value" => "valid", "origin" => "user"}}
+      assert Validation.validate_content(content, schema) == :ok
     end
   end
 end
