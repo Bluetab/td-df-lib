@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.4.0] 2026-04-06
+
+## Added
+
+- [TD-7949] Content validation and upload processing functions
+
 ## [8.3.1] 2026-03-12
 
 ## Changed
