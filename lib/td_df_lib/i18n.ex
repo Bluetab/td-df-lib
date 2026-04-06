@@ -6,7 +6,7 @@ defmodule TdDfLib.I18n do
   alias TdCache.I18nCache
   alias TdDfLib.Format
 
-  @translatable_widgets ~w(enriched_text string textarea)
+  @translatable_widgets ~w(enriched_text markdown string textarea)
 
   def get_translatable_fields(template) do
     template

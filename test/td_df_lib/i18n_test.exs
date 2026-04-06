@@ -19,6 +19,10 @@ defmodule TdDfLib.I18nTest do
                 "widget" => "string"
               },
               %{
+                "name" => "field4",
+                "widget" => "markdown"
+              },
+              %{
                 "name" => "field3",
                 "widget" => "number"
               }
@@ -27,7 +31,7 @@ defmodule TdDfLib.I18nTest do
         ]
       }
 
-      assert I18n.get_translatable_fields(template) == ["field1", "field2"]
+      assert I18n.get_translatable_fields(template) == ["field1", "field2", "field4"]
     end
 
     test "returns empty list when no translatable fields" do
@@ -128,6 +132,11 @@ defmodule TdDfLib.I18nTest do
 
     test "returns true for translatable enriched_text widget" do
       field = %{"widget" => "enriched_text"}
+      assert I18n.is_translatable_field?(field)
+    end
+
+    test "returns true for translatable markdown widget" do
+      field = %{"widget" => "markdown"}
       assert I18n.is_translatable_field?(field)
     end
 
