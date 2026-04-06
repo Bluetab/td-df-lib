@@ -57,6 +57,33 @@ defmodule TdDfLib.ContentTest do
              },
              other_field: true
            } = Content.legacy_content_support(content, legacy_content_key)
+
+    test "when content does not have legacy key" do
+      content = %{other: true}
+
+      assert Content.legacy_content_support(content, :df_content) == %{
+               df_content: nil,
+               dynamic_content: nil,
+               other: true
+             }
+    end
+
+    test "with primitive values" do
+      content = %{
+        df_content: %{"field" => "value"}
+      }
+
+      assert Content.legacy_content_support(content, :df_content) == %{
+               df_content: %{"field" => "value"},
+               dynamic_content: %{"field" => "value"}
+             }
+    end
+  end
+
+  test "merge with non-map values" do
+    content = %{"a" => "value", "b" => %{"value" => "", "origin" => "user"}}
+    current = %{"a" => "old"}
+    assert Content.merge(content, current) == %{"a" => "value"}
   end
 
   describe "df_content_equal?/2" do
@@ -252,11 +279,13 @@ defmodule TdDfLib.ContentTest do
         "b" => %{"value" => "wrapped", "origin" => "user"},
         "c" => %{"value" => "", "origin" => "user"},
         "d" => %{"some" => "map"},
+        "e" => %{"value" => nil, "origin" => "user"},
+        "f" => nil,
         "unknown" => "ignore"
       }
 
       {filtered, empty_fields} =
-        Content.filter_and_normalize_upload_content(new_content, ["a", "b", "c", "d"])
+        Content.filter_and_normalize_upload_content(new_content, ["a", "b", "c", "d", "e", "f"])
 
       assert filtered == %{
                "a" => %{"value" => "text", "origin" => "file"},
@@ -264,7 +293,7 @@ defmodule TdDfLib.ContentTest do
                "d" => %{"some" => "map", "origin" => "file"}
              }
 
-      assert Enum.sort(empty_fields) == ["c"]
+      assert Enum.sort(empty_fields) == ["c", "e", "f"]
     end
 
     test "treats nil and empty string as empty fields" do
@@ -431,6 +460,28 @@ defmodule TdDfLib.ContentTest do
                  "en",
                  existing_content,
                  existing_content
+               )
+    end
+
+    test "with existing content and no empty fields" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{"name" => "a", "type" => "string", "cardinality" => "1", "label" => "a"}
+        ]
+      }
+
+      new_content = %{"a" => "new"}
+      existing_content = %{"a" => %{"value" => "old", "origin" => "user"}}
+
+      assert {:ok, %{"a" => %{"value" => "new", "origin" => "file"}}} =
+               Content.process_upload_content(
+                 new_content,
+                 template_data,
+                 [],
+                 "en",
+                 existing_content,
+                 :skip
                )
     end
   end
