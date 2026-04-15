@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-8054] Add markdown field type
+
+### Removed
+
+- [TD-8054] Remove enriched_text field type
+
 ## [8.4.2] 2026-04-06
 
 ### Changed
