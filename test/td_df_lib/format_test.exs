@@ -3,7 +3,6 @@ defmodule TdDfLib.FormatTest do
 
   import TdDfLib.Factory
   alias TdDfLib.Format
-  alias TdDfLib.RichText
 
   describe "create_changeset/2" do
     setup do
@@ -837,16 +836,6 @@ defmodule TdDfLib.FormatTest do
       assert formatted_value == ["one", "tres"]
     end
 
-    test "format_field of enriched_text returns wrapped enriched text" do
-      formatted_value =
-        Format.format_field(%{
-          "content" => "some enriched text",
-          "type" => "enriched_text"
-        })
-
-      assert formatted_value == RichText.to_rich_text("some enriched text")
-    end
-
     test "format_field of user type field" do
       assert ["foo"] ==
                Format.format_field(%{"content" => "foo", "type" => "user", "cardinality" => "+"})
@@ -1420,33 +1409,7 @@ defmodule TdDfLib.FormatTest do
       content = %{
         "xyzzy" => %{"value" => "spqr", "origin" => "user"},
         "bay" => %{
-          "value" => %{
-            "object" => "value",
-            "document" => %{
-              "data" => %{},
-              "nodes" => [
-                %{
-                  "data" => %{},
-                  "type" => "paragraph",
-                  "nodes" => [
-                    %{
-                      "text" => "My Text",
-                      "marks" => [
-                        %{
-                          "data" => %{},
-                          "type" => "bold",
-                          "object" => "mark"
-                        }
-                      ],
-                      "object" => "text"
-                    }
-                  ],
-                  "object" => "block"
-                }
-              ],
-              "object" => "document"
-            }
-          },
+          "value" => "# My Text __with markdown__",
           "origin" => "user"
         }
       }
@@ -1458,13 +1421,13 @@ defmodule TdDfLib.FormatTest do
             %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
-            %{"name" => "bay", "type" => "enriched_text"}
+            %{"name" => "bay", "type" => "markdown"}
           ]
         }
       ]
 
       assert Format.search_values(content, %{content: fields}) == %{
-               "bay" => %{"value" => "My Text", "origin" => "user"},
+               "bay" => %{"value" => "# My Text __with markdown__", "origin" => "user"},
                "bar" => %{"origin" => "default", "value" => [""]},
                "baz" => %{"origin" => "default", "value" => [""]},
                "foo" => %{"origin" => "default", "value" => "foo"}
@@ -1474,36 +1437,7 @@ defmodule TdDfLib.FormatTest do
     test "doesn't apply default values when specified" do
       content = %{
         "xyzzy" => %{"value" => "spqr", "origin" => "user"},
-        "bay" => %{
-          "value" => %{
-            "object" => "value",
-            "document" => %{
-              "data" => %{},
-              "nodes" => [
-                %{
-                  "data" => %{},
-                  "type" => "paragraph",
-                  "nodes" => [
-                    %{
-                      "text" => "My Text",
-                      "marks" => [
-                        %{
-                          "data" => %{},
-                          "type" => "bold",
-                          "object" => "mark"
-                        }
-                      ],
-                      "object" => "text"
-                    }
-                  ],
-                  "object" => "block"
-                }
-              ],
-              "object" => "document"
-            }
-          },
-          "origin" => "user"
-        }
+        "bay" => %{"value" => "My Text", "origin" => "user"}
       }
 
       fields = [
@@ -1513,7 +1447,7 @@ defmodule TdDfLib.FormatTest do
             %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
-            %{"name" => "bay", "type" => "enriched_text"}
+            %{"name" => "bay", "type" => "markdown"}
           ]
         }
       ]
@@ -1596,7 +1530,7 @@ defmodule TdDfLib.FormatTest do
             %{"name" => "foo", "default" => %{"value" => "foo", "origin" => "default"}},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
-            %{"name" => "bay", "type" => "enriched_text"}
+            %{"name" => "bay", "type" => "markdown"}
           ]
         }
       ]
@@ -1607,36 +1541,7 @@ defmodule TdDfLib.FormatTest do
     test "omits values of type image and copy" do
       content = %{
         "xyzzy" => %{"value" => "spqr", "origin" => "user"},
-        "foo" => %{
-          "value" => %{
-            "object" => "value",
-            "document" => %{
-              "data" => %{},
-              "nodes" => [
-                %{
-                  "data" => %{},
-                  "type" => "paragraph",
-                  "nodes" => [
-                    %{
-                      "text" => "My Text",
-                      "marks" => [
-                        %{
-                          "data" => %{},
-                          "type" => "bold",
-                          "object" => "mark"
-                        }
-                      ],
-                      "object" => "text"
-                    }
-                  ],
-                  "object" => "block"
-                }
-              ],
-              "object" => "document"
-            }
-          },
-          "origin" => "user"
-        },
+        "foo" => %{"value" => "My Text", "origin" => "user"},
         "bay" => %{"value" => "photo code...", "origin" => "user"},
         "xyz" => %{"value" => "some json code as tring...", "origin" => "user"}
       }
@@ -1645,7 +1550,7 @@ defmodule TdDfLib.FormatTest do
         %{
           "name" => "group",
           "fields" => [
-            %{"name" => "foo", "type" => "enriched_text"},
+            %{"name" => "foo", "type" => "markdown"},
             %{"name" => "bar", "cardinality" => "+", "values" => []},
             %{"name" => "baz", "cardinality" => "*", "values" => []},
             %{"name" => "bay", "type" => "image"},
@@ -1727,42 +1632,16 @@ defmodule TdDfLib.FormatTest do
                Format.search_values(content, %{content: fields})
     end
 
-    test "works well for enriched texts" do
-      content_with_enriched_text = %{
+    test "works well for markdown fields" do
+      content_with_markdown = %{
         "layer" => %{"value" => "Landing", "origin" => "user"},
-        "Enriched text" => %{
-          "value" => %{
-            "object" => "value",
-            "document" => %{
-              "data" => %{},
-              "nodes" => [
-                %{
-                  "data" => %{},
-                  "type" => "paragraph",
-                  "nodes" => [
-                    %{
-                      "text" => "Enriched example",
-                      "marks" => [
-                        %{
-                          "data" => %{},
-                          "type" => "bold",
-                          "object" => "mark"
-                        }
-                      ],
-                      "object" => "text"
-                    }
-                  ],
-                  "object" => "block"
-                }
-              ],
-              "object" => "document"
-            }
-          },
+        "Markdown text" => %{
+          "value" => "**Markdown example**",
           "origin" => "another_user"
         }
       }
 
-      content_without_enriched_text = %{
+      content_without_markdown = %{
         "layer" => %{"value" => "Landing", "origin" => "user"}
       }
 
@@ -1787,24 +1666,26 @@ defmodule TdDfLib.FormatTest do
                 "on" => "layer",
                 "to_be" => ["Business", "Staging"]
               },
-              "label" => "Enriched text",
+              "label" => "Markdown text",
               "mandatory" => %{
                 "on" => ""
               },
-              "name" => "Enriched text",
-              "type" => "enriched_text",
+              "name" => "Markdown text",
+              "type" => "markdown",
               "values" => nil,
-              "widget" => "text"
+              "widget" => "markdown"
             }
           ]
         }
       ]
 
-      assert %{"Enriched text" => %{"value" => "Enriched example", "origin" => "another_user"}} =
-               Format.search_values(content_with_enriched_text, %{content: fields})
+      assert %{
+               "Markdown text" => %{"value" => "**Markdown example**", "origin" => "another_user"}
+             } =
+               Format.search_values(content_with_markdown, %{content: fields})
 
-      assert %{"Enriched text" => %{"value" => ""}} =
-               Format.search_values(content_without_enriched_text, %{content: fields})
+      assert %{"Markdown text" => %{"value" => ""}} =
+               Format.search_values(content_without_markdown, %{content: fields})
     end
 
     test "works well for system fields" do
@@ -1914,9 +1795,9 @@ defmodule TdDfLib.FormatTest do
               "label" => "Enriched text",
               "name" => "enriched text",
               "subscribable" => false,
-              "type" => "enriched_text",
+              "type" => "markdown",
               "values" => nil,
-              "widget" => "enriched_text"
+              "widget" => "markdown"
             },
             %{
               "cardinality" => "?",

@@ -87,18 +87,13 @@ defmodule TdDfLib.ValidationTest do
       refute changeset.valid?
     end
 
-    test "valid type enriched_text", %{template: template} do
-      changeset = get_changeset_for("enriched_text", %{}, "?", template)
+    test "valid type markdown", %{template: template} do
+      changeset = get_changeset_for("markdown", "# Hello\n**world**", "?", template)
       assert changeset.valid?
     end
 
-    test "invalid string type enriched_text", %{template: template} do
-      changeset = get_changeset_for("enriched_text", "my_string", "1", template)
-      refute changeset.valid?
-    end
-
-    test "invalid array type enriched_text", %{template: template} do
-      changeset = get_changeset_for("enriched_text", ["my_string"], "1", template)
+    test "invalid type markdown with unsafe content", %{template: template} do
+      changeset = get_changeset_for("markdown", @unsafe, "?", template)
       refute changeset.valid?
     end
 
@@ -1210,11 +1205,11 @@ defmodule TdDfLib.ValidationTest do
                %{
                  "cardinality" => "1",
                  "default" => "",
-                 "label" => "Enriched text",
+                 "label" => "Markdown text",
                  "name" => "enriched_text",
-                 "type" => "enriched_text",
+                 "type" => "markdown",
                  "values" => nil,
-                 "widget" => "text"
+                 "widget" => "markdown"
                },
                %{
                  "ai_suggestion" => false,
@@ -1230,7 +1225,7 @@ defmodule TdDfLib.ValidationTest do
 
       content = %{
         "multiple_hierarchy" => %{"origin" => "file", "value" => []},
-        "enriched_text" => %{"origin" => "file", "value" => %{}},
+        "enriched_text" => %{"origin" => "file", "value" => ""},
         "multiple_string" => %{"origin" => "file", "value" => [nil]}
       }
 
