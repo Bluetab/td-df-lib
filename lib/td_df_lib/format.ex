@@ -9,7 +9,6 @@ defmodule TdDfLib.Format do
   alias TdCache.TaxonomyCache
   alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.Parser, as: LibParser
-  alias TdDfLib.RichText
   alias TdDfLib.Templates
 
   def apply_template(content, fields, opts \\ [])
@@ -177,7 +176,7 @@ defmodule TdDfLib.Format do
   defp format_search_values(content, fields) do
     fields
     |> Enum.filter(fn
-      %{"type" => type} -> type in ["enriched_text", "system", "url"]
+      %{"type" => type} -> type in ["system", "url", "markdown"]
       _ -> false
     end)
     |> Enum.reduce(content, &set_search_value(&1, &2))
@@ -207,9 +206,9 @@ defmodule TdDfLib.Format do
     end
   end
 
-  defp set_search_value(%{"name" => name, "type" => "enriched_text"}, acc) do
+  defp set_search_value(%{"name" => name, "type" => "markdown"}, acc) do
     %{"value" => value} = field = Map.get(acc, name, @nil_content)
-    Map.put(acc, name, %{field | "value" => RichText.to_plain_text(value)})
+    Map.put(acc, name, %{field | "value" => value || ""})
   end
 
   defp set_search_value(%{"name" => name, "type" => "system"}, acc) do
@@ -429,10 +428,6 @@ defmodule TdDfLib.Format do
 
   def format_field(%{"content" => content, "type" => "string"}) do
     [content]
-  end
-
-  def format_field(%{"content" => content, "type" => "enriched_text"}) do
-    RichText.to_rich_text(content)
   end
 
   def format_field(%{"content" => "", "type" => "integer"}), do: nil
