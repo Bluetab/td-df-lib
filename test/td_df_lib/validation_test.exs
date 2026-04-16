@@ -1206,7 +1206,7 @@ defmodule TdDfLib.ValidationTest do
                  "cardinality" => "1",
                  "default" => "",
                  "label" => "Markdown text",
-                 "name" => "enriched_text",
+                 "name" => "markdown_text",
                  "type" => "markdown",
                  "values" => nil,
                  "widget" => "markdown"
@@ -1225,7 +1225,7 @@ defmodule TdDfLib.ValidationTest do
 
       content = %{
         "multiple_hierarchy" => %{"origin" => "file", "value" => []},
-        "enriched_text" => %{"origin" => "file", "value" => ""},
+        "markdown_text" => %{"origin" => "file", "value" => ""},
         "multiple_string" => %{"origin" => "file", "value" => [nil]}
       }
 
@@ -1241,7 +1241,7 @@ defmodule TdDfLib.ValidationTest do
                count: 1
              )
 
-      assert {_message, empty_object_validation} = errors[:enriched_text]
+      assert {_message, empty_object_validation} = errors[:markdown_text]
       assert empty_object_validation[:validation] == :required
 
       assert {_message, multiple_string_validation} = errors[:multiple_string]
