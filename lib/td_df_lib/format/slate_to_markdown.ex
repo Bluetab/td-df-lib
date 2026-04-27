@@ -15,9 +15,7 @@ defmodule TdDfLib.Format.SlateToMarkdown do
   def convert(text) when is_binary(text), do: text
 
   def convert(%{"document" => %{"nodes" => nodes}}) when is_list(nodes) do
-    nodes
-    |> Enum.map(&render_block/1)
-    |> Enum.join(@block_separator)
+    Enum.map_join(nodes, @block_separator, &render_block/1)
   end
 
   def convert(_), do: ""
@@ -31,16 +29,13 @@ defmodule TdDfLib.Format.SlateToMarkdown do
     do: "## " <> render_inlines(nodes)
 
   defp render_block(%{"type" => "bulleted-list", "nodes" => items}) do
-    items
-    |> Enum.map(fn item -> "- " <> render_list_item(item) end)
-    |> Enum.join("\n")
+    Enum.map_join(items, "\n", fn item -> "- " <> render_list_item(item) end)
   end
 
   defp render_block(%{"type" => "numbered-list", "nodes" => items}) do
     items
     |> Enum.with_index(1)
-    |> Enum.map(fn {item, index} -> "#{index}. " <> render_list_item(item) end)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", fn {item, index} -> "#{index}. " <> render_list_item(item) end)
   end
 
   defp render_block(%{"nodes" => nodes}), do: render_inlines(nodes)
