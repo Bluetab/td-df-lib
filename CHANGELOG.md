@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-8082] Thin parser of slate text to markdown
+
 ## [8.4.2] 2026-04-06
 
 ### Changed
