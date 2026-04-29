@@ -10,6 +10,12 @@
 
 - [TD-8054] Remove enriched_text field type
 
+## [8.5.0] 2026-04-27
+
+### Added
+
+- [TD-8082] Thin parser of slate text to markdown
+
 ## [8.4.2] 2026-04-06
 
 ### Changed
