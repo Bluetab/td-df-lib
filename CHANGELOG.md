@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- [TD-8054] Migration of `enriched_text` type of fields to `markdown`
+
 ### Removed
 
 - [TD-8054] Remove enriched_text field type
