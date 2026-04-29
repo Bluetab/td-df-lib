@@ -1,5 +1,15 @@
 # Changelog
 
+## [8.5.1] 2026-04-29
+
+### Added
+
+- [TD-8054] Migration of `enriched_text` type of fields to `markdown`
+
+### Removed
+
+- [TD-8054] Remove enriched_text field type
+
 ## [8.5.0] 2026-04-27
 
 ### Added

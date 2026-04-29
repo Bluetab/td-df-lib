@@ -138,6 +138,65 @@ defmodule TdDfLib.Format.SlateToMardownTest do
     end
   end
 
+  describe "convert/1 leaves format" do
+    test "renders a paragraph with text node using leaves" do
+      input =
+        document([
+          %{
+            "object" => "block",
+            "type" => "paragraph",
+            "nodes" => [
+              %{
+                "object" => "text",
+                "leaves" => [%{"text" => "plain text from leaves"}]
+              }
+            ]
+          }
+        ])
+
+      assert SlateToMarkdown.convert(input) == "plain text from leaves"
+    end
+
+    test "renders leaves with marks" do
+      input =
+        document([
+          %{
+            "object" => "block",
+            "type" => "paragraph",
+            "nodes" => [
+              %{
+                "object" => "text",
+                "leaves" => [
+                  %{"text" => "bold", "marks" => [%{"type" => "bold"}]},
+                  %{"text" => " normal"}
+                ]
+              }
+            ]
+          }
+        ])
+
+      assert SlateToMarkdown.convert(input) == "**bold** normal"
+    end
+
+    test "skips empty leaves" do
+      input =
+        document([
+          %{
+            "object" => "block",
+            "type" => "paragraph",
+            "nodes" => [
+              %{
+                "object" => "text",
+                "leaves" => [%{"text" => ""}, %{"text" => "visible"}]
+              }
+            ]
+          }
+        ])
+
+      assert SlateToMarkdown.convert(input) == "visible"
+    end
+  end
+
   describe "convert/1 multi-block document" do
     test "joins top-level blocks with a blank line" do
       input =

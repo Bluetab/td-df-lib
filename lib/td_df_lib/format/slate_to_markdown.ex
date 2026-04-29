@@ -54,6 +54,10 @@ defmodule TdDfLib.Format.SlateToMarkdown do
     apply_marks(text, mark_types(node))
   end
 
+  defp render_inline(%{"object" => "text", "leaves" => leaves}) when is_list(leaves) do
+    Enum.map_join(leaves, "", &render_leaf/1)
+  end
+
   defp render_inline(%{"object" => "text"}), do: ""
 
   defp render_inline(%{"object" => "inline", "type" => "link", "nodes" => nodes} = node) do
@@ -63,6 +67,12 @@ defmodule TdDfLib.Format.SlateToMarkdown do
 
   defp render_inline(%{"nodes" => nodes}), do: render_inlines(nodes)
   defp render_inline(_), do: ""
+
+  defp render_leaf(%{"text" => text} = leaf) when is_binary(text) and text != "" do
+    apply_marks(text, mark_types(leaf))
+  end
+
+  defp render_leaf(_), do: ""
 
   defp mark_types(%{"marks" => marks}) when is_list(marks) do
     marks

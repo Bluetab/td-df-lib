@@ -25,3 +25,8 @@ td_df_lib-*.tar
 .tool-versions
 
 *.DS_Store
+
+# Claude
+.claude/
+CLAUDE.md
+.claudeignore

@@ -3,6 +3,25 @@ defmodule TdDfLib.RichText do
   Helper module to manipulate rich text.
   """
 
+  alias TdDfLib.Format.SlateToMarkdown
+
+  @spec to_markdown_content(nil | map()) :: nil | map()
+  def to_markdown_content(nil), do: nil
+
+  def to_markdown_content(content) when is_map(content) do
+    Map.new(content, fn {k, v} -> {k, convert_field(v)} end)
+  end
+
+  defp convert_field(%{"value" => %{"document" => _} = doc} = field) do
+    Map.put(field, "value", SlateToMarkdown.convert(doc))
+  end
+
+  defp convert_field(%{"value" => empty} = field) when empty == %{} do
+    Map.put(field, "value", "")
+  end
+
+  defp convert_field(field), do: field
+
   def to_rich_text(nil), do: %{}
   def to_rich_text(""), do: %{}
 

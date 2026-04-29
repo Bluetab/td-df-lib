@@ -12,7 +12,7 @@ defmodule TdDfLib.I18nTest do
             "fields" => [
               %{
                 "name" => "field1",
-                "widget" => "enriched_text"
+                "widget" => "markdown"
               },
               %{
                 "name" => "field2",
@@ -127,11 +127,6 @@ defmodule TdDfLib.I18nTest do
 
     test "returns true for translatable textarea widget" do
       field = %{"widget" => "textarea"}
-      assert I18n.is_translatable_field?(field)
-    end
-
-    test "returns true for translatable enriched_text widget" do
-      field = %{"widget" => "enriched_text"}
       assert I18n.is_translatable_field?(field)
     end
 
