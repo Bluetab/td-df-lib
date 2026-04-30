@@ -1939,5 +1939,30 @@ defmodule TdDfLib.ValidationTest do
       content = %{"string" => %{"value" => "valid", "origin" => "user"}}
       assert Validation.validate_content(content, schema) == :ok
     end
+
+    test "validate_content accepts group role values and rejects users" do
+      domain = CacheHelpers.put_domain()
+      user = CacheHelpers.insert_user()
+      group = CacheHelpers.insert_group()
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "data_owner",
+          "type" => "group",
+          "values" => %{"processed_groups" => [], "role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
+      assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
+
+      content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
+      assert {:error, %{errors: [data_owner: {"is invalid", _}]}} =
+               Validation.validate_content(content, schema, domain_ids: [domain.id])
+    end
   end
 end

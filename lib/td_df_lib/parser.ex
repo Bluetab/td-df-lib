@@ -13,7 +13,7 @@ defmodule TdDfLib.Parser do
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
   @schema_types ~w(url enriched_text integer float domain hierarchy table dynamic_table)
-  @multiple_cardinality_schema_types ~w(string user user_group)
+  @multiple_cardinality_schema_types ~w(string user group user_group)
   @date_types ~w(date datetime)
 
   @doc """
