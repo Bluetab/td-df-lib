@@ -1136,8 +1136,9 @@ defmodule TdDfLib.ValidationTest do
       domain = CacheHelpers.put_domain()
       user = CacheHelpers.insert_user()
       group = CacheHelpers.insert_group()
+      group_without_alias = CacheHelpers.insert_group(alias: nil)
       CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
-      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id, group_without_alias.id])
 
       schema = Enum.flat_map(template.content, & &1["fields"])
       content = %{"data_owner" => %{"value" => "user:foo", "origin" => "user"}}
@@ -1149,7 +1150,8 @@ defmodule TdDfLib.ValidationTest do
       assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
 
       assert "user:#{user.full_name}" in enum
-      assert "group:#{group.name}" in enum
+      assert "group:#{group.alias}" in enum
+      assert "group:#{group_without_alias.name}" in enum
 
       # Invalid group
       content = %{"data_owner" => %{"value" => "group:foo", "origin" => "user"}}
@@ -1160,7 +1162,8 @@ defmodule TdDfLib.ValidationTest do
       assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
 
       assert "user:#{user.full_name}" in enum
-      assert "group:#{group.name}" in enum
+      assert "group:#{group.alias}" in enum
+      assert "group:#{group_without_alias.name}" in enum
 
       # Valid user
       content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
@@ -1171,12 +1174,22 @@ defmodule TdDfLib.ValidationTest do
       assert changes == %{data_owner: "user:#{user.full_name}"}
 
       # Valid group
-      content = %{"data_owner" => %{"value" => "group:#{group.name}", "origin" => "user"}}
+      content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
 
       %Ecto.Changeset{valid?: true, changes: changes} =
         Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
-      assert changes == %{data_owner: "group:#{group.name}"}
+      assert changes == %{data_owner: "group:#{group.alias}"}
+
+      # Valid group without alias
+      content = %{
+        "data_owner" => %{"value" => "group:#{group_without_alias.name}", "origin" => "user"}
+      }
+
+      %Ecto.Changeset{valid?: true, changes: changes} =
+        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert changes == %{data_owner: "group:#{group_without_alias.name}"}
     end
 
     @tag template_content: [
@@ -1920,6 +1933,32 @@ defmodule TdDfLib.ValidationTest do
       {:ok, schema} = TemplateCache.get(template.id, :content)
       content = %{"string" => %{"value" => "valid", "origin" => "user"}}
       assert Validation.validate_content(content, schema) == :ok
+    end
+
+    test "validate_content accepts group role values and rejects users" do
+      domain = CacheHelpers.put_domain()
+      user = CacheHelpers.insert_user()
+      group = CacheHelpers.insert_group()
+      CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "data_owner",
+          "type" => "group",
+          "values" => %{"processed_groups" => [], "role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
+      assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
+
+      content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
+
+      assert {:error, %{errors: [data_owner: {"is invalid", _}]}} =
+               Validation.validate_content(content, schema, domain_ids: [domain.id])
     end
   end
 end

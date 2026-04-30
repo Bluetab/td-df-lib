@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-8083] Add user group management features
+
 ## [8.5.1] 2026-04-29
 
 ### Added
