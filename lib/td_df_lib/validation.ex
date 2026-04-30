@@ -15,7 +15,7 @@ defmodule TdDfLib.Validation do
     "boolean" => :boolean,
     "url" => :map,
     "user" => :string,
-    "enriched_text" => :map,
+    "markdown" => :string,
     "table" => :map,
     "dynamic_table" => :map,
     "integer" => :integer,
@@ -405,7 +405,7 @@ defmodule TdDfLib.Validation do
 
   defp add_image_validation(changeset, %{}), do: changeset
 
-  defp add_richtext_validation(changeset, %{"name" => name, "type" => "enriched_text"}) do
+  defp add_richtext_validation(changeset, %{"name" => name, "type" => "markdown"}) do
     field = String.to_atom(name)
     Changeset.validate_change(changeset, field, &validate_safe/2)
   end

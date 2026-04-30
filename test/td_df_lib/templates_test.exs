@@ -467,10 +467,10 @@ defmodule TdDfLib.TemplatesTest do
             },
             %{
               "cardinality" => "?",
-              "label" => "Texto Enriquecido",
-              "name" => "enriched_text",
-              "type" => "enriched_text",
-              "widget" => "enriched_text"
+              "label" => "Texto Markdown",
+              "name" => "markdown_text",
+              "type" => "markdown",
+              "widget" => "markdown"
             },
             %{
               "cardinality" => "?",
