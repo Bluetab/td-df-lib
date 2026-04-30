@@ -1956,6 +1956,7 @@ defmodule TdDfLib.ValidationTest do
       assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
 
       content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
+
       assert {:error, %{errors: [data_owner: {"is invalid", _}]}} =
                Validation.validate_content(content, schema, domain_ids: [domain.id])
     end
