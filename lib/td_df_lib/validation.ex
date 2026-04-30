@@ -487,7 +487,7 @@ defmodule TdDfLib.Validation do
     domain_ids
     |> AclLoader.get_roles_and_groups()
     |> Map.get(role, [])
-    |> Enum.map(& &1.name)
+    |> Enum.map(&if &1.alias in [nil, ""], do: &1.name, else: &1.alias)
   end
 
   def validate_content(content, content_schema, opts \\ []) do
