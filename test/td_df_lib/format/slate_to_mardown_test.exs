@@ -209,6 +209,80 @@ defmodule TdDfLib.Format.SlateToMardownTest do
     end
   end
 
+  describe "convert/1 corrupt or partial nodes" do
+    test "renders link with nil href as empty href" do
+      input =
+        document([
+          block("paragraph", [
+            link(nil, [text("example")])
+          ])
+        ])
+
+      assert SlateToMarkdown.convert(input) == "[example]()"
+    end
+
+    test "renders link with nil data without crashing" do
+      input =
+        document([
+          block("paragraph", [
+            %{
+              "object" => "inline",
+              "type" => "link",
+              "data" => nil,
+              "nodes" => [text("example")]
+            }
+          ])
+        ])
+
+      assert SlateToMarkdown.convert(input) == "[example]()"
+    end
+
+    test "renders link missing data key without crashing" do
+      input =
+        document([
+          block("paragraph", [
+            %{"object" => "inline", "type" => "link", "nodes" => [text("example")]}
+          ])
+        ])
+
+      assert SlateToMarkdown.convert(input) == "[example]()"
+    end
+
+    test "renders the corrupt slate document from production without crashing" do
+      input =
+        document([
+          block("paragraph", [text("                      ")]),
+          block("paragraph", [text("")]),
+          block("heading-one", [text("and after many spaces and new lines...")]),
+          %{
+            "object" => "block",
+            "type" => "numbered-list",
+            "data" => %{},
+            "nodes" => [
+              %{
+                "object" => "block",
+                "type" => "heading-two",
+                "data" => %{},
+                "nodes" => [
+                  text(""),
+                  link(nil, [text("", marks: ~w(underlined))]),
+                  text("", marks: ~w(underlined))
+                ]
+              }
+            ]
+          },
+          block("paragraph", [text("")]),
+          block("heading-one", [text("this is probably beyond the bottom of the page....")]),
+          block("paragraph", [text("Lorem ipsum dolor sit amet")])
+        ])
+
+      expected =
+        "                      \n\n\n\n# and after many spaces and new lines...\n\n1. []()\n\n\n\n# this is probably beyond the bottom of the page....\n\nLorem ipsum dolor sit amet"
+
+      assert SlateToMarkdown.convert(input) == expected
+    end
+  end
+
   describe "convert/1 full example document" do
     test "renders the user-provided slate document" do
       expected =
