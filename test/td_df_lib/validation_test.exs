@@ -1110,8 +1110,8 @@ defmodule TdDfLib.ValidationTest do
 
       content = %{"data_owner" => %{"value" => user.full_name, "origin" => "user"}}
 
-      %Ecto.Changeset{valid?: true, changes: changes} =
-        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+      assert %Ecto.Changeset{valid?: true, changes: changes} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert changes == %{data_owner: user.full_name}
     end
@@ -1168,16 +1168,16 @@ defmodule TdDfLib.ValidationTest do
       # Valid user
       content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
 
-      %Ecto.Changeset{valid?: true, changes: changes} =
-        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+      assert %Ecto.Changeset{valid?: true, changes: changes} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert changes == %{data_owner: "user:#{user.full_name}"}
 
       # Valid group
       content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
 
-      %Ecto.Changeset{valid?: true, changes: changes} =
-        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+      assert %Ecto.Changeset{valid?: true, changes: changes} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert changes == %{data_owner: "group:#{group.alias}"}
 
@@ -1186,8 +1186,8 @@ defmodule TdDfLib.ValidationTest do
         "data_owner" => %{"value" => "group:#{group_without_alias.name}", "origin" => "user"}
       }
 
-      %Ecto.Changeset{valid?: true, changes: changes} =
-        Validation.build_changeset(content, schema, domain_ids: [domain.id])
+      assert %Ecto.Changeset{valid?: true, changes: changes} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert changes == %{data_owner: "group:#{group_without_alias.name}"}
     end
@@ -1957,8 +1957,10 @@ defmodule TdDfLib.ValidationTest do
 
       content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
 
-      assert {:error, %{errors: [data_owner: {"is invalid", _}]}} =
+      assert {:error, %{errors: errors}} =
                Validation.validate_content(content, schema, domain_ids: [domain.id])
+
+      assert [data_owner: {"is invalid", _}] = errors
     end
   end
 end
