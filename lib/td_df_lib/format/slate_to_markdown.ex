@@ -61,12 +61,14 @@ defmodule TdDfLib.Format.SlateToMarkdown do
   defp render_inline(%{"object" => "text"}), do: ""
 
   defp render_inline(%{"object" => "inline", "type" => "link", "nodes" => nodes} = node) do
-    href = node |> Map.get("data", %{}) |> Map.get("href", "")
-    "[" <> render_inlines(nodes) <> "](" <> href <> ")"
+    "[" <> render_inlines(nodes) <> "](" <> href_from_node(node) <> ")"
   end
 
   defp render_inline(%{"nodes" => nodes}), do: render_inlines(nodes)
   defp render_inline(_), do: ""
+
+  defp href_from_node(%{"data" => %{"href" => href}}) when is_binary(href), do: href
+  defp href_from_node(_), do: ""
 
   defp render_leaf(%{"text" => text} = leaf) when is_binary(text) and text != "" do
     apply_marks(text, mark_types(leaf))
