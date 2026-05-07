@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- [TD-8054] Migration of `enriched_text` type of fields to `markdown`
+- [TD-8054] Handle nil href in slate-to-markdown link conversion
 
 ## [8.5.1] 2026-04-29
 
