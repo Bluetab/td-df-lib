@@ -252,8 +252,7 @@ defmodule TdDfLib.Format do
       |> Map.get("value")
 
     default_value =
-      default_value
-      |> case do
+      case default_value do
         default_value = %{} -> Map.get(default_value, dependent_value)
         d -> d
       end

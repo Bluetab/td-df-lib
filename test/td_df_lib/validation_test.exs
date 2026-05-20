@@ -1939,8 +1939,13 @@ defmodule TdDfLib.ValidationTest do
       domain = CacheHelpers.put_domain()
       user = CacheHelpers.insert_user()
       group = CacheHelpers.insert_group()
+      group_without_alias = CacheHelpers.insert_group(alias: nil)
       CacheHelpers.insert_acl(domain.id, "Data Owner", [user.id])
-      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [
+        group.id,
+        group_without_alias.id
+      ])
 
       schema = [
         %{
@@ -1952,8 +1957,18 @@ defmodule TdDfLib.ValidationTest do
         }
       ]
 
-      content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
+      content = %{"data_owner" => %{"value" => group.alias, "origin" => "user"}}
       assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
+
+      content = %{"data_owner" => %{"value" => group_without_alias.name, "origin" => "user"}}
+      assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
+
+      content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
+
+      assert {:error, %{errors: errors}} =
+               Validation.validate_content(content, schema, domain_ids: [domain.id])
+
+      assert [data_owner: {"is invalid", _}] = errors
 
       content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
 
