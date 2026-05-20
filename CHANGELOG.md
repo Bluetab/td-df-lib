@@ -1,5 +1,11 @@
 # Changelog
 
+## [8.6.1] 2026-05-20
+
+### Changed
+
+- [TD-8083] Remove group prefix when content belongs to a group only
+
 ## [8.6.0] 2026-05-12
 
 ### Added
