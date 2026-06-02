@@ -2,9 +2,9 @@
 
 ## [8.6.3] 2026-05-20
 
-### Changed
+### Added
 
-- [TD-8083] Update td-cache
+- [TD-8083] Add user and group normalization for legacy identifiers
 
 ## [8.6.2] 2026-05-20
 
