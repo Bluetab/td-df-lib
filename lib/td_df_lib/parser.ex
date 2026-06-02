@@ -6,6 +6,7 @@ defmodule TdDfLib.Parser do
   alias TdCache.DomainCache
   alias TdCache.HierarchyCache
   alias TdCache.I18nCache
+  alias TdCache.UserCache
   alias TdDfLib.Format
   alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.I18n
@@ -73,6 +74,7 @@ defmodule TdDfLib.Parser do
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
       schema_type in @schema_types or schema_type in @date_types or
         (schema_type in @multiple_cardinality_schema_types and cardinality in ["*", "+"]) or
+        schema_type in ["user", "group", "user_group"] or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
     end)
@@ -379,6 +381,14 @@ defmodule TdDfLib.Parser do
 
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
+  defp parse_field(%{"type" => "group"}, value, _ctx) when is_binary(value) do
+    normalize_group_value(value)
+  end
+
+  defp parse_field(%{"type" => "user_group"}, value, _ctx) when is_binary(value) do
+    normalize_group_value(value)
+  end
+
   defp parse_field(
          %{"type" => "hierarchy", "values" => %{"hierarchy" => %{"id" => hierarchy_id}}},
          value,
@@ -427,6 +437,19 @@ defmodule TdDfLib.Parser do
   end
 
   defp parse_field(_, value, _), do: value
+
+  defp normalize_group_value("group:" <> _ = value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{alias: group_alias, name: name}} ->
+        name_or_alias = if group_alias in [nil, ""], do: name, else: group_alias
+        "group:#{name_or_alias}"
+
+      _ ->
+        value
+    end
+  end
+
+  defp normalize_group_value(value), do: value
 
   defp fields_to_string(acc, fields, content, ctx, opts) do
     Enum.reduce(

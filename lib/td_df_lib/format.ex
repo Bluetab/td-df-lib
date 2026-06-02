@@ -7,6 +7,7 @@ defmodule TdDfLib.Format do
   alias TdCache.I18nCache
   alias TdCache.SystemCache
   alias TdCache.TaxonomyCache
+  alias TdCache.UserCache
   alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.Parser, as: LibParser
   alias TdDfLib.Templates
@@ -454,6 +455,16 @@ defmodule TdDfLib.Format do
     end
   end
 
+  def format_field(%{"content" => content, "type" => "group"}) when is_binary(content) do
+    content
+    |> normalize_group_identifier()
+    |> String.replace_prefix("group:", "")
+  end
+
+  def format_field(%{"content" => content, "type" => "user_group"}) when is_binary(content) do
+    normalize_user_group_identifier(content)
+  end
+
   def format_field(%{
         "content" => content,
         "type" => "hierarchy",
@@ -542,6 +553,31 @@ defmodule TdDfLib.Format do
       _ -> key === content
     end
   end
+
+  defp normalize_group_identifier("group:" <> _ = value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{alias: group_alias, name: name}} ->
+        name_or_alias = if group_alias in [nil, ""], do: name, else: group_alias
+        "group:#{name_or_alias}"
+
+      _ ->
+        value
+    end
+  end
+
+  defp normalize_group_identifier(value) when is_binary(value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{alias: group_alias, name: name}} ->
+        name_or_alias = if group_alias in [nil, ""], do: name, else: group_alias
+        "group:#{name_or_alias}"
+
+      _ ->
+        value
+    end
+  end
+
+  defp normalize_user_group_identifier("user:" <> _ = value), do: value
+  defp normalize_user_group_identifier(value), do: normalize_group_identifier(value)
 
   defp set_cached_values(content, fields) do
     Enum.reduce(fields, content, &set_cached_value(&1, &2))
