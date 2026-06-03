@@ -896,9 +896,21 @@ defmodule TdDfLib.ParserTest do
       assert Parser.append_parsed_fields([], fields, content) == ["system"]
     end
 
-    test "formats legacy group values with canonical name for export" do
-      %{name: group_name} =
+    test "formats user_group values with alias for export when present" do
+      %{name: group_name, alias: group_alias} =
         CacheHelpers.insert_group(%{name: "legacy group name", alias: "canonical-group-alias"})
+
+      fields = [%{"type" => "user_group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == ["group:#{group_alias}"]
+    end
+
+    test "formats user_group values with name for export when alias is missing" do
+      %{name: group_name} = CacheHelpers.insert_group(%{name: "foo bar", alias: nil})
 
       fields = [%{"type" => "user_group", "name" => @field_name}]
 
@@ -909,14 +921,26 @@ defmodule TdDfLib.ParserTest do
       assert Parser.append_parsed_fields([], fields, content) == ["group:#{group_name}"]
     end
 
-    test "formats legacy group field values without prefix for export" do
-      %{name: group_name} =
+    test "formats group field values with alias for export when present" do
+      %{name: group_name, alias: group_alias} =
         CacheHelpers.insert_group(%{name: "legacy group field", alias: "canonical-group-field"})
 
       fields = [%{"type" => "group", "name" => @field_name}]
 
       content = %{
         @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == [group_alias]
+    end
+
+    test "formats group field values with name for export when alias is missing" do
+      %{name: group_name} = CacheHelpers.insert_group(%{name: "bar baz", alias: nil})
+
+      fields = [%{"type" => "group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => group_name, "origin" => "user"}
       }
 
       assert Parser.append_parsed_fields([], fields, content) == [group_name]

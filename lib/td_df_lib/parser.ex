@@ -382,11 +382,11 @@ defmodule TdDfLib.Parser do
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
   defp parse_field(%{"type" => "group"}, value, _ctx) when is_binary(value) do
-    normalize_group_field_value(value)
+    export_group_field_value(value)
   end
 
   defp parse_field(%{"type" => "user_group"}, value, _ctx) when is_binary(value) do
-    normalize_user_group_field_value(value)
+    export_user_group_field_value(value)
   end
 
   defp parse_field(
@@ -438,35 +438,34 @@ defmodule TdDfLib.Parser do
 
   defp parse_field(_, value, _), do: value
 
-  defp normalize_user_group_field_value("user:" <> _ = value), do: value
+  defp export_user_group_field_value("user:" <> _ = value), do: value
 
-  defp normalize_user_group_field_value("group:" <> _ = value) do
+  defp export_user_group_field_value(value) when is_binary(value) do
     case UserCache.get_group_by_name(value) do
-      {:ok, %{name: name}} -> "group:#{name}"
+      {:ok, group} when not is_nil(group) -> "group:#{group_export_label(group)}"
       _ -> value
     end
   end
 
-  defp normalize_user_group_field_value(value) when is_binary(value) do
+  defp export_group_field_value("group:" <> _ = value) do
     case UserCache.get_group_by_name(value) do
-      {:ok, %{name: name}} -> "group:#{name}"
-      _ -> value
-    end
-  end
-
-  defp normalize_group_field_value("group:" <> _ = value) do
-    case UserCache.get_group_by_name(value) do
-      {:ok, %{name: name}} -> name
+      {:ok, group} when not is_nil(group) -> group_export_label(group)
       _ -> String.replace_prefix(value, "group:", "")
     end
   end
 
-  defp normalize_group_field_value(value) when is_binary(value) do
+  defp export_group_field_value(value) when is_binary(value) do
     case UserCache.get_group_by_name(value) do
-      {:ok, %{name: name}} -> name
+      {:ok, group} when not is_nil(group) -> group_export_label(group)
       _ -> value
     end
   end
+
+  defp group_export_label(%{alias: group_alias, name: name})
+       when group_alias in [nil, ""],
+       do: name
+
+  defp group_export_label(%{alias: group_alias}), do: group_alias
 
   defp fields_to_string(acc, fields, content, ctx, opts) do
     Enum.reduce(
