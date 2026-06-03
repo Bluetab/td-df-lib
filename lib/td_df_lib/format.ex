@@ -556,23 +556,15 @@ defmodule TdDfLib.Format do
 
   defp normalize_group_identifier("group:" <> _ = value) do
     case UserCache.get_group_by_name(value) do
-      {:ok, %{alias: group_alias, name: name}} ->
-        name_or_alias = if group_alias in [nil, ""], do: name, else: group_alias
-        "group:#{name_or_alias}"
-
-      _ ->
-        value
+      {:ok, %{name: name}} -> "group:#{name}"
+      _ -> value
     end
   end
 
   defp normalize_group_identifier(value) when is_binary(value) do
     case UserCache.get_group_by_name(value) do
-      {:ok, %{alias: group_alias, name: name}} ->
-        name_or_alias = if group_alias in [nil, ""], do: name, else: group_alias
-        "group:#{name_or_alias}"
-
-      _ ->
-        value
+      {:ok, %{name: name}} -> "group:#{name}"
+      _ -> value
     end
   end
 

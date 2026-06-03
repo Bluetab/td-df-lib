@@ -382,11 +382,11 @@ defmodule TdDfLib.Parser do
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
   defp parse_field(%{"type" => "group"}, value, _ctx) when is_binary(value) do
-    normalize_group_value(value)
+    normalize_group_field_value(value)
   end
 
   defp parse_field(%{"type" => "user_group"}, value, _ctx) when is_binary(value) do
-    normalize_group_value(value)
+    normalize_user_group_field_value(value)
   end
 
   defp parse_field(
@@ -438,18 +438,35 @@ defmodule TdDfLib.Parser do
 
   defp parse_field(_, value, _), do: value
 
-  defp normalize_group_value("group:" <> _ = value) do
-    case UserCache.get_group_by_name(value) do
-      {:ok, %{alias: group_alias, name: name}} ->
-        name_or_alias = if group_alias in [nil, ""], do: name, else: group_alias
-        "group:#{name_or_alias}"
+  defp normalize_user_group_field_value("user:" <> _ = value), do: value
 
-      _ ->
-        value
+  defp normalize_user_group_field_value("group:" <> _ = value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{name: name}} -> "group:#{name}"
+      _ -> value
     end
   end
 
-  defp normalize_group_value(value), do: value
+  defp normalize_user_group_field_value(value) when is_binary(value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{name: name}} -> "group:#{name}"
+      _ -> value
+    end
+  end
+
+  defp normalize_group_field_value("group:" <> _ = value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{name: name}} -> name
+      _ -> String.replace_prefix(value, "group:", "")
+    end
+  end
+
+  defp normalize_group_field_value(value) when is_binary(value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, %{name: name}} -> name
+      _ -> value
+    end
+  end
 
   defp fields_to_string(acc, fields, content, ctx, opts) do
     Enum.reduce(

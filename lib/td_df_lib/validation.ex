@@ -6,6 +6,7 @@ defmodule TdDfLib.Validation do
   alias Ecto.Changeset
   alias TdCache.HierarchyCache
   alias TdCache.Templates.AclLoader
+  alias TdCache.UserCache
   alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Templates
@@ -375,6 +376,7 @@ defmodule TdDfLib.Validation do
          %{"name" => name, "type" => "group", "values" => %{"role_groups" => role_groups}},
          domain_ids
        ) do
+    changeset = normalize_group_entries(changeset, name)
     groups = fetch_group_names(domain_ids, role_groups)
 
     validate_inclusion(changeset, name, groups)
@@ -498,7 +500,42 @@ defmodule TdDfLib.Validation do
     domain_ids
     |> AclLoader.get_roles_and_groups()
     |> Map.get(role, [])
-    |> Enum.map(&if &1.alias in [nil, ""], do: &1.name, else: &1.alias)
+    |> Enum.map(& &1.name)
+  end
+
+  defp normalize_group_entries(changeset, name) do
+    field = String.to_atom(name)
+
+    case Changeset.get_field(changeset, field) do
+      nil ->
+        changeset
+
+      values when is_list(values) ->
+        Changeset.put_change(changeset, field, Enum.map(values, &normalize_group_entry/1))
+
+      value ->
+        Changeset.put_change(changeset, field, normalize_group_entry(value))
+    end
+  end
+
+  defp normalize_group_entry("group:" <> _ = value), do: normalize_group_unprefixed_entry(value)
+
+  defp normalize_group_entry(value) when is_binary(value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, nil} -> value
+      {:ok, %{name: name}} -> name
+      _ -> value
+    end
+  end
+
+  defp normalize_group_entry(value), do: value
+
+  defp normalize_group_unprefixed_entry("group:" <> _ = value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, nil} -> String.replace_prefix(value, "group:", "")
+      {:ok, %{name: name}} -> name
+      _ -> String.replace_prefix(value, "group:", "")
+    end
   end
 
   def validate_content(content, content_schema, opts \\ []) do

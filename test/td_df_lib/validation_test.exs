@@ -1150,7 +1150,7 @@ defmodule TdDfLib.ValidationTest do
       assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
 
       assert "user:#{user.full_name}" in enum
-      assert "group:#{group.alias}" in enum
+      assert "group:#{group.name}" in enum
       assert "group:#{group_without_alias.name}" in enum
 
       # Invalid group
@@ -1162,7 +1162,7 @@ defmodule TdDfLib.ValidationTest do
       assert {"is invalid", [validation: :inclusion, enum: enum]} = errors[:data_owner]
 
       assert "user:#{user.full_name}" in enum
-      assert "group:#{group.alias}" in enum
+      assert "group:#{group.name}" in enum
       assert "group:#{group_without_alias.name}" in enum
 
       # Valid user
@@ -1173,13 +1173,21 @@ defmodule TdDfLib.ValidationTest do
 
       assert changes == %{data_owner: "user:#{user.full_name}"}
 
-      # Valid group
+      # Invalid group alias (user_group values use group name, not alias)
       content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
+
+      assert %Ecto.Changeset{valid?: false, errors: errors} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert {"is invalid", [validation: :inclusion, enum: _]} = errors[:data_owner]
+
+      # Valid group by name
+      content = %{"data_owner" => %{"value" => "group:#{group.name}", "origin" => "user"}}
 
       assert %Ecto.Changeset{valid?: true, changes: changes} =
                Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
-      assert changes == %{data_owner: "group:#{group.alias}"}
+      assert changes == %{data_owner: "group:#{group.name}"}
 
       # Valid group without alias
       content = %{
@@ -1963,12 +1971,11 @@ defmodule TdDfLib.ValidationTest do
       content = %{"data_owner" => %{"value" => group_without_alias.name, "origin" => "user"}}
       assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
 
+      content = %{"data_owner" => %{"value" => "group:#{group.name}", "origin" => "user"}}
+      assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
+
       content = %{"data_owner" => %{"value" => "group:#{group.alias}", "origin" => "user"}}
-
-      assert {:error, %{errors: errors}} =
-               Validation.validate_content(content, schema, domain_ids: [domain.id])
-
-      assert [data_owner: {"is invalid", _}] = errors
+      assert Validation.validate_content(content, schema, domain_ids: [domain.id]) == :ok
 
       content = %{"data_owner" => %{"value" => "user:#{user.full_name}", "origin" => "user"}}
 
@@ -1976,6 +1983,36 @@ defmodule TdDfLib.ValidationTest do
                Validation.validate_content(content, schema, domain_ids: [domain.id])
 
       assert [data_owner: {"is invalid", _}] = errors
+    end
+
+    test "normalizes group legacy values to canonical name without prefix" do
+      domain = CacheHelpers.put_domain()
+      group = CacheHelpers.insert_group(%{name: "foo bar", alias: "Foo Bar Alias"})
+      CacheHelpers.insert_group_acl(domain.id, "Data Owner", [group.id])
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "group_field",
+          "type" => "group",
+          "values" => %{"role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{"group_field" => %{"value" => "group:foo bar", "origin" => "user"}}
+
+      assert %Ecto.Changeset{valid?: true, changes: changes} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert changes == %{group_field: "foo bar"}
+
+      content = %{"group_field" => %{"value" => "foo bar", "origin" => "user"}}
+
+      assert %Ecto.Changeset{valid?: true, changes: changes} =
+               Validation.build_changeset(content, schema, domain_ids: [domain.id])
+
+      assert changes == %{group_field: "foo bar"}
     end
   end
 end

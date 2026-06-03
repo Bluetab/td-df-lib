@@ -278,8 +278,8 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
-    test "format_content normalizes legacy user_group group names to aliases" do
-      %{name: group_name, alias: group_alias} =
+    test "format_content normalizes legacy user_group group names to canonical names" do
+      %{name: group_name} =
         CacheHelpers.insert_group(%{name: "legacy group", alias: "canonical-group"})
 
       schema = [
@@ -302,12 +302,12 @@ defmodule TdDfLib.ParserTest do
                content_schema: schema,
                domain_ids: []
              }) == %{
-               "data_owner" => %{"origin" => "file", "value" => "group:#{group_alias}"}
+               "data_owner" => %{"origin" => "file", "value" => "group:#{group_name}"}
              }
     end
 
-    test "format_content normalizes unprefixed legacy user_group group names to aliases" do
-      %{name: group_name, alias: group_alias} =
+    test "format_content normalizes unprefixed legacy user_group group names to canonical names" do
+      %{name: group_name} =
         CacheHelpers.insert_group(%{name: "legacy group no prefix", alias: "canonical-no-prefix"})
 
       schema = [
@@ -330,12 +330,12 @@ defmodule TdDfLib.ParserTest do
                content_schema: schema,
                domain_ids: []
              }) == %{
-               "data_owner" => %{"origin" => "file", "value" => "group:#{group_alias}"}
+               "data_owner" => %{"origin" => "file", "value" => "group:#{group_name}"}
              }
     end
 
-    test "format_content normalizes legacy group values to aliases" do
-      %{name: group_name, alias: group_alias} =
+    test "format_content normalizes legacy group values to canonical names" do
+      %{name: group_name} =
         CacheHelpers.insert_group(%{name: "legacy group name", alias: "canonical-group-alias"})
 
       schema = [
@@ -358,12 +358,12 @@ defmodule TdDfLib.ParserTest do
                content_schema: schema,
                domain_ids: []
              }) == %{
-               "group_field" => %{"origin" => "file", "value" => group_alias}
+               "group_field" => %{"origin" => "file", "value" => group_name}
              }
     end
 
-    test "format_content normalizes unprefixed legacy group values to aliases" do
-      %{name: group_name, alias: group_alias} =
+    test "format_content normalizes unprefixed legacy group values to canonical names" do
+      %{name: group_name} =
         CacheHelpers.insert_group(%{
           name: "legacy group name no prefix",
           alias: "canonical-group-alias-no-prefix"
@@ -389,7 +389,7 @@ defmodule TdDfLib.ParserTest do
                content_schema: schema,
                domain_ids: []
              }) == %{
-               "group_field" => %{"origin" => "file", "value" => group_alias}
+               "group_field" => %{"origin" => "file", "value" => group_name}
              }
     end
 
@@ -896,8 +896,8 @@ defmodule TdDfLib.ParserTest do
       assert Parser.append_parsed_fields([], fields, content) == ["system"]
     end
 
-    test "formats legacy group values with canonical alias for export" do
-      %{name: group_name, alias: group_alias} =
+    test "formats legacy group values with canonical name for export" do
+      %{name: group_name} =
         CacheHelpers.insert_group(%{name: "legacy group name", alias: "canonical-group-alias"})
 
       fields = [%{"type" => "user_group", "name" => @field_name}]
@@ -906,7 +906,20 @@ defmodule TdDfLib.ParserTest do
         @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
       }
 
-      assert Parser.append_parsed_fields([], fields, content) == ["group:#{group_alias}"]
+      assert Parser.append_parsed_fields([], fields, content) == ["group:#{group_name}"]
+    end
+
+    test "formats legacy group field values without prefix for export" do
+      %{name: group_name} =
+        CacheHelpers.insert_group(%{name: "legacy group field", alias: "canonical-group-field"})
+
+      fields = [%{"type" => "group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == [group_name]
     end
 
     test "keeps unknown group values unchanged for export" do
