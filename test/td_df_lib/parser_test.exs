@@ -278,6 +278,121 @@ defmodule TdDfLib.ParserTest do
                })
     end
 
+    test "format_content normalizes legacy user_group group names to canonical names" do
+      %{name: group_name} =
+        CacheHelpers.insert_group(%{name: "legacy group", alias: "canonical-group"})
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "data_owner",
+          "type" => "user_group",
+          "label" => "Data Owner",
+          "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{
+        "data_owner" => %{"origin" => "file", "value" => "group:#{group_name}"}
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "data_owner" => %{"origin" => "file", "value" => "group:#{group_name}"}
+             }
+    end
+
+    test "format_content normalizes unprefixed legacy user_group group names to canonical names" do
+      %{name: group_name} =
+        CacheHelpers.insert_group(%{name: "legacy group no prefix", alias: "canonical-no-prefix"})
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "data_owner",
+          "type" => "user_group",
+          "label" => "Data Owner",
+          "values" => %{"processed_users" => [], "role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{
+        "data_owner" => %{"origin" => "file", "value" => group_name}
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "data_owner" => %{"origin" => "file", "value" => "group:#{group_name}"}
+             }
+    end
+
+    test "format_content normalizes legacy group values to canonical names" do
+      %{name: group_name} =
+        CacheHelpers.insert_group(%{name: "legacy group name", alias: "canonical-group-alias"})
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "group_field",
+          "type" => "group",
+          "label" => "Group Field",
+          "values" => %{"role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{
+        "group_field" => %{"origin" => "file", "value" => "group:#{group_name}"}
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "group_field" => %{"origin" => "file", "value" => group_name}
+             }
+    end
+
+    test "format_content normalizes unprefixed legacy group values to canonical names" do
+      %{name: group_name} =
+        CacheHelpers.insert_group(%{
+          name: "legacy group name no prefix",
+          alias: "canonical-group-alias-no-prefix"
+        })
+
+      schema = [
+        %{
+          "cardinality" => "?",
+          "name" => "group_field",
+          "type" => "group",
+          "label" => "Group Field",
+          "values" => %{"role_groups" => "Data Owner"},
+          "widget" => "dropdown"
+        }
+      ]
+
+      content = %{
+        "group_field" => %{"origin" => "file", "value" => group_name}
+      }
+
+      assert Parser.format_content(%{
+               content: content,
+               content_schema: schema,
+               domain_ids: []
+             }) == %{
+               "group_field" => %{"origin" => "file", "value" => group_name}
+             }
+    end
+
     test "returns error for numbers with invalid format" do
       schema = [
         %{
@@ -779,6 +894,63 @@ defmodule TdDfLib.ParserTest do
       content = %{@atom_field_name => %{"value" => %{name: "system"}, "origin" => "user"}}
 
       assert Parser.append_parsed_fields([], fields, content) == ["system"]
+    end
+
+    test "formats user_group values with alias for export when present" do
+      %{name: group_name, alias: group_alias} =
+        CacheHelpers.insert_group(%{name: "legacy group name", alias: "canonical-group-alias"})
+
+      fields = [%{"type" => "user_group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == ["group:#{group_alias}"]
+    end
+
+    test "formats user_group values with name for export when alias is missing" do
+      %{name: group_name} = CacheHelpers.insert_group(%{name: "foo bar", alias: nil})
+
+      fields = [%{"type" => "user_group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == ["group:#{group_name}"]
+    end
+
+    test "formats group field values with alias for export when present" do
+      %{name: group_name, alias: group_alias} =
+        CacheHelpers.insert_group(%{name: "legacy group field", alias: "canonical-group-field"})
+
+      fields = [%{"type" => "group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => "group:#{group_name}", "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == [group_alias]
+    end
+
+    test "formats group field values with name for export when alias is missing" do
+      %{name: group_name} = CacheHelpers.insert_group(%{name: "bar baz", alias: nil})
+
+      fields = [%{"type" => "group", "name" => @field_name}]
+
+      content = %{
+        @atom_field_name => %{"value" => group_name, "origin" => "user"}
+      }
+
+      assert Parser.append_parsed_fields([], fields, content) == [group_name]
+    end
+
+    test "keeps unknown group values unchanged for export" do
+      fields = [%{"type" => "user_group", "name" => @field_name}]
+      content = %{@atom_field_name => %{"value" => "group:unknown-group", "origin" => "user"}}
+
+      assert Parser.append_parsed_fields([], fields, content) == ["group:unknown-group"]
     end
 
     test "formats fixed tuple" do
