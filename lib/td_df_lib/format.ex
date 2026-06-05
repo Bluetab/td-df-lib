@@ -115,7 +115,7 @@ defmodule TdDfLib.Format do
     content
     |> apply_template(fields, opts)
     |> drop_values(fields)
-    |> format_search_values(fields)
+    |> format_search_values(fields, opts)
   end
 
   def search_values(_, _, _), do: nil
@@ -174,14 +174,59 @@ defmodule TdDfLib.Format do
     Map.drop(content, keys)
   end
 
-  defp format_search_values(content, fields) do
+  defp format_search_values(content, fields, opts) do
+    groups = Keyword.get(opts, :groups, %{})
+
     fields
     |> Enum.filter(fn
-      %{"type" => type} -> type in ["system", "url", "markdown"]
+      %{"type" => type} -> type in ["system", "url", "markdown", "user_group", "group"]
       _ -> false
     end)
-    |> Enum.reduce(content, &set_search_value(&1, &2))
+    |> Enum.reduce(content, fn field, acc -> set_search_value(field, acc, groups) end)
   end
+
+  defp set_search_value(%{"name" => name, "type" => type}, acc, groups)
+       when type in ["user_group", "group"] do
+    case Map.get(acc, name) do
+      nil ->
+        acc
+
+      %{"value" => nil} ->
+        acc
+
+      %{"value" => values} = field when is_list(values) ->
+        Map.put(acc, name, %{
+          field
+          | "value" => Enum.flat_map(values, &with_group_alias(&1, groups))
+        })
+
+      %{"value" => value} = field when is_binary(value) ->
+        Map.put(acc, name, %{field | "value" => with_group_alias(value, groups)})
+
+      _ ->
+        acc
+    end
+  end
+
+  defp set_search_value(field, acc, _groups), do: set_search_value(field, acc)
+
+  # user_group: value has "group:" prefix → replace with alias (prefixed) if available
+  defp with_group_alias("group:" <> group_name = value, groups) do
+    case Map.get(groups, group_name) do
+      %{alias: group_alias} when group_alias not in [nil, ""] -> ["group:#{group_alias}"]
+      _ -> [value]
+    end
+  end
+
+  # group: value has no prefix → replace with alias if available, keep value otherwise
+  defp with_group_alias(value, groups) when is_binary(value) do
+    case Map.get(groups, value) do
+      %{alias: group_alias} when group_alias not in [nil, ""] -> [group_alias]
+      _ -> [value]
+    end
+  end
+
+  defp with_group_alias(value, _groups), do: [value]
 
   defp default_values(content, fields, opts) do
     if Keyword.get(opts, :apply_default_values?, true) do
