@@ -1,0 +1,30 @@
+name: test
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+
+    services:
+      redis:
+        image: library/redis:6.2-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6380:6379
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-elixir@v1
+        with:
+          otp-version: "27.2"
+          elixir-version: "1.18.1"
+      - run: mix deps.get
+      - run: mix credo --strict
+      - run: mix format --check-formatted
+      - run: mix test
+        env:
+          REDIS_HOST: localhost
