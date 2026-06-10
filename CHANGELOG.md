@@ -6,6 +6,12 @@
 
 - [TD-7655] Update libs
 
+## [8.7.0] 2026-06-10
+
+### Added
+
+- [TD-8168] Add code quality control
+
 ## [8.6.3] 2026-06-05
 
 ### Added
