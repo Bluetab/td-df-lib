@@ -6,6 +6,30 @@
 
 - [TD-8168] Add code quality control
 
+## [8.6.3] 2026-06-05
+
+### Added
+
+- [TD-8083] Add user and group normalization
+
+## [8.6.2] 2026-05-20
+
+### Fixed
+
+-[TD-8162] Vulnerabilities
+
+## [8.6.1] 2026-05-20
+
+### Changed
+
+- [TD-8083] Remove group prefix when content belongs to a group only
+
+## [8.6.0] 2026-05-12
+
+### Added
+
+- [TD-8083] User group management features
+
 ## [8.5.2] 2026-05-07
 
 ### Fixed

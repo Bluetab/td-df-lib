@@ -6,6 +6,7 @@ defmodule TdDfLib.Parser do
   alias TdCache.DomainCache
   alias TdCache.HierarchyCache
   alias TdCache.I18nCache
+  alias TdCache.UserCache
   alias TdDfLib.Format
   alias TdDfLib.Format.DateTime, as: FormatDateTime
   alias TdDfLib.I18n
@@ -13,7 +14,7 @@ defmodule TdDfLib.Parser do
   NimbleCSV.define(Parser.Table, separator: "\;", escape: "\"")
 
   @schema_types ~w(url integer float domain hierarchy table dynamic_table)
-  @multiple_cardinality_schema_types ~w(string user user_group)
+  @multiple_cardinality_schema_types ~w(string user group user_group)
   @date_types ~w(date datetime)
 
   @doc """
@@ -73,6 +74,7 @@ defmodule TdDfLib.Parser do
     |> Enum.filter(fn %{"type" => schema_type, "cardinality" => cardinality} = schema ->
       schema_type in @schema_types or schema_type in @date_types or
         (schema_type in @multiple_cardinality_schema_types and cardinality in ["*", "+"]) or
+        schema_type in ["user", "group", "user_group"] or
         match?(%{"fixed" => _}, Map.get(schema, "values")) or
         match?(%{"switch" => _}, Map.get(schema, "values"))
     end)
@@ -379,6 +381,14 @@ defmodule TdDfLib.Parser do
 
   defp parse_field(%{"type" => "system"}, value, _ctx), do: Map.get(value, :name, "")
 
+  defp parse_field(%{"type" => "group"}, value, _ctx) when is_binary(value) do
+    export_group_field_value(value)
+  end
+
+  defp parse_field(%{"type" => "user_group"}, value, _ctx) when is_binary(value) do
+    export_user_group_field_value(value)
+  end
+
   defp parse_field(
          %{"type" => "hierarchy", "values" => %{"hierarchy" => %{"id" => hierarchy_id}}},
          value,
@@ -427,6 +437,35 @@ defmodule TdDfLib.Parser do
   end
 
   defp parse_field(_, value, _), do: value
+
+  defp export_user_group_field_value("user:" <> _ = value), do: value
+
+  defp export_user_group_field_value(value) when is_binary(value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, group} when not is_nil(group) -> "group:#{group_export_label(group)}"
+      _ -> value
+    end
+  end
+
+  defp export_group_field_value("group:" <> _ = value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, group} when not is_nil(group) -> group_export_label(group)
+      _ -> String.replace_prefix(value, "group:", "")
+    end
+  end
+
+  defp export_group_field_value(value) when is_binary(value) do
+    case UserCache.get_group_by_name(value) do
+      {:ok, group} when not is_nil(group) -> group_export_label(group)
+      _ -> value
+    end
+  end
+
+  defp group_export_label(%{alias: group_alias, name: name})
+       when group_alias in [nil, ""],
+       do: name
+
+  defp group_export_label(%{alias: group_alias}), do: group_alias
 
   defp fields_to_string(acc, fields, content, ctx, opts) do
     Enum.reduce(

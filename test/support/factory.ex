@@ -59,7 +59,8 @@ defmodule TdDfLib.Factory do
     %{
       id: System.unique_integer([:positive]),
       name: sequence(:group, ["Europe", "Asia", "USA", "UK"]),
-      description: "group_description"
+      description: "group_description",
+      alias: sequence(:group_alias, ["Europe alias", "Asia alias", "USA alias", "UK alias"])
     }
   end
 end
