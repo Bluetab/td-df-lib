@@ -6,6 +6,7 @@ defmodule TdDfLib.Templates do
   alias TdDfLib.Format
 
   @templates Application.compile_env(:td_df_lib, :templates_module, TdCache.TemplateCache)
+  @suggestion_field_keys ["name", "description", "type", "cardinality", "depends"]
 
   def completeness(%{} = content, %{} = template) do
     template_completeness(template, content)
@@ -127,11 +128,6 @@ defmodule TdDfLib.Templates do
     |> @templates.list_by_scope!()
     |> Enum.flat_map(fn %{content: content} -> Format.flatten_content_fields(content) end)
   end
-
-  # Keys carried through to the agent so it knows how each value must be shaped:
-  # the field type, its cardinality (single vs. list), and any `depends` clause
-  # that makes the field conditionally applicable on another field's value.
-  @suggestion_field_keys ["name", "description", "type", "cardinality", "depends"]
 
   defp map_suggestion_field(%{"values" => %{"fixed" => possible_values}} = field) do
     field
