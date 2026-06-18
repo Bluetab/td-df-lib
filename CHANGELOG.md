@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-7965] `suggestion_fields_for_template/1` now carries each field's `type`,
+  `cardinality` and `depends` so AI suggestion consumers know how to shape each
+  value and which fields are conditionally applicable
+
 ## [8.7.1] 2026-06-11
 
 ### Changed

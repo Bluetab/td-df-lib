@@ -128,9 +128,14 @@ defmodule TdDfLib.Templates do
     |> Enum.flat_map(fn %{content: content} -> Format.flatten_content_fields(content) end)
   end
 
+  # Keys carried through to the agent so it knows how each value must be shaped:
+  # the field type, its cardinality (single vs. list), and any `depends` clause
+  # that makes the field conditionally applicable on another field's value.
+  @suggestion_field_keys ["name", "description", "type", "cardinality", "depends"]
+
   defp map_suggestion_field(%{"values" => %{"fixed" => possible_values}} = field) do
     field
-    |> Map.take(["name", "description"])
+    |> Map.take(@suggestion_field_keys)
     |> Map.put("possible_values", possible_values)
   end
 
@@ -138,11 +143,11 @@ defmodule TdDfLib.Templates do
     possible_values = Enum.map(tuples, & &1["value"])
 
     field
-    |> Map.take(["name", "description"])
+    |> Map.take(@suggestion_field_keys)
     |> Map.put("possible_values", possible_values)
   end
 
-  defp map_suggestion_field(field), do: Map.take(field, ["name", "description"])
+  defp map_suggestion_field(field), do: Map.take(field, @suggestion_field_keys)
 
   def meets_dependency?([_ | _] = value, target) do
     not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
