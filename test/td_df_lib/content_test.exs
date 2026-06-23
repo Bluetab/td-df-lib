@@ -339,6 +339,37 @@ defmodule TdDfLib.ContentTest do
              }
     end
 
+    test "builds nil empty override for numeric fields cleared in upload" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{"name" => "numeric_field", "type" => "integer", "cardinality" => "?", "label" => "Numeric Field"},
+          %{"name" => "string_field", "type" => "string", "cardinality" => "?", "label" => "String Field"}
+        ]
+      }
+
+      existing_content = %{
+        "numeric_field" => %{"value" => 8, "origin" => "user"},
+        "string_field" => %{"value" => "text", "origin" => "user"}
+      }
+
+      new_content = %{
+        "numeric_field" => "",
+        "string_field" => "updated"
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               new_content,
+               template_data,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "numeric_field" => %{"value" => nil, "origin" => "file"},
+               "string_field" => %{"value" => "updated", "origin" => "file"}
+             }
+    end
+
     test "does not create empty override when existing content is nil" do
       template_data = %{
         translations: %{},

@@ -3,6 +3,7 @@ defmodule TdDfLib.Content do
   Support for managing dynamic content
   """
 
+  alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Validation
 
@@ -113,7 +114,7 @@ defmodule TdDfLib.Content do
         lang: lang
       })
 
-    empty_overrides = build_empty_overrides(empty_fields, existing_content)
+    empty_overrides = build_empty_overrides(empty_fields, existing_content, content_schema)
 
     cleaned_existing =
       if empty_fields != [] and existing_content do
@@ -229,14 +230,29 @@ defmodule TdDfLib.Content do
   def normalize_value(v) when is_list(v), do: v |> Enum.map(&normalize_value/1) |> Enum.sort()
   def normalize_value(v), do: v
 
-  defp build_empty_overrides([], _existing_content), do: %{}
-  defp build_empty_overrides(_empty_fields, nil), do: %{}
+  defp build_empty_overrides([], _existing_content, _content_schema), do: %{}
+  defp build_empty_overrides(_empty_fields, nil, _content_schema), do: %{}
 
-  defp build_empty_overrides(empty_fields, existing_content) do
+  defp build_empty_overrides(empty_fields, existing_content, content_schema) do
+    schema_by_name = Map.new(content_schema, &{&1["name"], &1})
+
     empty_fields
     |> Enum.filter(&Map.has_key?(existing_content, &1))
-    |> Map.new(fn field -> {field, %{"value" => "", "origin" => "file"}} end)
+    |> Map.new(fn field ->
+      schema = Map.get(schema_by_name, field, %{"type" => "string"})
+      {field, %{"value" => empty_override_value(schema), "origin" => "file"}}
+    end)
   end
+
+  defp empty_override_value(schema) do
+    schema
+    |> Map.merge(%{"content" => ""})
+    |> Format.format_field()
+    |> normalize_empty_override_value()
+  end
+
+  defp normalize_empty_override_value([value]), do: value
+  defp normalize_empty_override_value(value), do: value
 
   defp value_empty?({_k, %{"value" => v}}), do: value_empty?(v)
   defp value_empty?({_k, v}), do: value_empty?(v)
