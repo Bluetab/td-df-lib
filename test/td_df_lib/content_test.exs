@@ -305,6 +305,19 @@ defmodule TdDfLib.ContentTest do
       assert filtered == %{}
       assert Enum.sort(empty_fields) == ["a", "b", "c"]
     end
+
+    test "does not treat absent keys as empty fields" do
+      field_names = ["radio_field", "checkbox_field", "dropdown_field"]
+
+      {filtered, empty_fields} =
+        Content.filter_and_normalize_upload_content(
+          %{"dropdown_field" => "opt2"},
+          field_names
+        )
+
+      assert empty_fields == []
+      assert filtered == %{"dropdown_field" => %{"value" => "opt2", "origin" => "file"}}
+    end
   end
 
   describe "prepare_and_merge_upload_content/5" do
@@ -367,6 +380,102 @@ defmodule TdDfLib.ContentTest do
              ) == %{
                "numeric_field" => %{"value" => nil, "origin" => "file"},
                "string_field" => %{"value" => "updated", "origin" => "file"}
+             }
+    end
+
+    test "clears fixed-value selection fields when upload is explicitly empty" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "radio_field",
+            "type" => "string",
+            "label" => "Radio Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["yes", "no"]},
+            "widget" => "radio"
+          },
+          %{
+            "name" => "checkbox_field",
+            "type" => "string",
+            "label" => "Checkbox Field",
+            "cardinality" => "*",
+            "values" => %{"fixed" => ["A", "B", "C"]},
+            "widget" => "checkbox"
+          },
+          %{
+            "name" => "dropdown_field",
+            "type" => "string",
+            "label" => "Dropdown Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["opt1", "opt2", "opt3"]},
+            "widget" => "dropdown"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "radio_field" => %{"value" => "yes", "origin" => "user"},
+        "checkbox_field" => %{"value" => ["A", "B"], "origin" => "user"},
+        "dropdown_field" => %{"value" => "opt1", "origin" => "user"}
+      }
+
+      new_content = %{
+        "radio_field" => "",
+        "checkbox_field" => "",
+        "dropdown_field" => ""
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               new_content,
+               template_data,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "radio_field" => %{"value" => "", "origin" => "file"},
+               "checkbox_field" => %{"value" => [], "origin" => "file"},
+               "dropdown_field" => %{"value" => "", "origin" => "file"}
+             }
+    end
+
+    test "preserves optional fixed fields omitted from upload when another field changes" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "radio_field",
+            "type" => "string",
+            "label" => "Radio Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["yes", "no"]},
+            "widget" => "radio"
+          },
+          %{
+            "name" => "dropdown_field",
+            "type" => "string",
+            "label" => "Dropdown Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["opt1", "opt2", "opt3"]},
+            "widget" => "dropdown"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "radio_field" => %{"value" => "yes", "origin" => "user"},
+        "dropdown_field" => %{"value" => "opt1", "origin" => "user"}
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               %{"dropdown_field" => "opt2"},
+               template_data,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "radio_field" => %{"value" => "yes", "origin" => "user"},
+               "dropdown_field" => %{"value" => "opt2", "origin" => "file"}
              }
     end
 
