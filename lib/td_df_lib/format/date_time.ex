@@ -162,7 +162,25 @@ defmodule TdDfLib.Format.DateTime do
   end
 
   defp handle_datetime_parse(_error, original) do
-    original
+    normalized =
+      original
+      |> normalize_datetime_string()
+      |> append_missing_seconds()
+
+    case normalized do
+      {:ok, completed} ->
+        case NaiveDateTime.from_iso8601(completed) do
+          {:ok, naive} -> {:ok, NaiveDateTime.to_iso8601(naive)}
+          _ -> parse_datetime_with_separators_result(original)
+        end
+
+      _ ->
+        parse_datetime_with_separators_result(original)
+    end
+  end
+
+  defp parse_datetime_with_separators_result(value) do
+    value
     |> parse_datetime_with_separators()
     |> maybe_to_iso8601()
   end
@@ -211,7 +229,7 @@ defmodule TdDfLib.Format.DateTime do
     case String.split(value, ~r/[T\s]+/, trim: true, parts: 2) do
       [date_part, time_part] ->
         with {:ok, date} <- parse_date(date_part),
-             {:ok, time} <- Time.from_iso8601(time_part),
+             {:ok, time} <- parse_time(time_part),
              {:ok, naive} <- NaiveDateTime.new(date, time) do
           {:ok, naive}
         else
@@ -220,6 +238,38 @@ defmodule TdDfLib.Format.DateTime do
 
       _ ->
         :error
+    end
+  end
+
+  defp parse_time(time_part) do
+    case Time.from_iso8601(time_part) do
+      {:ok, time} ->
+        {:ok, time}
+
+      _ ->
+        case String.split(time_part, ":", parts: 3) do
+          [hour, minute] ->
+            with {hour, ""} <- Integer.parse(hour),
+                 {minute, ""} <- Integer.parse(minute),
+                 {:ok, time} <- Time.new(hour, minute, 0) do
+              {:ok, time}
+            else
+              _ -> :error
+            end
+
+          [hour, minute, second] ->
+            with {hour, ""} <- Integer.parse(hour),
+                 {minute, ""} <- Integer.parse(minute),
+                 {second, ""} <- Integer.parse(second),
+                 {:ok, time} <- Time.new(hour, minute, second) do
+              {:ok, time}
+            else
+              _ -> :error
+            end
+
+          _ ->
+            :error
+        end
     end
   end
 

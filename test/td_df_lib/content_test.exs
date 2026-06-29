@@ -817,5 +817,30 @@ defmodule TdDfLib.ContentTest do
                "extra_field" => %{"value" => "texto por defecto", "origin" => "default"}
              }
     end
+
+    test "process_upload_content accepts datetime upload without seconds" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "datetime_field",
+            "type" => "datetime",
+            "cardinality" => "?",
+            "label" => "Date Time",
+            "default" => %{"origin" => "default", "value" => "2024-04-30 17:35"}
+          }
+        ]
+      }
+
+      assert {:ok, %{"datetime_field" => %{"value" => "2024-04-30T17:35:00", "origin" => "file"}}} =
+               Content.process_upload_content(
+                 %{"datetime_field" => "2024-04-30 17:35"},
+                 template_data,
+                 [],
+                 "en",
+                 nil,
+                 :skip
+               )
+    end
   end
 end
