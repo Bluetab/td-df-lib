@@ -356,8 +356,18 @@ defmodule TdDfLib.ContentTest do
       template_data = %{
         translations: %{},
         content_schema: [
-          %{"name" => "numeric_field", "type" => "integer", "cardinality" => "?", "label" => "Numeric Field"},
-          %{"name" => "string_field", "type" => "string", "cardinality" => "?", "label" => "String Field"}
+          %{
+            "name" => "numeric_field",
+            "type" => "integer",
+            "cardinality" => "?",
+            "label" => "Numeric Field"
+          },
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field"
+          }
         ]
       }
 
@@ -841,6 +851,61 @@ defmodule TdDfLib.ContentTest do
                  nil,
                  :skip
                )
+    end
+
+    test "process_upload_content returns validation error for invalid domain field" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "my_domain",
+            "type" => "domain",
+            "label" => "My domain",
+            "cardinality" => "?",
+            "widget" => "dropdown"
+          }
+        ]
+      }
+
+      assert {:validation, {:error, %Ecto.Changeset{valid?: false, errors: errors}}} =
+               Content.process_upload_content(
+                 %{"my_domain" => "unknown_domain"},
+                 template_data,
+                 [1],
+                 "en",
+                 nil,
+                 :skip
+               )
+
+      assert {"My domain is invalid", _} = errors[:my_domain]
+    end
+
+    test "process_upload_content returns validation error for invalid domain dropdown value" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "domain_dependent",
+            "type" => "string",
+            "label" => "Domain dependent",
+            "cardinality" => "1",
+            "widget" => "dropdown",
+            "values" => %{"domain" => %{"1" => ["allowed"], "2" => ["other"]}}
+          }
+        ]
+      }
+
+      assert {:validation, {:error, %Ecto.Changeset{valid?: false, errors: errors}}} =
+               Content.process_upload_content(
+                 %{"domain_dependent" => "not_allowed"},
+                 template_data,
+                 [99],
+                 "en",
+                 nil,
+                 :skip
+               )
+
+      assert {"missing domains", _} = errors[:domain_dependent]
     end
   end
 end

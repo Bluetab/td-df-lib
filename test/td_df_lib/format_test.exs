@@ -1318,6 +1318,15 @@ defmodule TdDfLib.FormatTest do
       assert Format.format_field(%{"content" => "foo", "type" => "datetime"}) ==
                {:error, :invalid_format}
     end
+
+    test "returns error for invalid domain external id" do
+      assert Format.format_field(%{"content" => "unknown_domain", "type" => "domain"}) ==
+               {:error, :invalid_format}
+    end
+
+    test "returns nil for empty domain external id" do
+      assert Format.format_field(%{"content" => "", "type" => "domain"}) == nil
+    end
   end
 
   describe "flatten_content_fields" do
