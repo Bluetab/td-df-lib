@@ -79,7 +79,7 @@ defmodule TdDfLib.Content do
     with {:validation, :ok} <-
            {:validation,
             Validation.validate_content(merged_content, content_schema,
-              fields: Map.keys(merged_content),
+              fields: Enum.map(content_schema, &Map.get(&1, "name")),
               domain_ids: domain_ids
             )},
          {:unchanged, false} <-
