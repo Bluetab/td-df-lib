@@ -76,19 +76,10 @@ defmodule TdDfLib.Content do
         existing_content
       )
 
-    validation_fields =
-      validation_fields(
-        new_content,
-        merged_content,
-        Enum.map(content_schema, & &1["name"]),
-        Map.get(template_data, :translations, %{}),
-        existing_content
-      )
-
     with {:validation, :ok} <-
            {:validation,
             Validation.validate_content(merged_content, content_schema,
-              fields: validation_fields,
+              fields: Map.keys(merged_content),
               domain_ids: domain_ids
             )},
          {:unchanged, false} <-
@@ -263,17 +254,6 @@ defmodule TdDfLib.Content do
 
   defp normalize_empty_override_value([value]), do: value
   defp normalize_empty_override_value(value), do: value
-
-  defp validation_fields(_new_content, merged_content, _field_names, _tft, nil) do
-    Map.keys(merged_content)
-  end
-
-  defp validation_fields(new_content, _merged_content, field_names, tft, _existing_content) do
-    new_content
-    |> normalize_translations(tft)
-    |> Map.take(field_names)
-    |> Map.keys()
-  end
 
   defp value_empty?({_k, %{"value" => v}}), do: value_empty?(v)
   defp value_empty?({_k, v}), do: value_empty?(v)

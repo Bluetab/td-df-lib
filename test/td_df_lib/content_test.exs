@@ -907,5 +907,43 @@ defmodule TdDfLib.ContentTest do
 
       assert {"missing domains", _} = errors[:domain_dependent]
     end
+
+    test "process_upload_content validates untouched existing fields on update" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "category",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "Category",
+            "values" => %{"fixed" => ["A", "B"]}
+          },
+          %{
+            "name" => "name",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "Name"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "category" => %{"value" => "OLD_INVALID", "origin" => "user"},
+        "name" => %{"value" => "old name", "origin" => "user"}
+      }
+
+      assert {:validation, {:error, %Ecto.Changeset{valid?: false, errors: errors}}} =
+               Content.process_upload_content(
+                 %{"name" => "new name"},
+                 template_data,
+                 [],
+                 "en",
+                 existing_content,
+                 :skip
+               )
+
+      assert {"is invalid", [validation: :inclusion, enum: ["A", "B"]]} = errors[:category]
+    end
   end
 end
