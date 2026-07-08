@@ -18,6 +18,26 @@ defmodule TdDfLib.Format.DateTimeTest do
 
       assert FormatDateTime.convert_to_iso8601(value, "datetime") ==
                {:ok, "2025-12-31T22:55:30"}
+
+      value = "2024-04-30 17:35"
+
+      assert FormatDateTime.convert_to_iso8601(value, "datetime") ==
+               {:ok, "2024-04-30T17:35:00"}
+
+      value = "31-12-2025 22:55"
+
+      assert FormatDateTime.convert_to_iso8601(value, "datetime") ==
+               {:ok, "2025-12-31T22:55:00"}
+
+      value = "31/12/2025 22:55"
+
+      assert FormatDateTime.convert_to_iso8601(value, "datetime") ==
+               {:ok, "2025-12-31T22:55:00"}
+
+      value = "31-12-2025 9:5:3"
+
+      assert FormatDateTime.convert_to_iso8601(value, "datetime") ==
+               {:ok, "2025-12-31T09:05:03"}
     end
 
     test "converts / string date and datetime to iso8601 string" do

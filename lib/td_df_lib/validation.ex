@@ -331,8 +331,18 @@ defmodule TdDfLib.Validation do
     field = String.to_atom(name)
 
     case take_domain_values(domain_values, opts[:domain_id], opts[:domain_ids]) do
-      [_ | _] = available -> validate_inclusion(changeset, name, available)
-      _ -> Changeset.delete_change(changeset, field)
+      [_ | _] = available ->
+        validate_inclusion(changeset, name, available)
+
+      :none ->
+        Changeset.delete_change(changeset, field)
+
+      _ ->
+        if field_has_value?(changeset, field) do
+          Changeset.add_error(changeset, field, "missing domains")
+        else
+          Changeset.delete_change(changeset, field)
+        end
     end
   end
 
@@ -487,6 +497,15 @@ defmodule TdDfLib.Validation do
 
   defp fetch_domain_ids(opts) do
     [opts[:domain_id] | opts[:domain_ids] || []] |> Enum.filter(& &1) |> Enum.uniq()
+  end
+
+  defp field_has_value?(changeset, field) do
+    case Changeset.get_field(changeset, field) do
+      nil -> false
+      "" -> false
+      [] -> false
+      _ -> true
+    end
   end
 
   defp fetch_user_names(domain_ids, role) do

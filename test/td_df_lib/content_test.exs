@@ -305,6 +305,19 @@ defmodule TdDfLib.ContentTest do
       assert filtered == %{}
       assert Enum.sort(empty_fields) == ["a", "b", "c"]
     end
+
+    test "does not treat absent keys as empty fields" do
+      field_names = ["radio_field", "checkbox_field", "dropdown_field"]
+
+      {filtered, empty_fields} =
+        Content.filter_and_normalize_upload_content(
+          %{"dropdown_field" => "opt2"},
+          field_names
+        )
+
+      assert empty_fields == []
+      assert filtered == %{"dropdown_field" => %{"value" => "opt2", "origin" => "file"}}
+    end
   end
 
   describe "prepare_and_merge_upload_content/5" do
@@ -336,6 +349,143 @@ defmodule TdDfLib.ContentTest do
              ) == %{
                "a" => %{"value" => "", "origin" => "file"},
                "b" => %{"value" => "new_b", "origin" => "file"}
+             }
+    end
+
+    test "builds nil empty override for numeric fields cleared in upload" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "numeric_field",
+            "type" => "integer",
+            "cardinality" => "?",
+            "label" => "Numeric Field"
+          },
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "numeric_field" => %{"value" => 8, "origin" => "user"},
+        "string_field" => %{"value" => "text", "origin" => "user"}
+      }
+
+      new_content = %{
+        "numeric_field" => "",
+        "string_field" => "updated"
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               new_content,
+               template_data,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "numeric_field" => %{"value" => nil, "origin" => "file"},
+               "string_field" => %{"value" => "updated", "origin" => "file"}
+             }
+    end
+
+    test "clears fixed-value selection fields when upload is explicitly empty" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "radio_field",
+            "type" => "string",
+            "label" => "Radio Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["yes", "no"]},
+            "widget" => "radio"
+          },
+          %{
+            "name" => "checkbox_field",
+            "type" => "string",
+            "label" => "Checkbox Field",
+            "cardinality" => "*",
+            "values" => %{"fixed" => ["A", "B", "C"]},
+            "widget" => "checkbox"
+          },
+          %{
+            "name" => "dropdown_field",
+            "type" => "string",
+            "label" => "Dropdown Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["opt1", "opt2", "opt3"]},
+            "widget" => "dropdown"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "radio_field" => %{"value" => "yes", "origin" => "user"},
+        "checkbox_field" => %{"value" => ["A", "B"], "origin" => "user"},
+        "dropdown_field" => %{"value" => "opt1", "origin" => "user"}
+      }
+
+      new_content = %{
+        "radio_field" => "",
+        "checkbox_field" => "",
+        "dropdown_field" => ""
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               new_content,
+               template_data,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "radio_field" => %{"value" => "", "origin" => "file"},
+               "checkbox_field" => %{"value" => [], "origin" => "file"},
+               "dropdown_field" => %{"value" => "", "origin" => "file"}
+             }
+    end
+
+    test "preserves optional fixed fields omitted from upload when another field changes" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "radio_field",
+            "type" => "string",
+            "label" => "Radio Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["yes", "no"]},
+            "widget" => "radio"
+          },
+          %{
+            "name" => "dropdown_field",
+            "type" => "string",
+            "label" => "Dropdown Field",
+            "cardinality" => "?",
+            "values" => %{"fixed" => ["opt1", "opt2", "opt3"]},
+            "widget" => "dropdown"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "radio_field" => %{"value" => "yes", "origin" => "user"},
+        "dropdown_field" => %{"value" => "opt1", "origin" => "user"}
+      }
+
+      assert Content.prepare_and_merge_upload_content(
+               %{"dropdown_field" => "opt2"},
+               template_data,
+               [],
+               "en",
+               existing_content
+             ) == %{
+               "radio_field" => %{"value" => "yes", "origin" => "user"},
+               "dropdown_field" => %{"value" => "opt2", "origin" => "file"}
              }
     end
 
@@ -385,6 +535,120 @@ defmodule TdDfLib.ContentTest do
                "field_a" => %{"value" => "valor_a", "origin" => "file"},
                "field_b" => %{"value" => "valor_b", "origin" => "file"}
              } = result
+    end
+
+    test "applies template defaults on create when upload omits optional fields" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field",
+            "default" => %{"origin" => "default", "value" => "default_text"}
+          },
+          %{
+            "name" => "datetime_field",
+            "type" => "datetime",
+            "cardinality" => "?",
+            "label" => "Date Time",
+            "default" => %{"origin" => "default", "value" => "2024-04-30T17:35:00"}
+          }
+        ]
+      }
+
+      assert %{
+               "string_field" => %{"value" => "uploaded", "origin" => "file"},
+               "datetime_field" => %{"value" => "2024-04-30T17:35:00", "origin" => "default"}
+             } =
+               Content.prepare_and_merge_upload_content(
+                 %{"string_field" => "uploaded"},
+                 template_data,
+                 [],
+                 "en",
+                 nil
+               )
+    end
+
+    test "does not apply template defaults on update when upload omits optional fields" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field",
+            "default" => %{"origin" => "default", "value" => "default_text"}
+          },
+          %{
+            "name" => "datetime_field",
+            "type" => "datetime",
+            "cardinality" => "?",
+            "label" => "Date Time",
+            "default" => %{"origin" => "default", "value" => "2024-04-30T17:35:00"}
+          }
+        ]
+      }
+
+      existing_content = %{
+        "string_field" => %{"value" => "existing_text", "origin" => "user"},
+        "datetime_field" => %{"value" => "2025-01-15T10:00:00", "origin" => "user"}
+      }
+
+      assert %{
+               "string_field" => %{"value" => "updated", "origin" => "file"},
+               "datetime_field" => %{"value" => "2025-01-15T10:00:00", "origin" => "user"}
+             } =
+               Content.prepare_and_merge_upload_content(
+                 %{"string_field" => "updated"},
+                 template_data,
+                 [],
+                 "en",
+                 existing_content
+               )
+    end
+
+    test "does not apply unparseable template default on update when upload omits datetime field" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field"
+          },
+          %{
+            "name" => "datetime_field",
+            "type" => "datetime",
+            "cardinality" => "?",
+            "label" => "Date Time",
+            "default" => %{"origin" => "default", "value" => "2024-04-30 17:35"}
+          }
+        ]
+      }
+
+      existing_content = %{
+        "string_field" => %{"value" => "existing_text", "origin" => "user"},
+        "datetime_field" => %{"value" => "2025-01-15T10:00:00", "origin" => "user"}
+      }
+
+      assert {:ok, merged_content} =
+               Content.process_upload_content(
+                 %{"string_field" => "updated"},
+                 template_data,
+                 [],
+                 "en",
+                 existing_content,
+                 :skip
+               )
+
+      assert merged_content == %{
+               "string_field" => %{"value" => "updated", "origin" => "file"},
+               "datetime_field" => %{"value" => "2025-01-15T10:00:00", "origin" => "user"}
+             }
     end
   end
 
@@ -483,6 +747,203 @@ defmodule TdDfLib.ContentTest do
                  existing_content,
                  :skip
                )
+    end
+
+    test "returns ok on update when upload omits field with template default" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field",
+            "default" => %{"origin" => "default", "value" => "default_text"}
+          },
+          %{
+            "name" => "datetime_field",
+            "type" => "datetime",
+            "cardinality" => "?",
+            "label" => "Date Time",
+            "default" => %{"origin" => "default", "value" => "2024-04-30T17:35:00"}
+          }
+        ]
+      }
+
+      existing_content = %{
+        "string_field" => %{"value" => "existing_text", "origin" => "user"},
+        "datetime_field" => %{"value" => "2025-01-15T10:00:00", "origin" => "user"}
+      }
+
+      assert {:ok, merged_content} =
+               Content.process_upload_content(
+                 %{"string_field" => "updated"},
+                 template_data,
+                 [],
+                 "en",
+                 existing_content,
+                 :skip
+               )
+
+      assert merged_content == %{
+               "string_field" => %{"value" => "updated", "origin" => "file"},
+               "datetime_field" => %{"value" => "2025-01-15T10:00:00", "origin" => "user"}
+             }
+    end
+
+    test "applies template defaults on create when upload omits optional fields" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "string_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "String Field",
+            "default" => %{"origin" => "default", "value" => "default_text"}
+          },
+          %{
+            "name" => "extra_field",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "Extra",
+            "default" => %{"origin" => "default", "value" => "texto por defecto"}
+          }
+        ]
+      }
+
+      assert {:ok, merged_content} =
+               Content.process_upload_content(
+                 %{"string_field" => "uploaded"},
+                 template_data,
+                 [],
+                 "en",
+                 nil,
+                 :skip
+               )
+
+      assert merged_content == %{
+               "string_field" => %{"value" => "uploaded", "origin" => "file"},
+               "extra_field" => %{"value" => "texto por defecto", "origin" => "default"}
+             }
+    end
+
+    test "process_upload_content accepts datetime upload without seconds" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "datetime_field",
+            "type" => "datetime",
+            "cardinality" => "?",
+            "label" => "Date Time",
+            "default" => %{"origin" => "default", "value" => "2024-04-30 17:35"}
+          }
+        ]
+      }
+
+      assert {:ok, %{"datetime_field" => %{"value" => "2024-04-30T17:35:00", "origin" => "file"}}} =
+               Content.process_upload_content(
+                 %{"datetime_field" => "2024-04-30 17:35"},
+                 template_data,
+                 [],
+                 "en",
+                 nil,
+                 :skip
+               )
+    end
+
+    test "process_upload_content returns validation error for invalid domain field" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "my_domain",
+            "type" => "domain",
+            "label" => "My domain",
+            "cardinality" => "?",
+            "widget" => "dropdown"
+          }
+        ]
+      }
+
+      assert {:validation, {:error, %Ecto.Changeset{valid?: false, errors: errors}}} =
+               Content.process_upload_content(
+                 %{"my_domain" => "unknown_domain"},
+                 template_data,
+                 [1],
+                 "en",
+                 nil,
+                 :skip
+               )
+
+      assert {"My domain is invalid", _} = errors[:my_domain]
+    end
+
+    test "process_upload_content returns validation error for invalid domain dropdown value" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "domain_dependent",
+            "type" => "string",
+            "label" => "Domain dependent",
+            "cardinality" => "1",
+            "widget" => "dropdown",
+            "values" => %{"domain" => %{"1" => ["allowed"], "2" => ["other"]}}
+          }
+        ]
+      }
+
+      assert {:validation, {:error, %Ecto.Changeset{valid?: false, errors: errors}}} =
+               Content.process_upload_content(
+                 %{"domain_dependent" => "not_allowed"},
+                 template_data,
+                 [99],
+                 "en",
+                 nil,
+                 :skip
+               )
+
+      assert {"missing domains", _} = errors[:domain_dependent]
+    end
+
+    test "process_upload_content validates untouched existing fields on update" do
+      template_data = %{
+        translations: %{},
+        content_schema: [
+          %{
+            "name" => "category",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "Category",
+            "values" => %{"fixed" => ["A", "B"]}
+          },
+          %{
+            "name" => "name",
+            "type" => "string",
+            "cardinality" => "?",
+            "label" => "Name"
+          }
+        ]
+      }
+
+      existing_content = %{
+        "category" => %{"value" => "OLD_INVALID", "origin" => "user"},
+        "name" => %{"value" => "old name", "origin" => "user"}
+      }
+
+      assert {:validation, {:error, %Ecto.Changeset{valid?: false, errors: errors}}} =
+               Content.process_upload_content(
+                 %{"name" => "new name"},
+                 template_data,
+                 [],
+                 "en",
+                 existing_content,
+                 :skip
+               )
+
+      assert {"is invalid", [validation: :inclusion, enum: ["A", "B"]]} = errors[:category]
     end
   end
 end
