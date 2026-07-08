@@ -493,10 +493,12 @@ defmodule TdDfLib.Format do
     end
   end
 
+  def format_field(%{"content" => "", "type" => "domain"}), do: nil
+
   def format_field(%{"content" => content, "type" => "domain"}) do
     case DomainCache.external_id_to_id(content) do
       {:ok, domain_id} -> domain_id
-      _ -> nil
+      _ -> {:error, :invalid_format}
     end
   end
 

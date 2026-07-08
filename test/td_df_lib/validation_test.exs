@@ -1079,6 +1079,40 @@ defmodule TdDfLib.ValidationTest do
       refute Map.has_key?(changes, :domain_dependent)
     end
 
+    test "build_changeset/1 returns missing domains when domain values are not configured for domain ids",
+         %{
+           template: template
+         } do
+      %{content: [group = %{"fields" => fields} | _]} = template
+
+      domain = %{
+        "name" => "domain_dependent",
+        "label" => "Domain dependent field",
+        "type" => "string",
+        "cardinality" => "*",
+        "values" => %{
+          "domain" => %{1 => ["foo", "bar", "baz"], 2 => ["xyz"]}
+        }
+      }
+
+      group = Map.put(group, "fields", fields ++ [domain])
+      template = Map.put(template, :content, [group])
+      {:ok, _} = TemplateCache.put(template)
+      {:ok, schema} = TemplateCache.get(template.id, :content)
+      schema = Enum.flat_map(schema, &Map.get(&1, "fields"))
+
+      content = %{
+        "string" => %{"value" => "foo", "origin" => "user"},
+        "list" => %{"value" => "one", "origin" => "user"},
+        "domain_dependent" => %{"value" => ["foo"], "origin" => "user"}
+      }
+
+      assert %{
+               valid?: false,
+               errors: [domain_dependent: {"missing domains", _}]
+             } = Validation.build_changeset(content, schema, domain_ids: [99])
+    end
+
     @tag template_content: [
            %{
              "name" => "group",

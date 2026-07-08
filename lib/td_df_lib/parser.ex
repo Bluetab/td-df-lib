@@ -57,9 +57,13 @@ defmodule TdDfLib.Parser do
       )
       when not is_nil(params_content) do
     lang = get_default_lang(Map.get(params, :lang))
+    apply_default_values? = Map.get(params, :apply_default_values?, true)
 
     template_content =
-      Format.apply_template(params_content, content_schema, domain_ids: domain_ids)
+      Format.apply_template(params_content, content_schema,
+        domain_ids: domain_ids,
+        apply_default_values?: apply_default_values?
+      )
 
     template_content
     |> get_from_content("value")

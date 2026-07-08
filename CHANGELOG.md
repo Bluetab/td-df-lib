@@ -1,5 +1,21 @@
 # Changelog
 
+## [8.8.0] 2026-07-08
+
+### Changed
+
+- [TD-8062] Centralise template content upload processing for implementations
+  - Build schema-aware empty overrides for cleared fields
+  - Accept datetime upload values without seconds (`HH:MM`)
+
+### Fixed
+
+- [TD-8062] Reject invalid `domain` field external ids on upload instead
+  of silently storing `nil`
+  - Validate domain-dependent dropdown fields (`values.domain`)
+  when domain context is available and reject values with no configured
+  options
+
 ## [8.7.1] 2026-06-11
 
 ### Changed
