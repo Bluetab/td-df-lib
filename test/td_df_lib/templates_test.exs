@@ -184,6 +184,94 @@ defmodule TdDfLib.TemplatesTest do
     assert fields == List.flatten(fields)
   end
 
+  describe "suggestion_fields_for_template/1" do
+    test "returns ai_suggestion fields enriched with type, cardinality, possible_values and depends" do
+      id = System.unique_integer([:positive])
+
+      template = %{
+        id: id,
+        name: "suggestion_template_#{id}",
+        label: "Suggestion #{id}",
+        scope: "test",
+        updated_at: DateTime.utc_now(),
+        content: [
+          %{
+            "name" => "group",
+            "fields" => [
+              %{
+                "name" => "df_description",
+                "description" => "Free text",
+                "type" => "string",
+                "cardinality" => "1",
+                "ai_suggestion" => true
+              },
+              %{
+                "name" => "confidencialidad",
+                "description" => "",
+                "type" => "string",
+                "cardinality" => "1",
+                "ai_suggestion" => true,
+                "values" => %{"fixed" => ["Interno", "Confidencial"]}
+              },
+              %{
+                "name" => "estado",
+                "description" => "",
+                "type" => "string",
+                "cardinality" => "1",
+                "ai_suggestion" => true,
+                "values" => %{"fixed_tuple" => [%{"value" => "A", "text" => "Alta"}]}
+              },
+              %{
+                "name" => "formula",
+                "description" => "Only when metric",
+                "type" => "string",
+                "cardinality" => "?",
+                "ai_suggestion" => true,
+                "depends" => %{"on" => "tipo", "to_be" => ["metric"]}
+              },
+              %{
+                "name" => "not_suggested",
+                "type" => "string",
+                "cardinality" => "1",
+                "ai_suggestion" => false
+              }
+            ]
+          }
+        ]
+      }
+
+      {:ok, _} = TemplateCache.put(template)
+      on_exit(fn -> TemplateCache.delete(id) end)
+
+      assert {:ok, fields} = Templates.suggestion_fields_for_template(id)
+
+      assert [df_description, confidencialidad, estado, formula] = fields
+
+      refute Enum.any?(fields, &(&1["name"] == "not_suggested"))
+
+      assert df_description == %{
+               "name" => "df_description",
+               "description" => "Free text",
+               "type" => "string",
+               "cardinality" => "1"
+             }
+
+      assert confidencialidad == %{
+               "name" => "confidencialidad",
+               "description" => "",
+               "type" => "string",
+               "cardinality" => "1",
+               "possible_values" => ["Interno", "Confidencial"]
+             }
+
+      assert estado["possible_values"] == ["A"]
+      assert estado["type"] == "string"
+
+      assert formula["depends"] == %{"on" => "tipo", "to_be" => ["metric"]}
+      assert formula["cardinality"] == "?"
+    end
+  end
+
   defp test_template do
     id = System.unique_integer([:positive])
 

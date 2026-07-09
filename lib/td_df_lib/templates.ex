@@ -6,6 +6,7 @@ defmodule TdDfLib.Templates do
   alias TdDfLib.Format
 
   @templates Application.compile_env(:td_df_lib, :templates_module, TdCache.TemplateCache)
+  @suggestion_field_keys ["name", "description", "type", "cardinality", "depends"]
 
   def completeness(%{} = content, %{} = template) do
     template_completeness(template, content)
@@ -130,7 +131,7 @@ defmodule TdDfLib.Templates do
 
   defp map_suggestion_field(%{"values" => %{"fixed" => possible_values}} = field) do
     field
-    |> Map.take(["name", "description"])
+    |> Map.take(@suggestion_field_keys)
     |> Map.put("possible_values", possible_values)
   end
 
@@ -138,11 +139,11 @@ defmodule TdDfLib.Templates do
     possible_values = Enum.map(tuples, & &1["value"])
 
     field
-    |> Map.take(["name", "description"])
+    |> Map.take(@suggestion_field_keys)
     |> Map.put("possible_values", possible_values)
   end
 
-  defp map_suggestion_field(field), do: Map.take(field, ["name", "description"])
+  defp map_suggestion_field(field), do: Map.take(field, @suggestion_field_keys)
 
   def meets_dependency?([_ | _] = value, target) do
     not MapSet.disjoint?(MapSet.new(value), MapSet.new(target))
