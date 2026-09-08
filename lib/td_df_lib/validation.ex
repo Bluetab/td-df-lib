@@ -35,11 +35,12 @@ defmodule TdDfLib.Validation do
     changeset_fields = get_changeset_fields(content_schema)
     content_values = Parser.get_from_content(content, "value")
     content_origins = Parser.get_from_content(content, "origin")
+    original_content_values = Keyword.get(opts, :original_content_values)
 
     {content_values, changeset_fields}
     |> Changeset.cast(content_values, Map.keys(changeset_fields))
     |> add_content_validation(content_schema, opts)
-    |> add_origin_validations(content_origins)
+    |> add_origin_validations(content_origins, original_content_values)
   end
 
   defp get_changeset_fields(content_schema) do
@@ -64,7 +65,6 @@ defmodule TdDfLib.Validation do
 
   defp dependent?(to_be, dependent_value), do: Enum.member?(to_be, dependent_value)
 
-  # Filters schema for non applicable dependant field
   defp add_content_validation(
          changeset,
          %{"depends" => %{"on" => on, "to_be" => to_be}} = field_spec,
@@ -79,7 +79,6 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  # Filters schema for switch applicable dependant field
   defp add_content_validation(
          changeset,
          %{"name" => name, "values" => %{"switch" => %{"on" => on, "values" => to_be}}},
@@ -103,6 +102,7 @@ defmodule TdDfLib.Validation do
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
+    |> add_date_restrictions_validation(field_spec, opts)
     |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
     |> add_table_validation(field_spec, opts)
@@ -431,6 +431,308 @@ defmodule TdDfLib.Validation do
 
   defp add_url_validation(changeset, %{}), do: changeset
 
+  defp add_date_restrictions_validation(
+         changeset,
+         %{"type" => type, "name" => name} = field_spec,
+         opts
+       )
+       when type in ["date", "datetime"] do
+    field_atom = String.to_atom(name)
+    original_content_values = Keyword.get(opts, :original_content_values)
+    new_value = Changeset.get_field(changeset, field_atom)
+    original_value = original_content_values && Map.get(original_content_values, name)
+
+    if changeset.action == :update and not is_nil(original_content_values) and
+         new_value == original_value do
+      changeset
+    else
+      restrictions = Map.get(field_spec, "restrictions")
+
+      cond do
+        is_nil(restrictions) or map_size(restrictions) == 0 ->
+          changeset
+
+        is_nil(new_value) ->
+          changeset
+
+        true ->
+          case parse_date_value(new_value, type) do
+            {:ok, parsed} ->
+              apply_date_restrictions(changeset, name, parsed, restrictions, type)
+
+            _ ->
+              changeset
+          end
+      end
+    end
+  end
+
+  defp add_date_restrictions_validation(changeset, _, _opts), do: changeset
+
+  defp apply_date_restrictions(changeset, field_name, value, restrictions, type) do
+    changeset
+    |> maybe_check_limit(field_name, value, Map.get(restrictions, "max_date"), :max, type)
+    |> maybe_check_limit(field_name, value, Map.get(restrictions, "min_date"), :min, type)
+    |> maybe_check_between(field_name, value, restrictions, type)
+  end
+
+  defp maybe_check_limit(changeset, _name, _value, nil, _direction, _type), do: changeset
+
+  defp maybe_check_limit(
+         changeset,
+         name,
+         value,
+         %{"mode" => "static", "value" => v},
+         direction,
+         type
+       ) do
+    case parse_date_value(v, type) do
+      {:ok, limit} ->
+        if exceeds?(value, limit, direction) do
+          add_limit_error(changeset, name, direction, format_limit(limit))
+        else
+          changeset
+        end
+
+      _ ->
+        changeset
+    end
+  end
+
+  defp maybe_check_limit(
+         changeset,
+         name,
+         value,
+         %{"mode" => "dynamic", "amount" => amount, "unit" => unit, "direction" => dir},
+         direction,
+         type
+       ) do
+    limit = compute_dynamic_limit(type, amount, unit, dir)
+
+    if exceeds?(value, limit, direction) do
+      add_limit_error(changeset, name, direction, format_limit(limit))
+    else
+      changeset
+    end
+  end
+
+  defp maybe_check_limit(changeset, _, _, _, _, _), do: changeset
+
+  defp add_limit_error(changeset, name, :max, limit_str) do
+    Changeset.add_error(
+      changeset,
+      String.to_atom(name),
+      %{
+        key: "errors.date_restrictions.must_be_on_or_before",
+        values: %{limit: limit_str},
+        fallback: "must be on or before #{limit_str}"
+      }
+    )
+  end
+
+  defp add_limit_error(changeset, name, :min, limit_str) do
+    Changeset.add_error(
+      changeset,
+      String.to_atom(name),
+      %{
+        key: "errors.date_restrictions.must_be_on_or_after",
+        values: %{limit: limit_str},
+        fallback: "must be on or after #{limit_str}"
+      }
+    )
+  end
+
+  defp maybe_check_between(changeset, _name, _value, %{"between_start" => nil}, _type),
+    do: changeset
+
+  defp maybe_check_between(changeset, _name, _value, %{"between_end" => nil}, _type),
+    do: changeset
+
+  defp maybe_check_between(
+         changeset,
+         name,
+         value,
+         %{"between_start" => start_str, "between_end" => end_str},
+         type
+       ) do
+    with {:ok, start_val} <- parse_date_value(start_str, type),
+         {:ok, end_val} <- parse_date_value(end_str, type) do
+      check_within_window(changeset, name, value, start_val, end_val)
+    else
+      _ -> changeset
+    end
+  end
+
+  defp maybe_check_between(
+         changeset,
+         name,
+         value,
+         %{
+           "between" => %{"mode" => "static", "start" => start_str, "end" => end_str}
+         },
+         type
+       )
+       when is_binary(start_str) and is_binary(end_str) do
+    with {:ok, start_val} <- parse_date_value(start_str, type),
+         {:ok, end_val} <- parse_date_value(end_str, type) do
+      check_within_window(changeset, name, value, start_val, end_val)
+    else
+      _ -> changeset
+    end
+  end
+
+  defp maybe_check_between(
+         changeset,
+         name,
+         value,
+         %{
+           "between" => %{
+             "mode" => "dynamic",
+             "from" => %{"amount" => fa, "unit" => fu, "direction" => fd},
+             "to" => %{"amount" => ta, "unit" => tu, "direction" => td}
+           }
+         },
+         type
+       ) do
+    from_val = compute_dynamic_limit(type, fa, fu, fd)
+    to_val = compute_dynamic_limit(type, ta, tu, td)
+
+    cond do
+      compare_dates(from_val, to_val) == :gt ->
+        Changeset.add_error(
+          changeset,
+          String.to_atom(name),
+          %{
+            key: "errors.date_restrictions.range_start_must_be_before_end",
+            values: %{},
+            fallback: "range start must be before range end"
+          }
+        )
+
+      true ->
+        check_within_window(changeset, name, value, from_val, to_val)
+    end
+  end
+
+  defp maybe_check_between(changeset, _, _, _, _), do: changeset
+
+  defp check_within_window(changeset, name, value, start_val, end_val) do
+    cond do
+      compare_dates(value, start_val) == :lt ->
+        Changeset.add_error(
+          changeset,
+          String.to_atom(name),
+          %{
+            key: "errors.date_restrictions.must_be_on_or_after",
+            values: %{limit: format_limit(start_val)},
+            fallback: "must be on or after #{format_limit(start_val)}"
+          }
+        )
+
+      compare_dates(value, end_val) == :gt ->
+        Changeset.add_error(
+          changeset,
+          String.to_atom(name),
+          %{
+            key: "errors.date_restrictions.must_be_on_or_before",
+            values: %{limit: format_limit(end_val)},
+            fallback: "must be on or before #{format_limit(end_val)}"
+          }
+        )
+
+      true ->
+        changeset
+    end
+  end
+
+  defp parse_date_value(value, "date") do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> {:ok, date}
+      _ -> :error
+    end
+  end
+
+  defp parse_date_value(value, "datetime") do
+    case NaiveDateTime.from_iso8601(value) do
+      {:ok, ndt} -> {:ok, ndt}
+      _ -> :error
+    end
+  end
+
+  defp exceeds?(_value, nil, _direction), do: false
+
+  defp exceeds?(value, limit, :max) do
+    compare_dates(value, limit) == :gt
+  end
+
+  defp exceeds?(value, limit, :min) do
+    compare_dates(value, limit) == :lt
+  end
+
+  defp compare_dates(a, b) when is_struct(a, Date) and is_struct(b, Date), do: Date.compare(a, b)
+
+  defp compare_dates(a, b) when is_struct(a, NaiveDateTime) and is_struct(b, NaiveDateTime),
+    do: NaiveDateTime.compare(a, b)
+
+  defp compute_dynamic_limit("date", amount, "years", direction) do
+    today = Date.utc_today()
+    shift_date(today, years: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("date", amount, "months", direction) do
+    today = Date.utc_today()
+    shift_date(today, months: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("date", amount, "weeks", direction) do
+    today = Date.utc_today()
+    shift_date(today, weeks: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("date", amount, "days", direction) do
+    today = Date.utc_today()
+    shift_date(today, days: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("datetime", amount, "years", direction) do
+    now = DateTime.to_naive(DateTime.utc_now())
+    shift_naive(now, years: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("datetime", amount, "months", direction) do
+    now = DateTime.to_naive(DateTime.utc_now())
+    shift_naive(now, months: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("datetime", amount, "weeks", direction) do
+    now = DateTime.to_naive(DateTime.utc_now())
+    shift_naive(now, weeks: sign_for_direction(direction) * amount)
+  end
+
+  defp compute_dynamic_limit("datetime", amount, "days", direction) do
+    now = DateTime.to_naive(DateTime.utc_now())
+    shift_naive(now, days: sign_for_direction(direction) * amount)
+  end
+
+  defp sign_for_direction("future"), do: 1
+  defp sign_for_direction("past"), do: -1
+  defp sign_for_direction(_), do: 1
+
+  defp shift_date(date, opts) do
+    Timex.shift(date, opts)
+  end
+
+  defp shift_naive(ndt, opts) do
+    case Timex.shift(ndt, opts) do
+      %NaiveDateTime{} = shifted -> shifted
+      %DateTime{} = shifted -> DateTime.to_naive(shifted)
+      shifted -> shifted
+    end
+  end
+
+  defp format_limit(%Date{} = d), do: Date.to_iso8601(d)
+  defp format_limit(%NaiveDateTime{} = ndt), do: NaiveDateTime.to_iso8601(ndt)
+
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
       true -> Keyword.new([{field, {"should not contain empty values", validation: :required}}])
@@ -664,7 +966,7 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  defp add_origin_validations(changeset, origins) do
+  defp add_origin_validations(changeset, origins, _original_content_values \\ nil) do
     origins
     |> Map.to_list()
     |> Enum.reduce(changeset, fn {key, value}, changeset ->
