@@ -36,10 +36,12 @@ defmodule TdDfLib.Validation do
     content_values = Parser.get_from_content(content, "value")
     content_origins = Parser.get_from_content(content, "origin")
     original_content_values = Keyword.get(opts, :original_content_values)
+    original_content_values = Keyword.get(opts, :original_content_values)
 
     {content_values, changeset_fields}
     |> Changeset.cast(content_values, Map.keys(changeset_fields))
     |> add_content_validation(content_schema, opts)
+    |> add_origin_validations(content_origins, original_content_values)
     |> add_origin_validations(content_origins, original_content_values)
   end
 
@@ -102,6 +104,7 @@ defmodule TdDfLib.Validation do
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
+    |> add_date_restrictions_validation(field_spec, opts)
     |> add_date_restrictions_validation(field_spec, opts)
     |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
