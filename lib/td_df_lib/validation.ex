@@ -7,6 +7,7 @@ defmodule TdDfLib.Validation do
   alias TdCache.HierarchyCache
   alias TdCache.Templates.AclLoader
   alias TdCache.UserCache
+  alias TdDfLib.DateRestrictions
   alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Templates
@@ -64,7 +65,6 @@ defmodule TdDfLib.Validation do
 
   defp dependent?(to_be, dependent_value), do: Enum.member?(to_be, dependent_value)
 
-  # Filters schema for non applicable dependant field
   defp add_content_validation(
          changeset,
          %{"depends" => %{"on" => on, "to_be" => to_be}} = field_spec,
@@ -79,7 +79,6 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  # Filters schema for switch applicable dependant field
   defp add_content_validation(
          changeset,
          %{"name" => name, "values" => %{"switch" => %{"on" => on, "values" => to_be}}},
@@ -103,6 +102,7 @@ defmodule TdDfLib.Validation do
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
     |> add_url_validation(field_spec)
+    |> add_date_restrictions_validation(field_spec)
     |> add_content_errors(field_spec)
     |> add_hierarchy_depth_validation(field_spec)
     |> add_table_validation(field_spec, opts)
@@ -430,6 +430,27 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_url_validation(changeset, %{}), do: changeset
+
+  defp add_date_restrictions_validation(changeset, %{"type" => type, "name" => name} = field_spec)
+       when type in ["date", "datetime"] do
+    restrictions = Map.get(field_spec, "restrictions")
+    value = Changeset.get_field(changeset, String.to_atom(name))
+
+    case DateRestrictions.validate_value(restrictions, value, type) do
+      :ok ->
+        changeset
+
+      {:error, error_info} ->
+        Changeset.add_error(
+          changeset,
+          String.to_atom(name),
+          error_info
+        )
+    end
+  end
+
+  defp add_date_restrictions_validation(changeset, _), do: changeset
+
 
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do

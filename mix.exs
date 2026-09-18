@@ -32,7 +32,8 @@ defmodule TdDfLib.MixProject do
       {:ecto, "~> 3.14"},
       {:ex_machina, "~> 2.8", only: :test},
       {:nimble_csv, "~> 1.2"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "8.7.1"}
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "8.7.1"},
+      {:timex, "~> 3.7"}
     ]
   end
 end
