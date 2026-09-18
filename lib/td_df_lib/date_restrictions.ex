@@ -77,8 +77,14 @@ defmodule TdDfLib.DateRestrictions do
 
   defp parse_value(value, "datetime") do
     case NaiveDateTime.from_iso8601(value) do
-      {:ok, ndt} -> {:ok, ndt}
-      _ -> error("invalid.datetime_format", %{})
+      {:ok, ndt} ->
+        {:ok, ndt}
+
+      _ ->
+        case NaiveDateTime.from_iso8601(value <> ":00") do
+          {:ok, ndt} -> {:ok, ndt}
+          _ -> error("invalid.datetime_format", %{})
+        end
     end
   end
 
@@ -172,18 +178,13 @@ defmodule TdDfLib.DateRestrictions do
     opts = [{String.to_atom(u), a}]
     result = Timex.shift(now, opts)
     coerce_to_struct(result, now)
-    |> zero_time()
   end
 
-  # Relative limits don't carry a time component (the user only specifies
-  # amount + unit). Normalize to 00:00:00 so the limit is deterministic
-  # and matches the front-end's datetime picker.
-  defp zero_time(%NaiveDateTime{} = ndt) do
-    %NaiveDateTime{ndt | hour: 0, minute: 0, second: 0, microsecond: {0, 0}}
-  end
-
-  defp zero_time(%Date{} = d), do: d
-  defp zero_time(other), do: other
+  # NOTE: dynamic limits intentionally preserve the time component of `now`.
+  # "max 4 days from now" means now+4d exactly, so picking the limit day at
+  # any hour up to the current time is valid. Normalizing to 00:00:00 here
+  # (as done previously) wrongly rejected every hour of the limit day for
+  # datetime fields. Kept in sync with the front-end's shiftFromOptions.
 
   defp coerce_to_struct(%Date{} = d, _), do: d
   defp coerce_to_struct(%NaiveDateTime{} = ndt, _), do: ndt
