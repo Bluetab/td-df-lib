@@ -1,31 +1,4 @@
 defmodule TdDfLib.DateRestrictions do
-  @moduledoc """
-  Pure validation of date/datetime restriction **values** against the
-  restriction definition. Decoupled from Ecto so it can be reused by any
-  consumer of `td-df-lib` that fills out a template (concepts, ingests,
-  implementations, ...).
-
-  This module is *not* responsible for validating the shape of the
-  restriction JSON — that belongs to the template owner (`td-df`) because
-  template definition (CRUD) is its domain.
-
-  A restriction value is a map with any of:
-
-    * `"max_date"` / `"min_date"`: either `%{"mode" => "static", "value" => iso}`
-      or `%{"mode" => "dynamic", "amount" => integer, "unit" => "days" | "weeks" | "months" | "years"}`.
-      The amount is signed: positive = future (today + amount), negative = past
-      (today - |amount|).
-
-    * `"between"`: either `%{"mode" => "static", "start" => iso, "end" => iso}`
-      or `%{"mode" => "dynamic", "from" => %{amount, unit}, "to" => %{amount, unit}}`.
-      Both `from` and `to` use signed amounts.
-
-    * Legacy flat shape: `%{"between_start" => iso, "between_end" => iso}`.
-
-  Functions return either `:ok` or `{:error, %{key: ..., values: ...,
-  fallback: ...}}`.
-  """
-
   alias Timex
 
   @type field_type :: String.t()
@@ -38,16 +11,6 @@ defmodule TdDfLib.DateRestrictions do
         }
   @type now :: Date.t() | NaiveDateTime.t() | nil
 
-  # ----- Public API -----
-
-  @doc """
-  Validates a value against restrictions. `now` is the reference date used
-  by dynamic restrictions (defaults to today's date / now in UTC).
-
-  The shape of `restrictions` is assumed valid — shape validation is the
-  responsibility of the template owner (see
-  `TdDf.Templates.DateRestrictionShape`).
-  """
   @spec validate_value(restrictions(), iso_value() | nil, field_type(), now()) ::
           :ok | {:error, error()}
   def validate_value(restrictions, value, type, now \\ nil)
@@ -55,14 +18,26 @@ defmodule TdDfLib.DateRestrictions do
     with :ok <- ensure_value(value),
          {:ok, parsed_value} <- parse_value(value, type),
          {:ok, ref_now} <- resolve_now(now, type),
-         :ok <- check_limit(parsed_value, Map.get(restrictions || %{}, "max_date"), :max, type, ref_now),
-         :ok <- check_limit(parsed_value, Map.get(restrictions || %{}, "min_date"), :min, type, ref_now),
+         :ok <-
+           check_limit(
+             parsed_value,
+             Map.get(restrictions || %{}, "max_date"),
+             :max,
+             type,
+             ref_now
+           ),
+         :ok <-
+           check_limit(
+             parsed_value,
+             Map.get(restrictions || %{}, "min_date"),
+             :min,
+             type,
+             ref_now
+           ),
          :ok <- check_between(parsed_value, restrictions || %{}, type, ref_now) do
       :ok
     end
   end
-
-  # ----- Value validation -----
 
   defp ensure_value(nil), do: :ok
   defp ensure_value(""), do: :ok
@@ -110,7 +85,13 @@ defmodule TdDfLib.DateRestrictions do
     end
   end
 
-  defp check_limit(value, %{"mode" => "dynamic", "amount" => a, "unit" => u}, direction, _type, now) do
+  defp check_limit(
+         value,
+         %{"mode" => "dynamic", "amount" => a, "unit" => u},
+         direction,
+         _type,
+         now
+       ) do
     limit = compute_dynamic_limit(now, %{"amount" => a, "unit" => u})
 
     if exceeds?(value, limit, direction) do
@@ -179,12 +160,6 @@ defmodule TdDfLib.DateRestrictions do
     result = Timex.shift(now, opts)
     coerce_to_struct(result, now)
   end
-
-  # NOTE: dynamic limits intentionally preserve the time component of `now`.
-  # "max 4 days from now" means now+4d exactly, so picking the limit day at
-  # any hour up to the current time is valid. Normalizing to 00:00:00 here
-  # (as done previously) wrongly rejected every hour of the limit day for
-  # datetime fields. Kept in sync with the front-end's shiftFromOptions.
 
   defp coerce_to_struct(%Date{} = d, _), do: d
   defp coerce_to_struct(%NaiveDateTime{} = ndt, _), do: ndt
