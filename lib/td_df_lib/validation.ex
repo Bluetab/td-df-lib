@@ -451,7 +451,6 @@ defmodule TdDfLib.Validation do
 
   defp add_date_restrictions_validation(changeset, _), do: changeset
 
-
   defp validate_no_empty_items(field, [_h | _t] = values) do
     case Enum.any?([nil, "", []], &Enum.member?(values, &1)) do
       true -> Keyword.new([{field, {"should not contain empty values", validation: :required}}])
