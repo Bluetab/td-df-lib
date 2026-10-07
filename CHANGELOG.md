@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-8029] Add i18n parameter handling and content formatting functions
+
 ## [8.8.1] 2026-07-09
 
 ### Added
