@@ -1,4 +1,6 @@
 defmodule TdDfLib.DateRestrictions do
+  @moduledoc false
+
   @units ~w(days weeks months years)
 
   @type field_type :: String.t()
