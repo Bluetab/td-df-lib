@@ -91,7 +91,14 @@ defmodule TdDfLib.DateRestrictions do
   end
 
   defp to_integer(amount) when is_integer(amount), do: {:ok, amount}
-  defp to_integer(amount) when is_binary(amount), do: Integer.parse(amount)
+
+  defp to_integer(amount) when is_binary(amount) do
+    case Integer.parse(amount) do
+      {int, ""} -> {:ok, int}
+      _ -> :error
+    end
+  end
+
   defp to_integer(_amount), do: :error
 
   defp reference_now("date", nil), do: Date.utc_today()

@@ -159,6 +159,17 @@ defmodule TdDfLib.DateRestrictionsTest do
                )
     end
 
+    test "a relative restriction with a string amount shifts the reference, same as an integer" do
+      restrictions = %{"min_date" => %{"mode" => "dynamic", "amount" => "-7", "unit" => "days"}}
+
+      assert :ok == DateRestrictions.validate_value(restrictions, "2026-10-08", "date", @now_date)
+
+      assert {:error, {_message, opts}} =
+               DateRestrictions.validate_value(restrictions, "2026-10-07", "date", @now_date)
+
+      assert Keyword.get(opts, :limit) == "2026-10-08"
+    end
+
     test "an unchanged value is not validated, even if it is now out of range" do
       restrictions = %{"max_date" => %{"mode" => "static", "value" => "2026-12-31"}}
       stored = "2030-01-01"
