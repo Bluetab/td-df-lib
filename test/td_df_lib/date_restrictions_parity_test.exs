@@ -1,6 +1,8 @@
 defmodule TdDfLib.DateRestrictionsParityTest do
   use ExUnit.Case, async: true
 
+  alias TdDfLib.DateRestrictions
+
   @fixture Path.expand("../fixtures/date_restrictions.json", __DIR__)
 
   setup_all do
@@ -56,7 +58,7 @@ defmodule TdDfLib.DateRestrictionsParityTest do
       for c <- cases do
         now = resolve_now(c["type"], c["now"])
 
-        assert TdDfLib.DateRestrictions.resolve(c["restrictions"], c["type"], now) ==
+        assert DateRestrictions.resolve(c["restrictions"], c["type"], now) ==
                  c["expected"],
                """
                case: #{c["id"]}
