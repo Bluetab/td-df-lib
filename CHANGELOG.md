@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- [TD-8428] Centralizes fixed and relative Date and DateTime limit resolution and validation
+
 ## [8.8.1] 2026-07-09
 
 ### Added
@@ -21,8 +27,8 @@
 - [TD-8062] Reject invalid `domain` field external ids on upload instead
   of silently storing `nil`
   - Validate domain-dependent dropdown fields (`values.domain`)
-  when domain context is available and reject values with no configured
-  options
+    when domain context is available and reject values with no configured
+    options
 
 ## [8.7.1] 2026-06-11
 
