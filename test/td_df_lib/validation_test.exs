@@ -7,6 +7,7 @@ defmodule TdDfLib.ValidationTest do
   alias TdDfLib.Validation
 
   @unsafe "javascript:alert(document)"
+  @date_restrictions_now ~D[2026-10-15]
 
   describe "build_changeset/2 & build_changeset/3" do
     setup context do
@@ -1716,6 +1717,49 @@ defmodule TdDfLib.ValidationTest do
     )
   end
 
+  defp date_restrictions_schema do
+    [
+      %{
+        "name" => "fecha",
+        "label" => "fecha",
+        "type" => "date",
+        "cardinality" => "?",
+        "restrictions" => %{
+          "between" => %{"mode" => "static", "start" => "2026-01-01", "end" => "2026-12-31"}
+        }
+      }
+    ]
+  end
+
+  defp date_restrictions_content(date) do
+    %{"fecha" => %{"value" => date, "origin" => "user"}}
+  end
+
+  defp date_restrictions_errors(date, opts \\ []) do
+    case Validation.validate_content(
+           date_restrictions_content(date),
+           date_restrictions_schema(),
+           Keyword.put_new(opts, :now, @date_restrictions_now)
+         ) do
+      :ok ->
+        %{}
+
+      {:error, %{errors: errors}} ->
+        Map.new(errors, fn {field, {_msg, _opts}} -> {field, true} end)
+    end
+  end
+
+  defp date_restrictions_error(date, opts \\ []) do
+    {:error, %{errors: [{:fecha, error}]}} =
+      Validation.validate_content(
+        date_restrictions_content(date),
+        date_restrictions_schema(),
+        Keyword.put_new(opts, :now, @date_restrictions_now)
+      )
+
+    error
+  end
+
   describe "date and datetime field error messages" do
     setup do
       %{id: template_id} = template = build(:template)
@@ -2047,6 +2091,105 @@ defmodule TdDfLib.ValidationTest do
                Validation.build_changeset(content, schema, domain_ids: [domain.id])
 
       assert changes == %{group_field: "foo bar"}
+    end
+
+    test "date restrictions: accepts a value inside the range" do
+      assert date_restrictions_errors("2026-06-15") == %{}
+    end
+
+    test "date restrictions: rejects a value before the range, naming the resolved limit" do
+      assert {message, opts} = date_restrictions_error("2025-06-15")
+      assert message == "errors.date_restrictions.out_of_range"
+      assert Keyword.get(opts, :limit) == "2026-01-01"
+      assert Keyword.get(opts, :fixed_name) == true
+    end
+
+    test "date restrictions: rejects a value after the range" do
+      assert {_message, opts} = date_restrictions_error("2027-06-15")
+      assert Keyword.get(opts, :limit) == "2026-12-31"
+    end
+
+    test "date restrictions: the error is attached to the offending field" do
+      assert %{fecha: true} = date_restrictions_errors("2027-06-15")
+    end
+
+    test "date restrictions: accepts an empty value, these records are fillable in part" do
+      assert date_restrictions_errors("") == %{}
+      assert date_restrictions_errors(nil) == %{}
+    end
+
+    test "date restrictions: an unchanged out-of-range value does not block the save" do
+      previous = %{"fecha" => %{"value" => "2020-01-01", "origin" => "user"}}
+
+      assert date_restrictions_errors("2020-01-01", previous_content: previous) == %{}
+    end
+
+    test "date restrictions: the same value is rejected once it has actually changed" do
+      previous = %{"fecha" => %{"value" => "2026-06-01", "origin" => "user"}}
+
+      assert %{fecha: true} = date_restrictions_errors("2020-01-01", previous_content: previous)
+    end
+
+    test "date restrictions: without previous_content everything is validated" do
+      assert %{fecha: true} = date_restrictions_errors("2020-01-01")
+    end
+
+    test "date restrictions: a string field with no restrictions behaves as before" do
+      schema = [%{"name" => "s", "label" => "s", "type" => "string", "cardinality" => "?"}]
+
+      assert :ok ==
+               Validation.validate_content(
+                 %{"s" => %{"value" => "cualquier cosa", "origin" => "user"}},
+                 schema
+               )
+    end
+
+    test "date restrictions: a date field with no restrictions key accepts anything" do
+      schema = [%{"name" => "fecha", "label" => "fecha", "type" => "date", "cardinality" => "?"}]
+
+      assert :ok ==
+               Validation.validate_content(
+                 %{"fecha" => %{"value" => "2020-01-01", "origin" => "user"}},
+                 schema
+               )
+    end
+
+    test "date restrictions: a date field with empty restrictions accepts anything" do
+      schema = [
+        %{
+          "name" => "fecha",
+          "label" => "fecha",
+          "type" => "date",
+          "cardinality" => "?",
+          "restrictions" => %{}
+        }
+      ]
+
+      assert :ok ==
+               Validation.validate_content(
+                 %{"fecha" => %{"value" => "2020-01-01", "origin" => "user"}},
+                 schema
+               )
+    end
+
+    test "date restrictions: a required date field with no value is still flagged blank" do
+      schema = [
+        %{
+          "name" => "fecha",
+          "label" => "fecha",
+          "type" => "date",
+          "cardinality" => "1",
+          "restrictions" => %{"max_date" => %{"mode" => "static", "value" => "2026-12-31"}}
+        }
+      ]
+
+      assert {:error, %{errors: errors}} =
+               Validation.validate_content(
+                 %{"fecha" => %{"value" => "", "origin" => "user"}},
+                 schema
+               )
+
+      assert [fecha: {"can't be blank", _}] = errors
     end
   end
 end

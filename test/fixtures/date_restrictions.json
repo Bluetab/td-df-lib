@@ -1,0 +1,698 @@
+[
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-01-01"
+    },
+    "id": "min_date_static_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "min_date": {
+        "mode": "static",
+        "value": "2026-01-01"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-01-01T00:00"
+    },
+    "id": "min_date_static_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "min_date": {
+        "mode": "static",
+        "value": "2026-01-01"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-12-31",
+      "min": null
+    },
+    "id": "max_date_static_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "max_date": {
+        "mode": "static",
+        "value": "2026-12-31"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-12-31T23:59",
+      "min": null
+    },
+    "id": "max_date_static_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "mode": "static",
+        "value": "2026-12-31"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-04-01",
+      "min": "2026-03-01"
+    },
+    "id": "between_static_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between": {
+        "end": "2026-04-01",
+        "mode": "static",
+        "start": "2026-03-01"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-04-01T23:59",
+      "min": "2026-03-01T00:00"
+    },
+    "id": "between_static_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "end": "2026-04-01",
+        "mode": "static",
+        "start": "2026-03-01"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-10-14"
+    },
+    "id": "min_date_dynamic_days_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "days"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-10-14T20:44"
+    },
+    "id": "min_date_dynamic_days_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "days"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-10-08"
+    },
+    "id": "min_date_dynamic_weeks_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "weeks"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-10-08T20:44"
+    },
+    "id": "min_date_dynamic_weeks_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "weeks"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-09-15"
+    },
+    "id": "min_date_dynamic_months_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "months"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-09-15T20:44"
+    },
+    "id": "min_date_dynamic_months_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "months"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2025-10-15"
+    },
+    "id": "min_date_dynamic_years_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "years"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2025-10-15T20:44"
+    },
+    "id": "min_date_dynamic_years_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "min_date": {
+        "amount": -1,
+        "mode": "dynamic",
+        "unit": "years"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-10-16",
+      "min": null
+    },
+    "id": "max_date_dynamic_days_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "days"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-10-16T20:44",
+      "min": null
+    },
+    "id": "max_date_dynamic_days_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "days"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-10-22",
+      "min": null
+    },
+    "id": "max_date_dynamic_weeks_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "weeks"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-10-22T20:44",
+      "min": null
+    },
+    "id": "max_date_dynamic_weeks_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "weeks"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-11-15",
+      "min": null
+    },
+    "id": "max_date_dynamic_months_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "months"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-11-15T20:44",
+      "min": null
+    },
+    "id": "max_date_dynamic_months_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "months"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2027-10-15",
+      "min": null
+    },
+    "id": "max_date_dynamic_years_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "years"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2027-10-15T20:44",
+      "min": null
+    },
+    "id": "max_date_dynamic_years_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "years"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2027-10-15",
+      "min": "2026-10-09"
+    },
+    "id": "between_dynamic_days_years_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -6,
+          "unit": "days"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 1,
+          "unit": "years"
+        }
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2027-10-15T20:44",
+      "min": "2026-10-09T20:44"
+    },
+    "id": "between_dynamic_days_years_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -6,
+          "unit": "days"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 1,
+          "unit": "years"
+        }
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-12-15",
+      "min": "2026-10-08"
+    },
+    "id": "between_dynamic_weeks_months_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -1,
+          "unit": "weeks"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 2,
+          "unit": "months"
+        }
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-12-15T20:44",
+      "min": "2026-10-08T20:44"
+    },
+    "id": "between_dynamic_weeks_months_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -1,
+          "unit": "weeks"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 2,
+          "unit": "months"
+        }
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2027-10-15",
+      "min": "2026-07-15"
+    },
+    "id": "between_dynamic_months_years_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -3,
+          "unit": "months"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 1,
+          "unit": "years"
+        }
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2027-10-15T20:44",
+      "min": "2026-07-15T20:44"
+    },
+    "id": "between_dynamic_months_years_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -3,
+          "unit": "months"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 1,
+          "unit": "years"
+        }
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2028-10-15",
+      "min": "2025-10-15"
+    },
+    "id": "between_dynamic_years_years_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -1,
+          "unit": "years"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 2,
+          "unit": "years"
+        }
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2028-10-15T20:44",
+      "min": "2025-10-15T20:44"
+    },
+    "id": "between_dynamic_years_years_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "from": {
+          "amount": -1,
+          "unit": "years"
+        },
+        "mode": "dynamic",
+        "to": {
+          "amount": 2,
+          "unit": "years"
+        }
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-09-30",
+      "min": "2026-06-01"
+    },
+    "id": "combined_min_max_between_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between": {
+        "end": "2026-09-30",
+        "mode": "static",
+        "start": "2026-06-01"
+      },
+      "max_date": {
+        "mode": "static",
+        "value": "2026-12-31"
+      },
+      "min_date": {
+        "mode": "static",
+        "value": "2026-01-01"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-09-30T17:00",
+      "min": "2026-06-01T10:00"
+    },
+    "id": "combined_min_max_between_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "end": "2026-09-30T17:00:00",
+        "mode": "static",
+        "start": "2026-06-01T10:00:00"
+      },
+      "max_date": {
+        "mode": "static",
+        "value": "2026-12-31T18:00:00"
+      },
+      "min_date": {
+        "mode": "static",
+        "value": "2026-01-01T08:00:00"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-05-31",
+      "min": "2026-02-01"
+    },
+    "id": "legacy_between_start_end_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "between_end": "2026-05-31",
+      "between_start": "2026-02-01"
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-05-31T19:45",
+      "min": "2026-02-01T08:30"
+    },
+    "id": "legacy_between_start_end_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between_end": "2026-05-31T19:45:00",
+      "between_start": "2026-02-01T08:30:00"
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": null
+    },
+    "id": "empty_restrictions_date",
+    "now": "2026-10-15",
+    "restrictions": {},
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": null
+    },
+    "id": "empty_restrictions_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {},
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-06-30T23:59",
+      "min": null
+    },
+    "id": "date_only_max_is_end_of_day",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "mode": "static",
+        "value": "2026-06-30"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-06-30T00:00"
+    },
+    "id": "date_only_min_is_start_of_day",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "min_date": {
+        "mode": "static",
+        "value": "2026-06-30"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": "2026-06-30T23:59",
+      "min": "2026-06-01T00:00"
+    },
+    "id": "date_only_between_covers_whole_days",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "between": {
+        "end": "2026-06-30",
+        "mode": "static",
+        "start": "2026-06-01"
+      }
+    },
+    "type": "datetime"
+  },
+  {
+    "expected": {
+      "max": null,
+      "min": "2026-11-15"
+    },
+    "id": "month_end_clamp_date",
+    "now": "2026-10-15",
+    "restrictions": {
+      "min_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "months"
+      }
+    },
+    "type": "date"
+  },
+  {
+    "expected": {
+      "max": "2026-11-15T20:44",
+      "min": null
+    },
+    "id": "month_end_clamp_datetime",
+    "now": "2026-10-15T20:44:30Z",
+    "restrictions": {
+      "max_date": {
+        "amount": 1,
+        "mode": "dynamic",
+        "unit": "months"
+      }
+    },
+    "type": "datetime"
+  }
+]

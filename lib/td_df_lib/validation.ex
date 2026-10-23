@@ -7,6 +7,7 @@ defmodule TdDfLib.Validation do
   alias TdCache.HierarchyCache
   alias TdCache.Templates.AclLoader
   alias TdCache.UserCache
+  alias TdDfLib.DateRestrictions
   alias TdDfLib.Format
   alias TdDfLib.Parser
   alias TdDfLib.Templates
@@ -99,6 +100,7 @@ defmodule TdDfLib.Validation do
   defp add_content_validation(changeset, %{} = field_spec, opts) do
     changeset
     |> add_require_validation(field_spec)
+    |> add_date_restrictions_validation(field_spec, opts)
     |> add_inclusion_validation(field_spec, opts)
     |> add_image_validation(field_spec)
     |> add_richtext_validation(field_spec)
@@ -305,6 +307,35 @@ defmodule TdDfLib.Validation do
   end
 
   defp add_require_validation(changeset, %{}), do: changeset
+
+  defp add_date_restrictions_validation(
+         changeset,
+         %{"type" => type, "name" => name} = field_spec,
+         opts
+       )
+       when type in ["date", "datetime"] and is_map_key(field_spec, "restrictions") do
+    restrictions = field_spec["restrictions"] || %{}
+    previous = Keyword.get(opts, :previous_content, %{})
+    field = String.to_atom(name)
+
+    Changeset.validate_change(changeset, field, fn _field, value ->
+      case DateRestrictions.validate_value(
+             restrictions,
+             unwrap_value(value),
+             type,
+             opts[:now],
+             previous_value: unwrap_value(Map.get(previous, name))
+           ) do
+        :ok -> []
+        {:error, error} -> [{field, error}]
+      end
+    end)
+  end
+
+  defp add_date_restrictions_validation(changeset, _field_spec, _opts), do: changeset
+
+  defp unwrap_value(%{"value" => value}), do: value
+  defp unwrap_value(value), do: value
 
   defp add_inclusion_validation(
          changeset,
@@ -579,12 +610,6 @@ defmodule TdDfLib.Validation do
     end
   end
 
-  @doc """
-  Returns a 2-arity validator function that can be used by
-  `Ecto.Changeset.validate_change/3` on a dynamic content field. The argument
-  may be either the name of a template or it's flattened schema, as returned by
-  `Templates.content_schema/1`.
-  """
   def validator(template_or_schema, opts \\ [])
 
   def validator({:error, reason}, _opts) do
