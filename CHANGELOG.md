@@ -1,16 +1,16 @@
 # Changelog
 
+## [8.13.1] 2026-10-26
+
+### Added
+
+- [TD-8428] Centralizes fixed and relative Date and DateTime limit resolution and validation
+
 ## [8.13.0] 2026-10-26
 
 ### Added
 
 - [TD-8029] Add i18n parameter handling and content formatting functions
-
-## [8.8.2] 2026-07-23
-
-### Added
-
-- [TD-8428] Centralizes fixed and relative Date and DateTime limit resolution and validation
 
 ## [8.8.1] 2026-07-09
 
