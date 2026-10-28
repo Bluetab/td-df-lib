@@ -28,7 +28,7 @@ defmodule TdDfLib.MixProject do
     [
       {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
-      {:decimal, "~> 3.0"},
+      {:decimal, "~> 3.1.2"},
       {:ecto, "~> 3.14"},
       {:ex_machina, "~> 2.8", only: :test},
       {:nimble_csv, "~> 1.2"},
