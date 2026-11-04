@@ -1,5 +1,9 @@
 # Changelog
 
+## [8.14.0] 2026-11-04
+
+- [TD-8573] Vulnerabilities
+
 ## [8.13.0] 2026-10-26
 
 ### Added
