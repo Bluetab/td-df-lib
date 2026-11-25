@@ -247,29 +247,24 @@ defmodule TdDfLib.Format.DateTime do
         {:ok, time}
 
       _ ->
-        case String.split(time_part, ":", parts: 3) do
-          [hour, minute] ->
-            with {hour, ""} <- Integer.parse(hour),
-                 {minute, ""} <- Integer.parse(minute),
-                 {:ok, time} <- Time.new(hour, minute, 0) do
-              {:ok, time}
-            else
-              _ -> :error
-            end
+        time_part
+        |> String.split(":", parts: 3)
+        |> parse_time_parts()
+    end
+  end
 
-          [hour, minute, second] ->
-            with {hour, ""} <- Integer.parse(hour),
-                 {minute, ""} <- Integer.parse(minute),
-                 {second, ""} <- Integer.parse(second),
-                 {:ok, time} <- Time.new(hour, minute, second) do
-              {:ok, time}
-            else
-              _ -> :error
-            end
+  defp parse_time_parts([hour, minute]), do: build_time(hour, minute, "0")
+  defp parse_time_parts([hour, minute, second]), do: build_time(hour, minute, second)
+  defp parse_time_parts(_), do: :error
 
-          _ ->
-            :error
-        end
+  defp build_time(hour, minute, second) do
+    with {hour, ""} <- Integer.parse(hour),
+         {minute, ""} <- Integer.parse(minute),
+         {second, ""} <- Integer.parse(second),
+         {:ok, time} <- Time.new(hour, minute, second) do
+      {:ok, time}
+    else
+      _ -> :error
     end
   end
 

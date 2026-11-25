@@ -1,5 +1,12 @@
 # Changelog
 
+## [8.15.1] 2026-11-25
+
+### Changed
+
+- [TD-8673] Update Mix dependencies: `td_cache` to 8.15.1, `decimal` to 3.2.0 and `timex` to 4.0, with matching lockfile updates
+- [TD-8673] Split `TdDfLib.Format.DateTime.parse_time/1` into smaller functions so it passes the nesting limit in `credo` 1.7.19. Behaviour is unchanged
+
 ## [8.15.0] 2026-11-25
 
 ### Changed
