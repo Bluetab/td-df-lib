@@ -28,12 +28,12 @@ defmodule TdDfLib.MixProject do
     [
       {:credo, "~> 1.7.11", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4.5", only: :dev, runtime: false},
-      {:decimal, "~> 3.1.2"},
+      {:decimal, "~> 3.2.0"},
       {:ecto, "~> 3.14"},
       {:ex_machina, "~> 2.8", only: :test},
       {:nimble_csv, "~> 1.2"},
-      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "8.14.1"},
-      {:timex, "~> 3.7"}
+      {:td_cache, git: "https://github.com/Bluetab/td-cache.git", tag: "8.15.1"},
+      {:timex, "~> 4.0"}
     ]
   end
 end
